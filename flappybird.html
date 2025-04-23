@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flappy Bird recreated</title>
+  <br>
+  <h1>Flappy Bird recreated</h1>
+  <p>
+    Created by Mason Murphy | <a href="https://www.masonnet.org">masonnet.org</a> | 
+    <a href="https://www.masonnet.org/more/games">More games from Mason Murphy and MASONNET!</a>
+  </p>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    canvas {
+      margin: 0; /* Remove default body margins */
+  height: 50vh; /* Make body full height of the viewport */
+  display: flex; /* Use flexbox for centering */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+      border: 1px solid #d3d3d3;
+      background-color: #f1f1f1;
+      background-image: url('https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png/v1/fill/w_608,h_457,q_80,strp/flappy_bird_backdrop_by_lenaxux_dg34rsu-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE');
+    }
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .button {
+      background-color: #ff0000;
+      border: none;
+      color: white;
+      padding: 16px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    .button1 {
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body onload="startGame()">
+  <script>
+    var myGamePiece;
+    var myObstacles = [];
+    var myScore;
+
+    function startGame() {
+      // Create the character component with a fallback color ("blue") 
+      myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
+      myGamePiece.gravity = 0.05;
+      // Create the text component for the score.
+      // For text, "width" is the font size and "height" is the font family.
+      myScore = new component("40px", "Arial", "black", 420, 40, "text");
+      myScore.value = 0;  // Initialize the numeric score separately
+      myGameArea.start();
+    }
+
+    var myGameArea = {
+      canvas: document.createElement("canvas"),
+      start: function() {
+        this.canvas.width = 480;
+        this.canvas.height = 270;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateGameArea, 20);
+      },
+      clear: function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+    };
+
+    // The component function creates game objects (the bird, obstacles, and score).
+    function component(width, height, color, x, y, type, imageSrc) {
+      this.type = type;
+      this.width = width;
+      this.height = height;
+      this.x = x;
+      this.y = y;
+      this.speedX = 0;
+      this.speedY = 0;
+      this.gravity = 0;
+      this.gravitySpeed = 0;
+      
+      if (imageSrc) {
+        this.image = new Image();
+        this.image.onload = () => { this.loaded = true; };
+        this.image.src = imageSrc;
+      } else {
+        this.image = null;
+      }
+      
+      if (type === "text") {
+        this.text = "";
+      }
+      
+      this.update = function() {
+        var ctx = myGameArea.context;
+        if (this.type === "text") {
+          ctx.font = this.width + " " + this.height;
+          ctx.fillStyle = color;
+          ctx.fillText(this.text, this.x, this.y);
+        } else if (this.image && this.loaded) {
+          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        } else {
+          ctx.fillStyle = color || "blue";
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+      };
+      
+      this.newPos = function() {
+        this.gravitySpeed += this.gravity;
+        this.x += this.speedX;
+        this.y += this.speedY + this.gravitySpeed;
+        this.hitBottom();
+      };
+      
+      this.hitBottom = function() {
+        var rockbottom = myGameArea.canvas.height - this.height;
+        if (this.y > rockbottom) {
+          this.y = rockbottom;
+          this.gravitySpeed = 0;
+        }
+      };
+      
+      this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + this.width;
+        var mytop = this.y;
+        var mybottom = this.y + this.height;
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + otherobj.width;
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + otherobj.height;
+        var crash = true;
+        if ((mybottom < othertop) || (mytop > otherbottom) ||
+            (myright < otherleft) || (myleft > otherright)) {
+          crash = false;
+        }
+        return crash;
+      };
+    }
+
+    function updateGameArea() {
+      var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+      
+      // Check collisions between the bird and each obstacle.
+      for (var i = 0; i < myObstacles.length; i++) {
+        if (myGamePiece.crashWith(myObstacles[i])) {
+          return; // Stop the game if a collision occurs.
+        }
+      }
+      
+      myGameArea.clear();
+      myGameArea.frameNo += 1;
+      
+      // Every 150 frames, add a new pair of obstacles.
+      if (myGameArea.frameNo == 1 || everyinterval(150)) {
+        x = myGameArea.canvas.width;
+        minHeight = 20;
+        maxHeight = 200;
+        height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
+        minGap = 50;
+        maxGap = 200;
+        gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
+        
+        // Create the top obstacle.
+        var obstacleTop = new component(10, height, "green", x, 0);
+        // Create the bottom obstacle.
+        var obstacleBottom = new component(10, myGameArea.canvas.height - height - gap, "green", x, height + gap);
+        obstacleTop.passed = false;
+        obstacleBottom.passed = false;
+        myObstacles.push(obstacleTop);
+        myObstacles.push(obstacleBottom);
+      }
+      
+      // First, update and move all obstacles.
+      for (var i = 0; i < myObstacles.length; i++) {
+        myObstacles[i].x -= 2;
+        myObstacles[i].update();
+      }
+      
+      // Next, check for obstacles passing the bird (using top obstacles only, assuming paired obstacles).
+      for (var i = 0; i < myObstacles.length; i += 2) {
+        if (!myObstacles[i].passed && myGamePiece.x > myObstacles[i].x + myObstacles[i].width) {
+          myObstacles[i].passed = true;
+          myScore.value += 1;
+        }
+      }
+      
+      // Update and display the score.
+      myScore.text = " " + myScore.value;
+      myScore.update();
+      
+      // Update the bird's position and render it.
+      myGamePiece.newPos();
+      myGamePiece.update();
+    }
+
+    function everyinterval(n) {
+      return ((myGameArea.frameNo / n) % 1 === 0);
+    }
+
+    function accelerate(n) {
+      myGamePiece.gravity = n;
+    }
+  </script>
+  <br>
+  <button onmousedown="accelerate(-0.5)" onmouseup="accelerate(0.30)" class="button button1">Fly</button>
+</body>
+</html>
