@@ -14,6 +14,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
+      position: relative; /* Ensures the overlay can be positioned relative to the page */
     }
     .button {
       background-color: #ff0000;
@@ -27,19 +28,19 @@
       margin: 4px 2px;
       cursor: pointer;
     }
-    .button1 {
-      border-radius: 8px;
-    }
+    .button1 { border-radius: 8px; }
+
     #game-container {
       margin-top: 10px;
       text-align: left;
+      position: relative; /* To assist overlay positioning relative to the game area */
     }
-    /* Updated leaderboard container aligned left */
+    /* Leaderboard container aligned left */
     #leaderboard-container {
       margin-top: 20px;
       text-align: left;
     }
-    /* Updated leaderboard table: remove auto horizontal margin */
+    /* Leaderboard table: remove auto horizontal margin */
     #leaderboard {
       border-collapse: collapse;
       width: 100%;
@@ -50,7 +51,7 @@
     #leaderboard td {
       border: 1px solid #ddd;
       padding: 8px;
-      text-align: center; /* You can adjust cell alignment if needed */
+      text-align: center;
     }
     #leaderboard tr:nth-child(even) { background-color: #f2f2f2; }
     #leaderboard tr:hover { background-color: #ddd; }
@@ -58,11 +59,31 @@
       background-color: #4CAF50;
       color: white;
     }
+    /* Game Over overlay styles */
+    #game-over-screen {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      text-align: center;
+      color: white;
+      z-index: 100;
+      width: 300px;
+      border-radius: 8px;
+    }
+    #game-over-screen h2 {
+      margin-top: 0;
+    }
   </style>
   
-  <!-- Firebase libraries -->
+  <!-- Include Firebase libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
+  <!-- Include Firebase Auth library -->
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
 </head>
 <body>
   <!-- Header & Info -->
@@ -82,7 +103,7 @@
   <button onmousedown="accelerate(-0.5)" onmouseup="accelerate(0.30)" class="button button1">Fly</button>
   <button onclick="window.location.reload();" class="button button1">&#8635;</button>
   
-  <!-- Leaderboard container (now aligned left) -->
+  <!-- Leaderboard container (aligned left) -->
   <div id="leaderboard-container">
     <h2>Top Ten Players</h2>
     <table id="leaderboard" border="1">
@@ -94,14 +115,21 @@
     </table>
   </div>
   
+  <!-- Game Over overlay -->
+  <div id="game-over-screen">
+    <h2>Game Over</h2>
+    <button onclick="restartGame()" class="button button1">Restart</button>
+  </div>
+  
   <script>
     // ====================================================
     // Firebase Configuration & Leaderboard Setup
     // ====================================================
-   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
   authDomain: "masonnet-app.firebaseapp.com",
+  databaseURL: "https://masonnet-app-default-rtdb.firebaseio.com",
   projectId: "masonnet-app",
   storageBucket: "masonnet-app.firebasestorage.app",
   messagingSenderId: "245878148284",
@@ -110,14 +138,18 @@ const firebaseConfig = {
 };
 
     firebase.initializeApp(firebaseConfig);
+
+    // Sign in anonymously so all write requests are authenticated.
+    firebase.auth().signInAnonymously().catch(function(error) {
+      console.error("Anonymous sign-in failed:", error);
+    });
+    
     const db = firebase.database();
 
-    // Update leaderboard in Firebase
     function updateFirebaseLeaderboard(localLeaderboard) {
       db.ref("leaderboard").set(localLeaderboard);
     }
 
-    // Fetch leaderboard from Firebase (fallback default if needed)
     function fetchFirebaseLeaderboard(callback) {
       db.ref("leaderboard").once('value')
         .then(snapshot => {
@@ -143,7 +175,6 @@ const firebaseConfig = {
         })
         .catch(error => {
           console.error("Error fetching leaderboard:", error);
-          // Fallback default leaderboard.
           const fallbackLeaderboard = [
               { name: "Player 1", score: 0 },
               { name: "Player 2", score: 0 },
@@ -160,7 +191,6 @@ const firebaseConfig = {
         });
     }
 
-    // Listen for live leaderboard updates
     function listenForLeaderboardChanges() {
       db.ref("leaderboard").on('value', (snapshot) => {
         const data = snapshot.val();
@@ -201,14 +231,13 @@ const firebaseConfig = {
     // ====================================================
     // Game Code
     // ====================================================
-    // Global background image object.
+    // Global background image; we use the full URL (with a token if needed)
     var bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
     bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
 
     var myGamePiece, myObstacles = [], myScore;
 
-    // Game initialization: fetch leaderboard then start game.
     function initGame() {
       fetchFirebaseLeaderboard(function(data) {
         leaderboardData = data;
@@ -222,13 +251,12 @@ const firebaseConfig = {
       // Create the bird component.
       myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
       myGamePiece.gravity = 0.05;
-      // Create the score display as a text component.
+      // Create the score component.
       myScore = new component("40px", "Arial", "black", 420, 40, "text");
       myScore.value = 0;
       myGameArea.start();
     }
 
-    // Create the canvas and append it to the game container.
     var myGameArea = {
       canvas: document.createElement("canvas"),
       start: function() {
@@ -240,7 +268,6 @@ const firebaseConfig = {
         this.interval = setInterval(updateGameArea, 20);
       },
       clear: function() {
-        // Clear the canvas and draw the background.
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (bgImage.complete && bgImage.naturalWidth > 0) {
           this.context.drawImage(bgImage, 0, 0, this.canvas.width, this.canvas.height);
@@ -313,22 +340,18 @@ const firebaseConfig = {
         var otherright = otherobj.x + otherobj.width;
         var othertop = otherobj.y;
         var otherbottom = otherobj.y + otherobj.height;
-        var crash = true;
-        if ((mybottom < othertop) || (mytop > otherbottom) ||
-            (myright < otherleft) || (myleft > otherright)) {
-          crash = false;
-        }
-        return crash;
+        return !((mybottom < othertop) || (mytop > otherbottom) ||
+                 (myright < otherleft) || (myleft > otherright));
       };
     }
 
     // Main game loop.
     function updateGameArea() {
-      // Detect collisions.
       for (var i = 0; i < myObstacles.length; i++) {
         if (myGamePiece.crashWith(myObstacles[i])) {
           clearInterval(myGameArea.interval);
           checkAndUpdateLeaderboard(myScore.value);
+          displayGameOverScreen();
           return;
         }
       }
@@ -336,14 +359,11 @@ const firebaseConfig = {
       myGameArea.clear();
       myGameArea.frameNo += 1;
       
-      // Every 150 frames, add a new pair of obstacles.
       if (myGameArea.frameNo === 1 || everyinterval(150)) {
         var x = myGameArea.canvas.width;
-        var minHeight = 20,
-            maxHeight = 200;
+        var minHeight = 20, maxHeight = 200;
         var height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
-        var minGap = 50,
-            maxGap = 200;
+        var minGap = 50, maxGap = 200;
         var gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
         
         var topObstacleImage = "https://app.masonnet.org/pipe-green.png";
@@ -358,13 +378,11 @@ const firebaseConfig = {
         myObstacles.push(obstacleBottom);
       }
       
-      // Update obstacles.
       for (var i = 0; i < myObstacles.length; i++) {
         myObstacles[i].x -= 2;
         myObstacles[i].update();
       }
       
-      // Increase score when obstacles are passed.
       for (var i = 0; i < myObstacles.length; i += 2) {
         if (!myObstacles[i].passed && myGamePiece.x > myObstacles[i].x + myObstacles[i].width) {
           myObstacles[i].passed = true;
@@ -387,7 +405,24 @@ const firebaseConfig = {
       myGamePiece.gravity = n;
     }
     
-    // Wait for the background image to load (or error out), then initialize the game.
+    // Display the Game Over overlay.
+    function displayGameOverScreen() {
+      document.getElementById("game-over-screen").style.display = "block";
+    }
+    
+    // When restart is clicked, hide the overlay and reset the game state.
+    function restartGame() {
+      document.getElementById("game-over-screen").style.display = "none";
+      myObstacles = [];
+      myGameArea.frameNo = 0;
+      myScore.value = 0;
+      // Reset the bird's position
+      myGamePiece.x = 10;
+      myGamePiece.y = 120;
+      // Restart the game loop
+      myGameArea.interval = setInterval(updateGameArea, 20);
+    }
+    
     bgImage.onload = function() {
       console.log("Background image loaded.");
       initGame();
