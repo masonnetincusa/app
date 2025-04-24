@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -316,10 +317,19 @@ const firebaseConfig = {
         }
       };
       
-      this.newPos = function() {
+       // Update the position and prevent going above the top limit.
+       this.newPos = function() {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
+        
+        // Set TOP_LIMIT to the minimum y-value the character is allowed.
+        const TOP_LIMIT = 10 // Adjust as needed (e.g., bottom edge of your top obstacle)
+        if (this.y < TOP_LIMIT) {
+          this.y = TOP_LIMIT;
+          this.gravitySpeed = 0;
+        }
+        
         this.hitBottom();
       };
       
