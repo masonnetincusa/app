@@ -4,16 +4,20 @@
   <title>Flappy Bird recreated</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
+    /* Canvas styling: The background is drawn via JS */
     canvas {
       margin: 0;
       height: 50vh;
       display: block;
       border: 1px solid #d3d3d3;
     }
+
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
+      position: relative;  /* Needed for absolute positioning of overlay */
     }
+
     .button {
       background-color: #ff0000;
       border: none;
@@ -26,29 +30,55 @@
       margin: 4px 2px;
       cursor: pointer;
     }
+
     .button1 { border-radius: 8px; }
-    #game-container { margin-top: 10px; text-align: left; }
-    #leaderboard-container { margin-top: 20px; text-align: left; }
+
+    #game-container {
+      margin-top: 10px;
+      text-align: left;
+      position: relative;
+    }
+
+    #leaderboard-container {
+      margin-top: 20px;
+      text-align: left;
+    }
+
     #leaderboard {
       border-collapse: collapse;
       width: 100%;
       max-width: 400px;
       margin: 0;
     }
+
     #leaderboard th, 
     #leaderboard td {
       border: 1px solid #ddd;
       padding: 8px;
       text-align: center;
     }
+
     #leaderboard tr:nth-child(even) { background-color: #f2f2f2; }
     #leaderboard tr:hover { background-color: #ddd; }
-    #leaderboard th {
-      background-color: #4CAF50;
+    #leaderboard th { background-color: #4CAF50; color: white; }
+
+    /* Game Over overlay styling */
+    #game-over-screen {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      text-align: center;
       color: white;
+      z-index: 100;
+      width: 300px;
+      border-radius: 8px;
     }
   </style>
-  
+
   <!-- Include Firebase libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
@@ -59,7 +89,7 @@
   <div id="game-container"></div>
   
   <br>
-  <!-- Updated fly button with both mouse and touch events -->
+  <!-- Fly button now supports both mouse and touch events -->
   <button id="flyButton" 
           onmousedown="accelerate(-0.5)" 
           onmouseup="accelerate(0.30)" 
@@ -79,10 +109,17 @@
     </table>
   </div>
   
+  <!-- Game Over overlay with restart option -->
+  <div id="game-over-screen">
+    <h2>Game Over</h2>
+    <button onclick="restartGame()" class="button button1">Restart</button>
+  </div>
+  
   <script>
     // ====================================================
     // Firebase Configuration & Leaderboard Setup
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    // ====================================================
+ // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
   authDomain: "masonnet-app.firebaseapp.com",
@@ -166,10 +203,10 @@ const firebaseConfig = {
     // ====================================================
     // Game Code
     // ====================================================
-    // Replace with your actual background image URL (include token if needed)
+    // Background image – using a full URL (replace if necessary)
     var bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
-    bgImage.src = "https://example.com/flappybird-background.png";
+    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
 
     var myGamePiece, myObstacles = [], myScore;
 
@@ -221,7 +258,7 @@ const firebaseConfig = {
       this.gravity = 0;
       this.gravitySpeed = 0;
       
-      if (imageSrc) {
+      if(imageSrc) {
         this.image = new Image();
         this.image.onload = () => { this.loaded = true; };
         this.image.src = imageSrc;
@@ -229,111 +266,108 @@ const firebaseConfig = {
         this.image = null;
       }
       
-      if (this.type === "text") {
+      if(this.type === "text") {
         this.text = "";
       }
       
-      // Update position and prevent going above a set limit.
+      // Update position and prevent going above TOP_LIMIT
       this.newPos = function() {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
         
-        // Set TOP_LIMIT to the minimal y-value allowed (e.g., bottom edge of top obstacle)
-        const TOP_LIMIT = 40; 
-        if (this.y < TOP_LIMIT) {
+        const TOP_LIMIT = 40; // Adjust to the lowest point of your top obstacle
+        if(this.y < TOP_LIMIT) {
           this.y = TOP_LIMIT;
           this.gravitySpeed = 0;
         }
         
         this.hitBottom();
       };
-
+      
       this.hitBottom = function() {
         var rockbottom = myGameArea.canvas.height - this.height;
-        if (this.y > rockbottom) {
+        if(this.y > rockbottom) {
           this.y = rockbottom;
           this.gravitySpeed = 0;
         }
       };
-
+      
       this.update = function() {
         var ctx = myGameArea.context;
-        if (this.type === "text") {
+        if(this.type === "text") {
           ctx.font = this.width + " " + this.height;
           ctx.fillStyle = color;
           ctx.fillText(this.text, this.x, this.y);
-        } else if (this.image && this.loaded) {
+        } else if(this.image && this.loaded) {
           ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         } else {
           ctx.fillStyle = color || "blue";
           ctx.fillRect(this.x, this.y, this.width, this.height);
         }
       };
-
+      
       this.crashWith = function(otherobj) {
-        var myleft = this.x;
-        var myright = this.x + this.width;
-        var mytop = this.y;
-        var mybottom = this.y + this.height;
-        var otherleft = otherobj.x;
-        var otherright = otherobj.x + otherobj.width;
-        var othertop = otherobj.y;
-        var otherbottom = otherobj.y + otherobj.height;
-        return !((mybottom < othertop) || (mytop > otherbottom) ||
-                 (myright < otherleft) || (myleft > otherright));
+         var myleft = this.x;
+         var myright = this.x + this.width;
+         var mytop = this.y;
+         var mybottom = this.y + this.height;
+         var otherleft = otherobj.x;
+         var otherright = otherobj.x + otherobj.width;
+         var othertop = otherobj.y;
+         var otherbottom = otherobj.y + otherobj.height;
+         return !((mybottom < othertop) || (mytop > otherbottom) ||
+                  (myright < otherleft) || (myleft > otherright));
       };
-
+      
       this.newPos = this.newPos.bind(this);
     }
 
     function updateGameArea() {
-      for (var i = 0; i < myObstacles.length; i++) {
-        if (myGamePiece.crashWith(myObstacles[i])) {
-          clearInterval(myGameArea.interval);
-          checkAndUpdateLeaderboard(myScore.value);
-          // Optionally, you could add a Game Over screen here.
-          return;
-        }
+      for(var i = 0; i < myObstacles.length; i++){
+         if(myGamePiece.crashWith(myObstacles[i])){
+            clearInterval(myGameArea.interval);
+            checkAndUpdateLeaderboard(myScore.value);
+            displayGameOverScreen();
+            return;
+         }
       }
       
       myGameArea.clear();
       myGameArea.frameNo += 1;
       
-      if (myGameArea.frameNo === 1 || everyinterval(150)) {
-        var x = myGameArea.canvas.width;
-        var minHeight = 20, maxHeight = 200;
-        var height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
-        var minGap = 50, maxGap = 200;
-        var gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
-        
-        var topObstacleImage = "https://app.masonnet.org/pipe-green.png";
-        var bottomObstacleImage = "https://app.masonnet.org/pipe-green.png";
-        
-        var obstacleTop = new component(40, height, "", x, 0, "image", topObstacleImage);
-        var obstacleBottom = new component(40, myGameArea.canvas.height - height - gap, "", x, height + gap, "image", bottomObstacleImage);
-        
-        obstacleTop.passed = false;
-        obstacleBottom.passed = false;
-        myObstacles.push(obstacleTop);
-        myObstacles.push(obstacleBottom);
+      if(myGameArea.frameNo === 1 || everyinterval(150)){
+         var x = myGameArea.canvas.width;
+         var minHeight = 20, maxHeight = 200;
+         var height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
+         var minGap = 50, maxGap = 200;
+         var gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
+         
+         var topObstacleImage = "https://app.masonnet.org/pipe-green.png";
+         var bottomObstacleImage = "https://app.masonnet.org/pipe-green.png";
+         
+         var obstacleTop = new component(40, height, "", x, 0, "image", topObstacleImage);
+         var obstacleBottom = new component(40, myGameArea.canvas.height - height - gap, "", x, height + gap, "image", bottomObstacleImage);
+         obstacleTop.passed = false;
+         obstacleBottom.passed = false;
+         myObstacles.push(obstacleTop);
+         myObstacles.push(obstacleBottom);
       }
       
-      for (var i = 0; i < myObstacles.length; i++) {
-        myObstacles[i].x -= 2;
-        myObstacles[i].update();
+      for(var i = 0; i < myObstacles.length; i++){
+         myObstacles[i].x -= 2;
+         myObstacles[i].update();
       }
       
-      for (var i = 0; i < myObstacles.length; i += 2) {
-        if (!myObstacles[i].passed && myGamePiece.x > myObstacles[i].x + myObstacles[i].width) {
-          myObstacles[i].passed = true;
-          myScore.value += 1;
-        }
+      for(var i = 0; i < myObstacles.length; i += 2){
+         if(!myObstacles[i].passed && myGamePiece.x > myObstacles[i].x + myObstacles[i].width){
+             myObstacles[i].passed = true;
+             myScore.value += 1;
+         }
       }
       
       myScore.text = " " + myScore.value;
       myScore.update();
-      
       myGamePiece.newPos();
       myGamePiece.update();
     }
@@ -346,12 +380,26 @@ const firebaseConfig = {
       myGamePiece.gravity = n;
     }
     
-    bgImage.onload = function() {
-      initGame();
+    function displayGameOverScreen(){
+        document.getElementById("game-over-screen").style.display = "block";
+    }
+    
+    function restartGame(){
+       document.getElementById("game-over-screen").style.display = "none";
+       myObstacles = [];
+       myGameArea.frameNo = 0;
+       myScore.value = 0;
+       myGamePiece.x = 10;
+       myGamePiece.y = 120;
+       myGameArea.interval = setInterval(updateGameArea, 20);
+    }
+    
+    bgImage.onload = function(){
+       initGame();
     };
-    bgImage.onerror = function() {
-      console.error("Error loading background image. Using fallback fill.");
-      initGame();
+    bgImage.onerror = function(){
+       console.error("Error loading background image. Using fallback fill.");
+       initGame();
     };
   </script>
 </body>
