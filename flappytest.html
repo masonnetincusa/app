@@ -11,57 +11,66 @@
       display: block;
       border: 1px solid #d3d3d3;
     }
-
+    
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      position: relative;  /* Needed for absolute positioning of overlay */
+      position: relative; /* For overlay positioning */
     }
-
+    
+    /* Base button styling */
     .button {
       background-color: #ff0000;
       border: none;
       color: white;
-      padding: 16px;
       text-align: center;
       text-decoration: none;
       display: inline-block;
-      font-size: 16px;
-      margin: 4px 2px;
       cursor: pointer;
+      /* Default padding and font-size can be overridden by a modifier class */
     }
-
+    
+    /* Rounded corners */
     .button1 { border-radius: 8px; }
-
+    
+    /* New small modifier: forces a button to be 24px by 24px */
+    .small {
+      width: 24px;
+      height: 24px;
+      font-size: 10px;      /* Adjust font size as needed */
+      padding: 0;
+      line-height: 24px;    /* Center text vertically */
+    }
+    
     #game-container {
       margin-top: 10px;
       text-align: left;
       position: relative;
     }
-
+    
     #leaderboard-container {
       margin-top: 20px;
       text-align: left;
     }
-
+    
     #leaderboard {
       border-collapse: collapse;
       width: 100%;
       max-width: 400px;
       margin: 0;
     }
-
+    
     #leaderboard th, 
     #leaderboard td {
       border: 1px solid #ddd;
       padding: 8px;
       text-align: center;
     }
-
+    
     #leaderboard tr:nth-child(even) { background-color: #f2f2f2; }
     #leaderboard tr:hover { background-color: #ddd; }
     #leaderboard th { background-color: #4CAF50; color: white; }
-
+    
     /* Game Over overlay styling */
     #game-over-screen {
       display: none;
@@ -77,16 +86,15 @@
       width: 300px;
       border-radius: 8px;
     }
-    .button1 {font-size: 24px;}
   </style>
-
+  
   <!-- Include Firebase libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-  <!-- Header & Info -->
+    <!-- Header & Info -->
    <img src="https://masonnetincusa.github.io/MASONNET/IMG_0427.png">
   <h1>Flappy Bird recreated</h1>
   <p>
@@ -95,17 +103,20 @@
     <a href="https://app.masonnet.org/home.html">MASONNET App Home</a>
   </p>
   <p>Version 1.1, Build 0004</p>
+  
   <div id="game-container"></div>
   
   <br>
-  <!-- Fly button now supports both mouse and touch events -->
+  <!-- Updated buttons: added the "small" class so they are 24px by 24px -->
   <button id="flyButton" 
+          class="button button1 small"
           onmousedown="accelerate(-0.5)" 
           onmouseup="accelerate(0.30)" 
           ontouchstart="accelerate(-0.5); event.preventDefault();" 
-          ontouchend="accelerate(0.30); event.preventDefault();" 
-          class="button button1">Fly</button>
-  <button onclick="window.location.reload();" class="button button1">&#8635;</button>
+          ontouchend="accelerate(0.30); event.preventDefault();">Fly</button>
+  <button id="reloadButton" 
+          onclick="window.location.reload();" 
+          class="button button1 small">&#8635;</button>
   
   <div id="leaderboard-container">
     <h2>Top Ten Players</h2>
@@ -121,14 +132,14 @@
   <!-- Game Over overlay with restart option -->
   <div id="game-over-screen">
     <h2>Game Over</h2>
-    <button onclick="restartGame()" class="button button1">Restart</button>
+    <button onclick="restartGame()" class="button button1 small">↺</button>
   </div>
   
   <script>
     // ====================================================
     // Firebase Configuration & Leaderboard Setup
     // ====================================================
- // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
   authDomain: "masonnet-app.firebaseapp.com",
@@ -212,7 +223,7 @@ const firebaseConfig = {
     // ====================================================
     // Game Code
     // ====================================================
-    // Background image – using a full URL (replace if necessary)
+    // Background image – using a full URL
     var bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
     bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
@@ -285,7 +296,7 @@ const firebaseConfig = {
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
         
-        const TOP_LIMIT = 10; // Adjust to the lowest point of your top obstacle
+        const TOP_LIMIT = 10; // Modify as needed
         if(this.y < TOP_LIMIT) {
           this.y = TOP_LIMIT;
           this.gravitySpeed = 0;
@@ -377,6 +388,7 @@ const firebaseConfig = {
       
       myScore.text = " " + myScore.value;
       myScore.update();
+      
       myGamePiece.newPos();
       myGamePiece.update();
     }
