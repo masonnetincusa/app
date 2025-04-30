@@ -1,9 +1,16 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <title>Flappy Bird recreated</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+     <script>
+    var ua = navigator.userAgent.toLowerCase();
+    var isMobile = ua.indexOf('mobile') > -1 || ua.indexOf('android') > -1 || ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1; // Add more devices as needed
+
+    if (isMobile) {
+        window.location.replace('https://app.masonnet.org/flappybirdmobile'); // Replace with your mobile site URL
+    }
+   </script>
   <style>
     /* We let JavaScript draw the background so no CSS background-image here */
     canvas {
