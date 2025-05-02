@@ -10,29 +10,28 @@
       font-family: Arial, sans-serif;
       background: #222;
       color: #fff;
-      /* Remove default margin so fullscreen truly fills the viewport */
       margin: 0;
       overflow-x: hidden;
     }
     h1 { text-align: center; margin: 20px 0; }
     
-    /* Game Container (by default 480x270, but will be resized to 100vw x 100vh in fullscreen) */
+    /* Game container: default size 480x270; will fill viewport in full screen */
     #game-container {
       position: relative;
       width: 480px;
       height: 270px;
-      background: #000; /* fallback background */
+      background: #000;
       margin: 0 auto;
       overflow: hidden;
     }
     
-    /* Canvas container fills game container */
+    /* The canvas container fills the game container */
     #canvas-container {
       width: 100%;
       height: 100%;
     }
     
-    /* Overlays – applied to Main Menu, Leaderboard, Pause & Game Over */
+    /* Overlays for Main Menu, Leaderboard, Pause, Game Over */
     .overlay {
       position: absolute;
       top: 0;
@@ -45,15 +44,15 @@
       align-items: center;
       justify-content: center;
       z-index: 2000;
-      padding: 20px;      /* Added padding for scrolling */
-      overflow-y: auto;   /* Allows scrolling if content is taller than viewport */
+      padding: 20px;
+      overflow-y: auto;
       text-align: center;
     }
-    /* Show only main menu by default; others are hidden */
+    /* Only main menu is visible at first */
     #main-menu { display: flex; }
     #leaderboard-menu, #pause-menu, #game-over-screen { display: none; }
     
-    /* Main Menu & Leaderboard Button Styles with extra spacing */
+    /* Main menu & leaderboard button styles with extra spacing */
     .menu-button {
       background-color: #ff0000;
       border: none;
@@ -65,10 +64,10 @@
       cursor: pointer;
     }
     
-    /* Container for the Full Screen toggle button inside the main menu */
+    /* Full screen button container inside main menu */
     #fs-button-container { margin-top: 15px; }
     
-    /* Leaderboard Table Styling */
+    /* Leaderboard table styling */
     #leaderboard {
       border-collapse: collapse;
       width: 80%;
@@ -83,7 +82,7 @@
       text-align: center;
     }
     
-    /* Pause Button: visible during gameplay */
+    /* Pause button visible during gameplay */
     #pauseButton {
       position: absolute;
       top: 10px;
@@ -108,7 +107,7 @@
 <body>
   <h1>Flappy Bird Recreated</h1>
   
-  <!-- Game Container: this will be resized in fullscreen mode -->
+  <!-- Game Container -->
   <div id="game-container">
     <div id="canvas-container"></div>
     
@@ -119,7 +118,7 @@
       <button class="menu-button" onclick="startGameFromMenu();">Start</button>
       <button class="menu-button" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="menu-button" id="soundButton" onclick="toggleSound();">Sound: On</button>
-      <!-- Full Screen Toggle is now inside the main menu -->
+      <!-- Full Screen toggle inside main menu -->
       <div id="fs-button-container">
         <button class="menu-button" onclick="toggleFullScreen();">Full Screen</button>
       </div>
@@ -144,28 +143,28 @@
       <button class="menu-button" onclick="togglePause();">Resume</button>
     </div>
     
-    <!-- Game Over Overlay (Fully Centered) -->
+    <!-- Game Over Overlay (centered) -->
     <div id="game-over-screen" class="overlay">
       <h2>Game Over</h2>
       <button class="menu-button" onclick="restartGame();">Restart</button>
     </div>
     
-    <!-- Pause Button (visible during game) -->
+    <!-- Pause Button: visible during gameplay -->
     <button id="pauseButton" onclick="togglePause();">Pause</button>
   </div>
   
   <script>
-    /* =============================================
-       Global Variables & Sound Setup
-    ============================================= */
-    let gameState = "menu"; // "menu", "playing", "paused", "gameover", "leaderboard"
+    /***********************
+     * Global Variables & Sound Setup
+     ***********************/
+    let gameState = "menu"; // Possible: "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound effect URL
+    const soundEffectURL = "https://example.com/sound.mp3";  // Replace with your sound URL
     const soundEffect = new Audio(soundEffectURL);
     
-    /* =============================================
-       Firebase Configuration & Leaderboard Setup
-    ============================================= */
+    /***********************
+     * Firebase Config & Leaderboard Setup
+     ***********************/
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
@@ -180,40 +179,43 @@ const firebaseConfig = {
     firebase.initializeApp(firebaseConfig);
     firebase.auth().signInAnonymously().catch(err => console.error("Auth Error:", err));
     const db = firebase.database();
+    
     function updateFirebaseLeaderboard(lb) {
       db.ref("leaderboard").set(lb);
     }
+    
     function fetchFirebaseLeaderboard(callback) {
       db.ref("leaderboard").once("value")
-        .then(snapshot => {
-          const data = snapshot.val();
-          if (data) callback(data);
-          else {
-            const defaultLB = [
-              { name: "Player 1", score: 0 },
-              { name: "Player 2", score: 0 },
-              { name: "Player 3", score: 0 },
-              { name: "Player 4", score: 0 },
-              { name: "Player 5", score: 0 },
-              { name: "Player 6", score: 0 },
-              { name: "Player 7", score: 0 },
-              { name: "Player 8", score: 0 },
-              { name: "Player 9", score: 0 },
-              { name: "Player 10", score: 0 }
-            ];
-            db.ref("leaderboard").set(defaultLB);
-            callback(defaultLB);
-          }
-        })
-        .catch(err => console.error("Fetch LB Error:", err));
+      .then(snapshot => {
+        const data = snapshot.val();
+        if(data) callback(data);
+        else {
+          const defaultLB = [
+            { name: "Player 1", score: 0 },
+            { name: "Player 2", score: 0 },
+            { name: "Player 3", score: 0 },
+            { name: "Player 4", score: 0 },
+            { name: "Player 5", score: 0 },
+            { name: "Player 6", score: 0 },
+            { name: "Player 7", score: 0 },
+            { name: "Player 8", score: 0 },
+            { name: "Player 9", score: 0 },
+            { name: "Player 10", score: 0 }
+          ];
+          db.ref("leaderboard").set(defaultLB);
+          callback(defaultLB);
+        }
+      })
+      .catch(err => console.error("Fetch LB Error:", err));
     }
     
     let leaderboardData = [];
+    
     function updateLeaderboardDisplay() {
       const table = document.getElementById("leaderboard");
       table.innerHTML = `<tr><th>Rank</th><th>Name</th><th>Score</th></tr>`;
       leaderboardData.forEach((entry, index) => {
-        let row = table.insertRow();
+        const row = table.insertRow();
         row.insertCell(0).innerHTML = index + 1;
         row.insertCell(1).innerHTML = entry.name;
         row.insertCell(2).innerHTML = entry.score;
@@ -222,18 +224,18 @@ const firebaseConfig = {
     
     function checkAndUpdateLeaderboard(currentScore) {
       if (currentScore > leaderboardData[leaderboardData.length - 1].score) {
-        let playerName = prompt("High score! Enter your name:") || "Anonymous";
+        const playerName = prompt("High score! Enter your name:") || "Anonymous";
         leaderboardData.push({ name: playerName, score: currentScore });
-        leaderboardData.sort((a, b) => b.score - a.score);
+        leaderboardData.sort((a,b) => b.score - a.score);
         leaderboardData = leaderboardData.slice(0, 10);
         updateLeaderboardDisplay();
         updateFirebaseLeaderboard(leaderboardData);
       }
     }
     
-    /* =============================================
-       Menu Functions
-    ============================================= */
+    /***********************
+     * Menu Functions
+     ***********************/
     function showMainMenu() {
       gameState = "menu";
       document.getElementById("main-menu").style.display = "flex";
@@ -241,10 +243,11 @@ const firebaseConfig = {
       document.getElementById("pause-menu").style.display = "none";
       document.getElementById("game-over-screen").style.display = "none";
       let highScore = 0;
-      leaderboardData.forEach(entry => { if (entry.score > highScore) highScore = entry.score; });
+      leaderboardData.forEach(entry => {
+        if(entry.score > highScore) highScore = entry.score;
+      });
       document.getElementById("high-score-display").innerText = "High Score: " + highScore;
       document.getElementById("canvas-container").innerHTML = "";
-      // Hide pause button when not playing.
       document.getElementById("pauseButton").style.display = "none";
     }
     
@@ -255,7 +258,12 @@ const firebaseConfig = {
       updateLeaderboardDisplay();
     }
     
+    // Modified startGameFromMenu() now asks before full screen:
     function startGameFromMenu() {
+      // Ask for full screen. This is triggered by a user click and thus permitted.
+      if (window.confirm("Would you like to play in full screen?")) {
+        toggleFullScreen();
+      }
       gameState = "playing";
       document.getElementById("main-menu").style.display = "none";
       document.getElementById("leaderboard-menu").style.display = "none";
@@ -267,9 +275,9 @@ const firebaseConfig = {
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
     
-    /* =============================================
-       Full Screen Toggle & Dynamic Sizing
-    ============================================= */
+    /***********************
+     * Full Screen Toggle & Dynamic Sizing
+     ***********************/
     function toggleFullScreen() {
       const elem = document.getElementById("game-container");
       if (!document.fullscreenElement) {
@@ -288,26 +296,25 @@ const firebaseConfig = {
     document.addEventListener("fullscreenchange", function() {
       const container = document.getElementById("game-container");
       if (document.fullscreenElement) {
-        // Set container dimensions to full viewport.
         container.style.width = window.innerWidth + "px";
         container.style.height = window.innerHeight + "px";
-        if(myGameArea){                  
+        if (myGameArea) {
           myGameArea.canvas.width = window.innerWidth;
           myGameArea.canvas.height = window.innerHeight;
         }
       } else {
         container.style.width = "480px";
         container.style.height = "270px";
-        if(myGameArea){                  
+        if (myGameArea) {
           myGameArea.canvas.width = 480;
           myGameArea.canvas.height = 270;
         }
       }
     });
     
-    /* =============================================
-       Global Controls: Spacebar to Fly & "k" for Pause
-    ============================================= */
+    /***********************
+     * Global Controls: Spacebar to Fly, "k" to Pause
+     ***********************/
     window.addEventListener("keydown", function(e) {
       if (e.code === "Space" || e.keyCode === 32) {
         accelerate(-0.5);
@@ -326,9 +333,9 @@ const firebaseConfig = {
       }
     });
     
-    /* =============================================
-       Pause Menu Implementation
-    ============================================= */
+    /***********************
+     * Pause Menu Implementation
+     ***********************/
     let isPaused = false;
     function togglePause() {
       if (gameState === "playing" && !isPaused) {
@@ -344,9 +351,9 @@ const firebaseConfig = {
       }
     }
     
-    /* =============================================
-       Sound Effect on Canvas Tap
-    ============================================= */
+    /***********************
+     * Sound Effect on Canvas Tap
+     ***********************/
     function playFlySound() {
       if (soundEnabled) {
         soundEffect.currentTime = 0;
@@ -354,9 +361,9 @@ const firebaseConfig = {
       }
     }
     
-    /* =============================================
-       Game Code
-    ============================================= */
+    /***********************
+     * Game Code
+     ***********************/
     const bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
     // Replace with your custom background image URL.
@@ -392,7 +399,7 @@ const firebaseConfig = {
         document.getElementById("canvas-container").appendChild(this.canvas);
         this.frameNo = 0;
         this.interval = setInterval(updateGameArea, 20);
-        // Always enable canvas tap for acceleration
+        // Always enable canvas tap for acceleration.
         this.canvas.addEventListener("mousedown", function(e) {
           accelerate(-0.5);
           playFlySound();
@@ -551,6 +558,7 @@ const firebaseConfig = {
       showMainMenu();
     }
     
+    // Load the background image and initialize the game.
     bgImage.onload = function() {
       initGame();
     };
@@ -559,6 +567,22 @@ const firebaseConfig = {
       console.error("Error loading background image. Using fallback fill.");
       initGame();
     };
+    
+    // Force full screen mode on page load via a user prompt.
+    document.addEventListener("DOMContentLoaded", function() {
+      const container = document.getElementById("game-container");
+      if (window.confirm("Would you like to play in full screen mode?")) {
+        if (container.requestFullscreen) {
+          container.requestFullscreen().catch(err => console.error("Fullscreen request failed:", err));
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        } else if (container.mozRequestFullScreen) {
+          container.mozRequestFullScreen();
+        } else if (container.msRequestFullscreen) {
+          container.msRequestFullscreen();
+        }
+      }
+    });
   </script>
 </body>
 </html>
