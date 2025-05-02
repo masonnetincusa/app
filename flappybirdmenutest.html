@@ -4,10 +4,8 @@
   <title>Flappy Bird Recreated</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Default styling for the canvas – it will be created and appended
-       to a dedicated container within #game-container. */
+    /* Canvas styling – the canvas is appended inside a container. */
     canvas {
-      margin: 0;
       display: block;
       border: 1px solid #d3d3d3;
     }
@@ -23,34 +21,33 @@
       color: white;
       text-align: center;
       text-decoration: none;
-      display: inline-block;
       cursor: pointer;
+      margin: 5px;  /* spacing between buttons */
     }
     .button1 { border-radius: 8px; }
-    /* Small modifier to force a 24x24 button */
+    /* Small modifier (for control buttons) */
     .small {
       width: 24px;
       height: 24px;
       font-size: 10px;
-      padding: 0;
       line-height: 24px;
+      padding: 0;
     }
-    /* The game container. This element will go full screen.
-       It will house the canvas as well as all overlay menus. */
+    /* Game container – this element will go full screen */
     #game-container {
-      margin-top: 10px;
       position: relative;
       width: 480px;
       height: 270px;
-      background: #f1f1f1;
+      background: #000;  /* ensure a black background if image not present */
+      margin: 0 auto;
     }
-    /* The canvas container is where the game canvas is appended. */
+    /* Canvas container where the game canvas is placed */
     #canvas-container {
       width: 100%;
       height: 100%;
     }
-    /* Main Menu overlay styling */
-    #main-menu {
+    /* Overlays inside the game container */
+    #main-menu, #leaderboard-menu, #pause-menu, #game-over-screen {
       position: absolute;
       top: 0;
       left: 0;
@@ -58,60 +55,42 @@
       height: 100%;
       background: rgba(0,0,0,0.85);
       color: white;
-      z-index: 2000;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-    }
-    #main-menu h2 { margin: 10px 0; }
-    #main-menu p { margin: 10px 0; }
-    /* Leaderboard Menu overlay styling */
-    #leaderboard-menu {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      color: white;
       z-index: 2000;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
     }
-    /* Game Over overlay styling */
-    #game-over-screen {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8);
-      padding: 20px;
-      text-align: center;
-      color: white;
-      z-index: 2000;
-      width: 300px;
-      border-radius: 8px;
+    /* Main menu is shown by default */
+    #main-menu { display: flex; }
+    #leaderboard-menu, #pause-menu, #game-over-screen { display: none; }
+    /* Spacing for main menu buttons */
+    #main-menu button, #leaderboard-menu button {
+      margin: 10px;
+      padding: 10px 20px;
     }
-    /* Leaderboard table styling inside leaderboard-menu */
+    /* Leaderboard table styling (inside the leaderboard overlay) */
     #leaderboard {
       border-collapse: collapse;
       width: 80%;
       max-width: 400px;
+      background: black;
+      color: white;
       margin-bottom: 10px;
     }
     #leaderboard th, #leaderboard td {
-      border: 1px solid #ddd;
+      border: 1px solid white;
       padding: 8px;
       text-align: center;
     }
-    #leaderboard tr:nth-child(even) { background-color: #f2f2f2; }
-    #leaderboard th { background-color: #4CAF50; color: white; }
+    /* Pause button styling (displayed during game play) */
+    #pauseButton {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 2500;
+    }
   </style>
-
   <!-- Firebase Libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
@@ -119,11 +98,9 @@
 </head>
 <body>
   <h1>Flappy Bird Recreated</h1>
-  <!-- The game container includes the canvas container and overlay menus -->
+  <!-- Game container (this will also go full screen) -->
   <div id="game-container">
-    <div id="canvas-container">
-      <!-- The game canvas will be added here dynamically -->
-    </div>
+    <div id="canvas-container"></div>
     <!-- Main Menu overlay -->
     <div id="main-menu">
       <h2>Flappy Bird</h2>
@@ -132,10 +109,10 @@
       <button class="button button1" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="button button1" id="soundButton" onclick="toggleSound();">Sound: On</button>
     </div>
-    <!-- Leaderboard Menu overlay -->
+    <!-- Leaderboard overlay -->
     <div id="leaderboard-menu">
       <h2>Leaderboard</h2>
-      <table id="leaderboard" border="1">
+      <table id="leaderboard">
         <tr>
           <th>Rank</th>
           <th>Name</th>
@@ -144,26 +121,36 @@
       </table>
       <button class="button button1" onclick="showMainMenu();">Back</button>
     </div>
+    <!-- Pause Menu overlay -->
+    <div id="pause-menu">
+      <h2>Paused</h2>
+      <button class="button button1" onclick="togglePause();">Resume</button>
+    </div>
     <!-- Game Over overlay -->
     <div id="game-over-screen">
       <h2>Game Over</h2>
-      <button class="button button1" onclick="restartGame();">↺</button>
+      <button class="button button1" onclick="restartGame();">Restart</button>
     </div>
+    <!-- Pause Button (visible while playing) -->
+    <button id="pauseButton" class="button button1 small" onclick="togglePause();">P</button>
   </div>
   <br>
-  <!-- Controls below the game container -->
+  <!-- Control buttons (outside game container) -->
   <button id="reloadButton" class="button button1 small" onclick="window.location.reload();">&#8635;</button>
   <button id="fullscreenButton" class="button button1 small" onclick="toggleFullScreen();">FS</button>
-
   <script>
-    /* --- Global Variables and Sound Setup --- */
-    let gameState = "menu"; // "menu", "playing", "leaderboard", or "gameover"
+    /* =============================
+       Global Variables & Sound Setup
+    ============================== */
+    let gameState = "menu"; // possible states: "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3"; // Place your sound effect URL here
+    const soundEffectURL = "https://example.com/sound.mp3"; // Placeholder URL for sound effect
     const soundEffect = new Audio(soundEffectURL);
 
-    /* --- Firebase Configuration & Leaderboard --- */
-   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    /* =============================
+       Firebase Configuration & Leaderboard
+    ============================== */
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
   authDomain: "masonnet-app.firebaseapp.com",
@@ -175,7 +162,7 @@ const firebaseConfig = {
   measurementId: "G-NY1MN2R295"
 };
     firebase.initializeApp(firebaseConfig);
-    firebase.auth().signInAnonymously().catch(function(error) {
+    firebase.auth().signInAnonymously().catch(error => {
       console.error("Anonymous sign-in failed:", error);
     });
     const db = firebase.database();
@@ -212,7 +199,6 @@ const firebaseConfig = {
     let leaderboardData = [];
     function updateLeaderboardDisplay() {
       const table = document.getElementById("leaderboard");
-      // Clear previous rows (except header)
       table.innerHTML = `<tr><th>Rank</th><th>Name</th><th>Score</th></tr>`;
       leaderboardData.forEach((entry, index) => {
         const row = table.insertRow();
@@ -231,13 +217,16 @@ const firebaseConfig = {
         updateFirebaseLeaderboard(leaderboardData);
       }
     }
-    /* --- Menu Functions --- */
+    /* =============================
+       Menu Functions
+    ============================== */
     function showMainMenu() {
       gameState = "menu";
       document.getElementById("main-menu").style.display = "flex";
       document.getElementById("leaderboard-menu").style.display = "none";
+      document.getElementById("pause-menu").style.display = "none";
       document.getElementById("game-over-screen").style.display = "none";
-      // Update high score display from leaderboard data
+      // Update high score display using leaderboard data
       let highScore = 0;
       leaderboardData.forEach(entry => { if (entry.score > highScore) highScore = entry.score; });
       document.getElementById("high-score-display").innerText = "High Score: " + highScore;
@@ -254,37 +243,27 @@ const firebaseConfig = {
       gameState = "playing";
       document.getElementById("main-menu").style.display = "none";
       document.getElementById("leaderboard-menu").style.display = "none";
-      // Start the game
       startGame();
     }
     function toggleSound() {
       soundEnabled = !soundEnabled;
-      const soundBtn = document.getElementById("soundButton");
-      soundBtn.innerText = soundEnabled ? "Sound: On" : "Sound: Off";
+      document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
-    /* --- Full Screen Toggle & Dynamic Sizing --- */
+    /* =============================
+       Full Screen Toggle & Dynamic Sizing
+    ============================== */
     function toggleFullScreen() {
       const elem = document.getElementById("game-container");
       if (!document.fullscreenElement) {
-        if (elem.requestFullscreen) {
-          elem.requestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-          elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) {
-          elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-          elem.msRequestFullscreen();
-        }
+        if (elem.requestFullscreen) { elem.requestFullscreen(); }
+        else if (elem.mozRequestFullScreen) { elem.mozRequestFullScreen(); }
+        else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+        else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
       } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-          document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
-        }
+        if (document.exitFullscreen) { document.exitFullscreen(); }
+        else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
+        else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+        else if (document.msExitFullscreen) { document.msExitFullscreen(); }
       }
     }
     let fsScoreX = window.innerWidth - 60;
@@ -292,7 +271,7 @@ const firebaseConfig = {
       if (document.fullscreenElement) {
         myGameArea.canvas.width = window.innerWidth;
         myGameArea.canvas.height = window.innerHeight;
-        fsScoreX = window.innerWidth - 60; // Adjust as desired
+        fsScoreX = window.innerWidth - 60;
         if (myScore) { myScore.x = fsScoreX; }
       } else {
         myGameArea.canvas.width = 480;
@@ -300,13 +279,18 @@ const firebaseConfig = {
         if (myScore) { myScore.x = 420; }
       }
     });
-    /* --- Global Spacebar for Acceleration --- */
+    /* =============================
+       Global Controls: Spacebar & "k" for Pause
+    ============================== */
     window.addEventListener("keydown", function(e) {
       if (e.code === "Space" || e.keyCode === 32) {
         accelerate(-0.5);
         e.preventDefault();
       }
-      // Optionally add pause functionality with the "k" key here.
+      if (e.key.toLowerCase() === "k") {
+        togglePause();
+        e.preventDefault();
+      }
     });
     window.addEventListener("keyup", function(e) {
       if (e.code === "Space" || e.keyCode === 32) {
@@ -314,44 +298,57 @@ const firebaseConfig = {
         e.preventDefault();
       }
     });
-    /* --- Sound Effect on Canvas Tap --- */
-    // When the canvas is tapped to fly, play the sound if enabled.
+    /* =============================
+       Pause Menu Implementation
+    ============================== */
+    let isPaused = false;
+    function togglePause() {
+      if (gameState === "playing" && !isPaused) {
+        clearInterval(myGameArea.interval);
+        isPaused = true;
+        gameState = "paused";
+        document.getElementById("pause-menu").style.display = "flex";
+      } else if (isPaused) {
+        document.getElementById("pause-menu").style.display = "none";
+        isPaused = false;
+        gameState = "playing";
+        myGameArea.interval = setInterval(updateGameArea, 20);
+      }
+    }
+    /* =============================
+       Sound Effect on Canvas Tap
+    ============================== */
     function playFlySound() {
       if (soundEnabled) {
-        // Reset the sound if it's already playing.
         soundEffect.currentTime = 0;
         soundEffect.play();
       }
     }
-    /* --- Game Code --- */
+    /* =============================
+       Game Code
+    ============================== */
     const bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
-    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=YOUR_TOKEN_HERE";
-    
+    // Use a valid background image URL (placeholder used here).
+    bgImage.src = "https://images.unsplash.com/photo-1601924582977-c6d8cbf8a11a?fit=crop&w=800&q=80";
     let myGamePiece, myObstacles = [], myScore;
-    
     function initGame() {
       fetchFirebaseLeaderboard(function(data) {
         leaderboardData = data;
         updateLeaderboardDisplay();
-        // Stay in main menu; canvas is not created until "Start" is clicked.
         showMainMenu();
       });
     }
-    
     function startGame() {
-      // Remove any previous canvas
+      // Remove any existing canvas.
       document.getElementById("canvas-container").innerHTML = "";
-      // Create game objects:
       myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
       myGamePiece.gravity = 0.05;
       myScore = new component("40px", "Arial", "black", 420, 40, "text");
       myScore.value = 0;
-      // Start the game loop:
       myGameArea.start();
       gameState = "playing";
     }
-    
     const myGameArea = {
       canvas: document.createElement("canvas"),
       start: function() {
@@ -361,28 +358,22 @@ const firebaseConfig = {
         document.getElementById("canvas-container").appendChild(this.canvas);
         this.frameNo = 0;
         this.interval = setInterval(updateGameArea, 20);
-        // Add canvas event listeners for tap/click acceleration:
+        // Canvas event listeners for tapping (always active)
         this.canvas.addEventListener("mousedown", function(e) {
-          if (document.fullscreenElement) { 
-            accelerate(-0.5); 
-            playFlySound();
-          }
+          accelerate(-0.5);
+          playFlySound();
         });
         this.canvas.addEventListener("mouseup", function(e) {
-          if (document.fullscreenElement) { accelerate(0.30); }
+          accelerate(0.30);
         });
         this.canvas.addEventListener("touchstart", function(e) {
-          if (document.fullscreenElement) { 
-            accelerate(-0.5); 
-            playFlySound();
-            e.preventDefault();
-          }
+          accelerate(-0.5);
+          playFlySound();
+          e.preventDefault();
         });
         this.canvas.addEventListener("touchend", function(e) {
-          if (document.fullscreenElement) { 
-            accelerate(0.30); 
-            e.preventDefault();
-          }
+          accelerate(0.30);
+          e.preventDefault();
         });
       },
       clear: function() {
@@ -390,12 +381,11 @@ const firebaseConfig = {
         if (bgImage.complete && bgImage.naturalWidth > 0) {
           this.context.drawImage(bgImage, 0, 0, this.canvas.width, this.canvas.height);
         } else {
-          this.context.fillStyle = "#f1f1f1";
+          this.context.fillStyle = "#000";
           this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
       }
     };
-    
     function component(width, height, color, x, y, type, imageSrc) {
       this.type = type;
       this.width = width;
@@ -459,7 +449,6 @@ const firebaseConfig = {
       };
       this.newPos = this.newPos.bind(this);
     }
-    
     function updateGameArea() {
       for (let i = 0; i < myObstacles.length; i++) {
         if (myGamePiece.crashWith(myObstacles[i])) {
@@ -518,11 +507,9 @@ const firebaseConfig = {
       myScore.value = 0;
       myGamePiece.x = 10;
       myGamePiece.y = 120;
-      // Instead of immediately restarting the game, return to the main menu.
       clearInterval(myGameArea.interval);
       showMainMenu();
     }
-    
     bgImage.onload = function() {
       initGame();
     };
