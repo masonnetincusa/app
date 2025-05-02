@@ -4,10 +4,10 @@
   <title>Flappy Bird Recreated</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Canvas styling: the background is drawn via JavaScript. */
+    /* Canvas styling: by default, the canvas is 480x270, but in full screen it adapts */
     canvas {
       margin: 0;
-      height: 50vh;
+      /* default height is 50vh, but we update when in full screen */
       display: block;
       border: 1px solid #d3d3d3;
     }
@@ -15,7 +15,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      position: relative; /* Needed for overlay positioning */
+      position: relative; /* For overlay positioning */
     }
 
     /* Base button styling */
@@ -70,9 +70,10 @@
     #leaderboard th { background-color: #4CAF50; color: white; }
 
     /* Game Over overlay styling */
+    /* Using position: fixed to cover the entire screen */
     #game-over-screen {
       display: none;
-      position: absolute;
+      position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -86,7 +87,7 @@
     }
   </style>
 
-  <!-- Firebase libraries -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
@@ -95,7 +96,7 @@
   <h1>Flappy Bird Recreated</h1>
   <div id="game-container"></div>
   <br>
-  <!-- Fly button supports both mouse and touch events -->
+  <!-- Fly Button (supports mouse and touch) -->
   <button id="flyButton" class="button button1 small"
           onmousedown="accelerate(-0.5)"
           onmouseup="accelerate(0.30)"
@@ -103,11 +104,11 @@
           ontouchend="accelerate(0.30); event.preventDefault();">
     Fly
   </button>
-  <!-- Reload/Refresh button -->
+  <!-- Reload/Refresh Button -->
   <button id="reloadButton" class="button button1 small" onclick="window.location.reload();">
     &#8635;
   </button>
-  <!-- Full screen toggle button -->
+  <!-- Full Screen Toggle Button -->
   <button id="fullscreenButton" class="button button1 small" onclick="toggleFullScreen();">
     FS
   </button>
@@ -122,8 +123,8 @@
       </tr>
     </table>
   </div>
-  
-  <!-- Game Over overlay with restart option -->
+
+  <!-- Game Over Overlay -->
   <div id="game-over-screen">
     <h2>Game Over</h2>
     <button class="button button1 small" onclick="restartGame();">↺</button>
@@ -146,12 +147,12 @@ const firebaseConfig = {
 };
 
     firebase.initializeApp(firebaseConfig);
-
-    // Authenticate anonymously so all writes are secure.
+    
+    // Authenticate anonymously
     firebase.auth().signInAnonymously().catch(function(error) {
       console.error("Anonymous sign-in failed:", error);
     });
-
+    
     const db = firebase.database();
 
     function updateFirebaseLeaderboard(localLeaderboard) {
@@ -159,7 +160,7 @@ const firebaseConfig = {
     }
 
     function fetchFirebaseLeaderboard(callback) {
-      db.ref("leaderboard").once('value')
+      db.ref("leaderboard").once("value")
         .then(snapshot => {
           const data = snapshot.val();
           if (data) {
@@ -186,7 +187,7 @@ const firebaseConfig = {
         });
     }
 
-    var leaderboardData = [];
+    let leaderboardData = [];
 
     function updateLeaderboardDisplay() {
       const table = document.getElementById("leaderboard");
@@ -215,18 +216,18 @@ const firebaseConfig = {
     }
 
     // ====================================================
-    // Full Screen Toggle Functionality
+    // Full Screen Toggle and Resize
     // ====================================================
     function toggleFullScreen() {
       const elem = document.getElementById("game-container");
       if (!document.fullscreenElement) {
         if (elem.requestFullscreen) {
           elem.requestFullscreen();
-        } else if (elem.mozRequestFullScreen) { /* Firefox */
+        } else if (elem.mozRequestFullScreen) {
           elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        } else if (elem.webkitRequestFullscreen) {
           elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        } else if (elem.msRequestFullscreen) {
           elem.msRequestFullscreen();
         }
       } else {
@@ -242,17 +243,30 @@ const firebaseConfig = {
       }
     }
 
+    // Listen for fullscreen changes to update canvas size.
+    document.addEventListener("fullscreenchange", function() {
+      if (document.fullscreenElement) {
+        // In full screen, set canvas to fill the screen.
+        myGameArea.canvas.width = window.innerWidth;
+        myGameArea.canvas.height = window.innerHeight;
+      } else {
+        // Revert to default dimensions.
+        myGameArea.canvas.width = 480;
+        myGameArea.canvas.height = 270;
+      }
+    });
+
     // ====================================================
     // Spacebar Acceleration (global)
     // ====================================================
-    window.addEventListener('keydown', function(e) {
-      if (e.code === 'Space' || e.keyCode === 32) {
+    window.addEventListener("keydown", function(e) {
+      if (e.code === "Space" || e.keyCode === 32) {
         accelerate(-0.5);
         e.preventDefault();
       }
     });
-    window.addEventListener('keyup', function(e) {
-      if (e.code === 'Space' || e.keyCode === 32) {
+    window.addEventListener("keyup", function(e) {
+      if (e.code === "Space" || e.keyCode === 32) {
         accelerate(0.30);
         e.preventDefault();
       }
@@ -293,7 +307,8 @@ const firebaseConfig = {
         document.getElementById("game-container").appendChild(this.canvas);
         this.frameNo = 0;
         this.interval = setInterval(updateGameArea, 20);
-        // Canvas tap events for full screen acceleration:
+
+        // Add canvas event listeners for full screen acceleration:
         this.canvas.addEventListener("mousedown", function(e) {
           if (document.fullscreenElement) {
             accelerate(-0.5);
@@ -356,13 +371,11 @@ const firebaseConfig = {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
-        
         const TOP_LIMIT = 40;
         if (this.y < TOP_LIMIT) {
           this.y = TOP_LIMIT;
           this.gravitySpeed = 0;
         }
-        
         this.hitBottom();
       };
 
@@ -397,7 +410,8 @@ const firebaseConfig = {
         let otherright = otherobj.x + otherobj.width;
         let othertop = otherobj.y;
         let otherbottom = otherobj.y + otherobj.height;
-        return !(mybottom < othertop || mytop > otherbottom || myright < otherleft || myleft > otherright);
+        return !(mybottom < othertop || mytop > otherbottom ||
+                 myright < otherleft || myleft > otherright);
       };
 
       this.newPos = this.newPos.bind(this);
@@ -474,11 +488,10 @@ const firebaseConfig = {
       myGamePiece.y = 120;
       myGameArea.interval = setInterval(updateGameArea, 20);
     }
-
+    
     bgImage.onload = function() {
       initGame();
     };
-
     bgImage.onerror = function() {
       console.error("Error loading background image. Using fallback fill.");
       initGame();
