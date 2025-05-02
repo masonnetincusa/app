@@ -4,7 +4,7 @@
   <title>Flappy Bird Recreated</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Canvas styling – the canvas is appended to the canvas-container */
+    /* Canvas styling – the canvas is appended to #canvas-container. */
     canvas {
       display: block;
       border: 1px solid #d3d3d3;
@@ -22,10 +22,10 @@
       text-align: center;
       text-decoration: none;
       cursor: pointer;
-      margin: 5px;  /* extra spacing between buttons */
+      margin: 5px;
     }
     .button1 { border-radius: 8px; }
-    /* Small modifier forces 24x24 size for control buttons */
+    /* Small modifier forces buttons to be 24x24 */
     .small {
       width: 24px;
       height: 24px;
@@ -33,27 +33,27 @@
       line-height: 24px;
       padding: 0;
     }
-    /* Game container—this element will go full screen.
-       It now has a default size but will be resized in full screen mode. */
+    /* Game container – by default 480x270 but will be resized in full screen */
     #game-container {
       position: relative;
       width: 480px;
       height: 270px;
-      background: #000; /* fallback background; our clear() function will draw the custom image */
+      background: #000;
       margin: 0 auto;
     }
-    /* Canvas container where the game canvas is appended */
+    /* Canvas container fills the game container */
     #canvas-container {
       width: 100%;
       height: 100%;
     }
     /* Overlays inside game-container (Main Menu, Leaderboard, Pause, Game Over) */
-    #main-menu, #leaderboard-menu, #pause-menu, #game-over-screen {
+    #main-menu, 
+    #leaderboard-menu, 
+    #pause-menu, 
+    #game-over-screen {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.85);
       color: white;
       display: flex;
@@ -65,8 +65,9 @@
     /* Main menu is shown by default; others are hidden */
     #main-menu { display: flex; }
     #leaderboard-menu, #pause-menu, #game-over-screen { display: none; }
-    /* Extra spacing for main menu and leaderboard buttons */
-    #main-menu button, #leaderboard-menu button {
+    /* Extra spacing for main menu buttons */
+    #main-menu button, 
+    #leaderboard-menu button {
       margin: 10px;
       padding: 10px 20px;
     }
@@ -79,22 +80,18 @@
       color: white;
       margin-bottom: 10px;
     }
-    #leaderboard th, #leaderboard td {
+    #leaderboard th, 
+    #leaderboard td {
       border: 1px solid white;
       padding: 8px;
       text-align: center;
     }
-    /* Pause Button – visible during gameplay */
+    /* Pause Button (visible during gameplay) */
     #pauseButton {
       position: absolute;
       top: 5px;
       right: 5px;
       z-index: 2500;
-    }
-    /* Ensure both pause and game over popups are centered */
-    #pause-menu, #game-over-screen {
-      text-align: center;
-      /* They already use flex centering via the parent overlay styles */
     }
   </style>
   
@@ -105,7 +102,7 @@
 </head>
 <body>
   <h1>Flappy Bird Recreated</h1>
-  <!-- Game container: This contains the canvas plus all overlays -->
+  <!-- Game container: houses the canvas container and overlay menus -->
   <div id="game-container">
     <div id="canvas-container"></div>
     <!-- Main Menu overlay -->
@@ -115,6 +112,8 @@
       <button class="button button1" onclick="startGameFromMenu();">Start</button>
       <button class="button button1" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="button button1" id="soundButton" onclick="toggleSound();">Sound: On</button>
+      <!-- Full Screen Toggle moved here -->
+      <button class="button button1" onclick="toggleFullScreen();">FS</button>
     </div>
     <!-- Leaderboard overlay -->
     <div id="leaderboard-menu">
@@ -133,31 +132,30 @@
       <h2>Paused</h2>
       <button class="button button1" onclick="togglePause();">Resume</button>
     </div>
-    <!-- Game Over overlay -->
+    <!-- Game Over overlay (centered using absolute positioning and transform) -->
     <div id="game-over-screen">
       <h2>Game Over</h2>
       <button class="button button1" onclick="restartGame();">Restart</button>
     </div>
-    <!-- Pause Button visible during gameplay -->
+    <!-- Pause Button (visible during gameplay) -->
     <button id="pauseButton" class="button button1 small" onclick="togglePause();">P</button>
   </div>
   <br>
   <!-- Control buttons outside game container -->
   <button id="reloadButton" class="button button1 small" onclick="window.location.reload();">&#8635;</button>
-  <button id="fullscreenButton" class="button button1 small" onclick="toggleFullScreen();">FS</button>
-
+  
   <script>
     /* =============================
        Global Variables & Sound Setup
-    ============================== */
+    ============================= */
     let gameState = "menu"; // "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3";  // Placeholder URL; replace it.
+    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound URL
     const soundEffect = new Audio(soundEffectURL);
-
+    
     /* =============================
        Firebase Configuration & Leaderboard
-    ============================== */
+    ============================= */
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
@@ -174,6 +172,7 @@ const firebaseConfig = {
       console.error("Anonymous sign-in failed:", error);
     });
     const db = firebase.database();
+    
     function updateFirebaseLeaderboard(localLeaderboard) {
       db.ref("leaderboard").set(localLeaderboard);
     }
@@ -204,6 +203,7 @@ const firebaseConfig = {
           console.error("Error fetching leaderboard:", error);
         });
     }
+    
     let leaderboardData = [];
     function updateLeaderboardDisplay() {
       const table = document.getElementById("leaderboard");
@@ -225,15 +225,17 @@ const firebaseConfig = {
         updateFirebaseLeaderboard(leaderboardData);
       }
     }
+    
     /* =============================
        Menu Functions
-    ============================== */
+    ============================= */
     function showMainMenu() {
       gameState = "menu";
       document.getElementById("main-menu").style.display = "flex";
       document.getElementById("leaderboard-menu").style.display = "none";
       document.getElementById("pause-menu").style.display = "none";
       document.getElementById("game-over-screen").style.display = "none";
+      
       let highScore = 0;
       leaderboardData.forEach(entry => { if (entry.score > highScore) highScore = entry.score; });
       document.getElementById("high-score-display").innerText = "High Score: " + highScore;
@@ -255,9 +257,10 @@ const firebaseConfig = {
       soundEnabled = !soundEnabled;
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
+    
     /* =============================
-       Full Screen Toggle & Dynamic Sizing
-    ============================== */
+       Full Screen & Dynamic Sizing
+    ============================= */
     function toggleFullScreen() {
       const elem = document.getElementById("game-container");
       if (!document.fullscreenElement) {
@@ -272,6 +275,7 @@ const firebaseConfig = {
         else if (document.msExitFullscreen) { document.msExitFullscreen(); }
       }
     }
+    
     let fsScoreX = window.innerWidth - 60;
     document.addEventListener("fullscreenchange", function() {
       const container = document.getElementById("game-container");
@@ -280,7 +284,7 @@ const firebaseConfig = {
         container.style.height = window.innerHeight + "px";
         myGameArea.canvas.width = window.innerWidth;
         myGameArea.canvas.height = window.innerHeight;
-        fsScoreX = window.innerWidth - 60; // Adjust as desired
+        fsScoreX = window.innerWidth - 60;
         if (myScore) { myScore.x = fsScoreX; }
       } else {
         container.style.width = "480px";
@@ -290,9 +294,10 @@ const firebaseConfig = {
         if (myScore) { myScore.x = 420; }
       }
     });
+    
     /* =============================
-       Global Controls: Spacebar to Fly & "k" for Pause
-    ============================== */
+       Global Controls: Spacebar & "k" for Pause
+    ============================= */
     window.addEventListener("keydown", function(e) {
       if (e.code === "Space" || e.keyCode === 32) {
         accelerate(-0.5);
@@ -309,9 +314,10 @@ const firebaseConfig = {
         e.preventDefault();
       }
     });
+    
     /* =============================
        Pause Menu Implementation
-    ============================== */
+    ============================= */
     let isPaused = false;
     function togglePause() {
       if (gameState === "playing" && !isPaused) {
@@ -326,23 +332,27 @@ const firebaseConfig = {
         myGameArea.interval = setInterval(updateGameArea, 20);
       }
     }
+    
     /* =============================
        Sound Effect on Canvas Tap
-    ============================== */
+    ============================= */
     function playFlySound() {
       if (soundEnabled) {
         soundEffect.currentTime = 0;
         soundEffect.play();
       }
     }
+    
     /* =============================
        Game Code
-    ============================== */
+    ============================= */
     const bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
-    // Set this URL to your custom background image.
-    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";  
+    // Replace with your custom background image URL.
+    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
+    
     let myGamePiece, myObstacles = [], myScore;
+    
     function initGame() {
       fetchFirebaseLeaderboard(function(data) {
         leaderboardData = data;
@@ -350,7 +360,9 @@ const firebaseConfig = {
         showMainMenu();
       });
     }
+    
     function startGame() {
+      // Remove any existing canvas.
       document.getElementById("canvas-container").innerHTML = "";
       myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
       myGamePiece.gravity = 0.05;
@@ -359,6 +371,7 @@ const firebaseConfig = {
       myGameArea.start();
       gameState = "playing";
     }
+    
     const myGameArea = {
       canvas: document.createElement("canvas"),
       start: function() {
@@ -368,7 +381,7 @@ const firebaseConfig = {
         document.getElementById("canvas-container").appendChild(this.canvas);
         this.frameNo = 0;
         this.interval = setInterval(updateGameArea, 20);
-        // Always enable canvas tap for acceleration
+        // Enable canvas tap for acceleration at all times.
         this.canvas.addEventListener("mousedown", function(e) {
           accelerate(-0.5);
           playFlySound();
@@ -391,12 +404,12 @@ const firebaseConfig = {
         if (bgImage.complete && bgImage.naturalWidth > 0) {
           this.context.drawImage(bgImage, 0, 0, this.canvas.width, this.canvas.height);
         } else {
-          // Fallback to white so the custom image is expected to load
           this.context.fillStyle = "#fff";
           this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
       }
     };
+    
     function component(width, height, color, x, y, type, imageSrc) {
       this.type = type;
       this.width = width;
@@ -460,6 +473,7 @@ const firebaseConfig = {
       };
       this.newPos = this.newPos.bind(this);
     }
+    
     function updateGameArea() {
       for (let i = 0; i < myObstacles.length; i++) {
         if (myGamePiece.crashWith(myObstacles[i])) {
@@ -501,16 +515,20 @@ const firebaseConfig = {
       myGamePiece.newPos();
       myGamePiece.update();
     }
+    
     function everyinterval(n) {
       return ((myGameArea.frameNo / n) % 1 === 0);
     }
+    
     function accelerate(n) {
       myGamePiece.gravity = n;
     }
+    
     function displayGameOverScreen() {
-      document.getElementById("game-over-screen").style.display = "block";
+      document.getElementById("game-over-screen").style.display = "flex";
       gameState = "gameover";
     }
+    
     function restartGame() {
       document.getElementById("game-over-screen").style.display = "none";
       myObstacles = [];
@@ -521,9 +539,11 @@ const firebaseConfig = {
       clearInterval(myGameArea.interval);
       showMainMenu();
     }
+    
     bgImage.onload = function() {
       initGame();
     };
+    
     bgImage.onerror = function() {
       console.error("Error loading background image. Using fallback fill.");
       initGame();
