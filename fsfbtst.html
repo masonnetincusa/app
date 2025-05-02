@@ -28,11 +28,11 @@
     .button1 { border-radius: 8px; }
     /* Small buttons: force 24px x 24px sizing */
     .small {
-      width: 24px;
-      height: 24px;
-      font-size: 10px;
+      width: 64px;
+      height: 64px;
+      font-size: 32px;
       padding: 0;
-      line-height: 24px;
+      line-height: 64px;
     }
     /* The game container—the element that will go full screen.
        Note: We now include the game over popup here so that it shows in full screen. */
@@ -345,7 +345,7 @@ const firebaseConfig = {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
-        const TOP_LIMIT = 40;
+        const TOP_LIMIT = 10;
         if (this.y < TOP_LIMIT) {
           this.y = TOP_LIMIT;
           this.gravitySpeed = 0;
