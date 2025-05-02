@@ -172,15 +172,17 @@
     /* =============================
        Firebase Configuration & Leaderboard Setup
     ============================= */
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      databaseURL: "YOUR_DATABASE_URL",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
+  authDomain: "masonnet-app.firebaseapp.com",
+  databaseURL: "https://masonnet-app-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app",
+  storageBucket: "masonnet-app.firebasestorage.app",
+  messagingSenderId: "245878148284",
+  appId: "1:245878148284:web:2b3f54cebc08ad14b594b9",
+  measurementId: "G-NY1MN2R295"
+};
     firebase.initializeApp(firebaseConfig);
     firebase.auth().signInAnonymously().catch(error => {
       console.error("Anonymous sign-in failed:", error);
@@ -371,7 +373,7 @@
     const bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
     // Replace this URL with your custom background image URL.
-    bgImage.src = "https://your-custom-background-url.jpg";
+    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
     
     let myGamePiece, myObstacles = [], myScore;
     
