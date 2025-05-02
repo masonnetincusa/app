@@ -15,7 +15,7 @@
     }
     h1 { text-align: center; margin: 20px 0; }
     
-    /* Game container: default size 480x270; will fill viewport in full screen */
+    /* Game container: default size 480x270; will be resized to fill viewport in full screen */
     #game-container {
       position: relative;
       width: 480px;
@@ -31,7 +31,9 @@
       height: 100%;
     }
     
-    /* Overlays for Main Menu, Leaderboard, Pause, Game Over */
+    /* Overlays for Main Menu, Leaderboard, Pause, and Game Over.
+       They cover the entire game container and use flexbox to center their content.
+       "overflow-y: auto" ensures scrollability in small viewports. */
     .overlay {
       position: absolute;
       top: 0;
@@ -48,11 +50,11 @@
       overflow-y: auto;
       text-align: center;
     }
-    /* Only main menu is visible at first */
+    /* By default, only the main menu is visible */
     #main-menu { display: flex; }
     #leaderboard-menu, #pause-menu, #game-over-screen { display: none; }
     
-    /* Main menu & leaderboard button styles with extra spacing */
+    /* Main menu & Leaderboard button styles with extra spacing */
     .menu-button {
       background-color: #ff0000;
       border: none;
@@ -64,7 +66,7 @@
       cursor: pointer;
     }
     
-    /* Full screen button container inside main menu */
+    /* Container for the Full Screen toggle button inside the main menu */
     #fs-button-container { margin-top: 15px; }
     
     /* Leaderboard table styling */
@@ -82,7 +84,7 @@
       text-align: center;
     }
     
-    /* Pause button visible during gameplay */
+    /* Pause button (visible during gameplay) */
     #pauseButton {
       position: absolute;
       top: 10px;
@@ -107,7 +109,7 @@
 <body>
   <h1>Flappy Bird Recreated</h1>
   
-  <!-- Game Container -->
+  <!-- Game Container: This element will be resized in full screen mode -->
   <div id="game-container">
     <div id="canvas-container"></div>
     
@@ -118,7 +120,7 @@
       <button class="menu-button" onclick="startGameFromMenu();">Start</button>
       <button class="menu-button" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="menu-button" id="soundButton" onclick="toggleSound();">Sound: On</button>
-      <!-- Full Screen toggle inside main menu -->
+      <!-- Full Screen Toggle Button inside Main Menu -->
       <div id="fs-button-container">
         <button class="menu-button" onclick="toggleFullScreen();">Full Screen</button>
       </div>
@@ -157,13 +159,13 @@
     /***********************
      * Global Variables & Sound Setup
      ***********************/
-    let gameState = "menu"; // Possible: "menu", "playing", "paused", "gameover", "leaderboard"
+    let gameState = "menu"; // "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3";  // Replace with your sound URL
+    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound effect URL
     const soundEffect = new Audio(soundEffectURL);
     
     /***********************
-     * Firebase Config & Leaderboard Setup
+     * Firebase Configuration & Leaderboard Setup
      ***********************/
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -179,38 +181,34 @@ const firebaseConfig = {
     firebase.initializeApp(firebaseConfig);
     firebase.auth().signInAnonymously().catch(err => console.error("Auth Error:", err));
     const db = firebase.database();
-    
     function updateFirebaseLeaderboard(lb) {
       db.ref("leaderboard").set(lb);
     }
-    
     function fetchFirebaseLeaderboard(callback) {
       db.ref("leaderboard").once("value")
-      .then(snapshot => {
-        const data = snapshot.val();
-        if(data) callback(data);
-        else {
-          const defaultLB = [
-            { name: "Player 1", score: 0 },
-            { name: "Player 2", score: 0 },
-            { name: "Player 3", score: 0 },
-            { name: "Player 4", score: 0 },
-            { name: "Player 5", score: 0 },
-            { name: "Player 6", score: 0 },
-            { name: "Player 7", score: 0 },
-            { name: "Player 8", score: 0 },
-            { name: "Player 9", score: 0 },
-            { name: "Player 10", score: 0 }
-          ];
-          db.ref("leaderboard").set(defaultLB);
-          callback(defaultLB);
-        }
-      })
-      .catch(err => console.error("Fetch LB Error:", err));
+        .then(snapshot => {
+          const data = snapshot.val();
+          if (data) callback(data);
+          else {
+            const defaultLB = [
+              { name: "Player 1", score: 0 },
+              { name: "Player 2", score: 0 },
+              { name: "Player 3", score: 0 },
+              { name: "Player 4", score: 0 },
+              { name: "Player 5", score: 0 },
+              { name: "Player 6", score: 0 },
+              { name: "Player 7", score: 0 },
+              { name: "Player 8", score: 0 },
+              { name: "Player 9", score: 0 },
+              { name: "Player 10", score: 0 }
+            ];
+            db.ref("leaderboard").set(defaultLB);
+            callback(defaultLB);
+          }
+        })
+        .catch(err => console.error("Fetch LB Error:", err));
     }
-    
     let leaderboardData = [];
-    
     function updateLeaderboardDisplay() {
       const table = document.getElementById("leaderboard");
       table.innerHTML = `<tr><th>Rank</th><th>Name</th><th>Score</th></tr>`;
@@ -221,12 +219,11 @@ const firebaseConfig = {
         row.insertCell(2).innerHTML = entry.score;
       });
     }
-    
     function checkAndUpdateLeaderboard(currentScore) {
       if (currentScore > leaderboardData[leaderboardData.length - 1].score) {
         const playerName = prompt("High score! Enter your name:") || "Anonymous";
         leaderboardData.push({ name: playerName, score: currentScore });
-        leaderboardData.sort((a,b) => b.score - a.score);
+        leaderboardData.sort((a, b) => b.score - a.score);
         leaderboardData = leaderboardData.slice(0, 10);
         updateLeaderboardDisplay();
         updateFirebaseLeaderboard(leaderboardData);
@@ -243,25 +240,20 @@ const firebaseConfig = {
       document.getElementById("pause-menu").style.display = "none";
       document.getElementById("game-over-screen").style.display = "none";
       let highScore = 0;
-      leaderboardData.forEach(entry => {
-        if(entry.score > highScore) highScore = entry.score;
-      });
+      leaderboardData.forEach(entry => { if (entry.score > highScore) highScore = entry.score; });
       document.getElementById("high-score-display").innerText = "High Score: " + highScore;
       document.getElementById("canvas-container").innerHTML = "";
       document.getElementById("pauseButton").style.display = "none";
     }
-    
     function showLeaderboardMenu() {
       gameState = "leaderboard";
       document.getElementById("main-menu").style.display = "none";
       document.getElementById("leaderboard-menu").style.display = "flex";
       updateLeaderboardDisplay();
     }
-    
-    // Modified startGameFromMenu() now asks before full screen:
+    // Modified startGameFromMenu() now asks if user wants full screen before starting:
     function startGameFromMenu() {
-      // Ask for full screen. This is triggered by a user click and thus permitted.
-      if (window.confirm("Would you like to play in full screen?")) {
+      if (window.confirm("Would you like to play in full screen mode?")) {
         toggleFullScreen();
       }
       gameState = "playing";
@@ -269,7 +261,6 @@ const firebaseConfig = {
       document.getElementById("leaderboard-menu").style.display = "none";
       startGame();
     }
-    
     function toggleSound() {
       soundEnabled = !soundEnabled;
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
@@ -325,7 +316,6 @@ const firebaseConfig = {
         e.preventDefault();
       }
     });
-    
     window.addEventListener("keyup", function(e) {
       if (e.code === "Space" || e.keyCode === 32) {
         accelerate(0.30);
@@ -399,7 +389,7 @@ const firebaseConfig = {
         document.getElementById("canvas-container").appendChild(this.canvas);
         this.frameNo = 0;
         this.interval = setInterval(updateGameArea, 20);
-        // Always enable canvas tap for acceleration.
+        // Enable canvas tap for acceleration always.
         this.canvas.addEventListener("mousedown", function(e) {
           accelerate(-0.5);
           playFlySound();
@@ -564,21 +554,21 @@ const firebaseConfig = {
     };
     
     bgImage.onerror = function() {
-      console.error("Error loading background image. Using fallback fill.");
+      console.error("Error loading background image. Using fallback.");
       initGame();
     };
     
-    // Force full screen mode on page load via a user prompt.
+    // Request full screen after page loads (via a confirm dialog) as a user gesture.
     document.addEventListener("DOMContentLoaded", function() {
       const container = document.getElementById("game-container");
       if (window.confirm("Would you like to play in full screen mode?")) {
-        if (container.requestFullscreen) {
+        if (container.requestFullscreen) { 
           container.requestFullscreen().catch(err => console.error("Fullscreen request failed:", err));
-        } else if (container.webkitRequestFullscreen) {
+        } else if (container.webkitRequestFullscreen) { 
           container.webkitRequestFullscreen();
-        } else if (container.mozRequestFullScreen) {
+        } else if (container.mozRequestFullScreen) { 
           container.mozRequestFullScreen();
-        } else if (container.msRequestFullscreen) {
+        } else if (container.msRequestFullscreen) { 
           container.msRequestFullscreen();
         }
       }
