@@ -15,24 +15,26 @@
     }
     h1 { text-align: center; margin: 20px 0; }
     
-    /* Game container: default size 480x270; will be resized in fullscreen mode */
+    /* Game container: default size is 480x270; in full screen we’ll update it to fill the viewport */
     #game-container {
       position: relative;
       width: 480px;
       height: 270px;
-      background: #000; /* fallback background */
+      background: #000;
       margin: 0 auto;
       overflow: hidden;
     }
     
-    /* Canvas container fills game container */
-    #canvas-container { width: 100%; height: 100%; }
+    /* Canvas container fills the game container */
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+    }
     
-    /* Overlays for Main Menu, Leaderboard, Pause & Game Over */
+    /* Overlays (Main Menu, Leaderboard, Pause, Game Over) */
     .overlay {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.85);
@@ -45,11 +47,11 @@
       overflow-y: auto;
       text-align: center;
     }
-    /* Only show main menu by default */
+    /* Only the Main Menu overlay is visible by default */
     #main-menu { display: flex; }
     #leaderboard-menu, #pause-menu, #game-over-screen { display: none; }
     
-    /* Main Menu & Leaderboard button styles with extra spacing */
+    /* Main menu & Leaderboard button styles with extra spacing */
     .menu-button {
       background-color: #ff0000;
       border: none;
@@ -61,7 +63,7 @@
       cursor: pointer;
     }
     
-    /* Full Screen toggle button container (inside main menu) */
+    /* Full Screen toggle button container inside Main Menu */
     #fs-button-container { margin-top: 15px; }
     
     /* Leaderboard table styling */
@@ -79,7 +81,7 @@
       text-align: center;
     }
     
-    /* Pause button, visible during gameplay */
+    /* Pause button (visible during gameplay) */
     #pauseButton {
       position: absolute;
       top: 10px;
@@ -115,6 +117,7 @@
       <button class="menu-button" onclick="startGameFromMenu();">Start</button>
       <button class="menu-button" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="menu-button" id="soundButton" onclick="toggleSound();">Sound: On</button>
+      <!-- Full Screen toggle button inside Main Menu -->
       <div id="fs-button-container">
         <button class="menu-button" onclick="toggleFullScreen();">Full Screen</button>
       </div>
@@ -146,7 +149,7 @@
       <button class="menu-button" onclick="backToMainMenu();">Main Menu</button>
     </div>
     
-    <!-- Pause Button (visible during gameplay) -->
+    <!-- Pause Button visible during gameplay -->
     <button id="pauseButton" onclick="togglePause();">Pause</button>
   </div>
   
@@ -154,9 +157,9 @@
     /***********************
      * Global Variables & Sound Setup
      ***********************/
-    let gameState = "menu"; // Possible values: "menu", "playing", "paused", "gameover", "leaderboard"
+    let gameState = "menu"; // “menu”, “playing”, “paused”, “gameover”, “leaderboard”
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound effect URL
+    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound URL
     const soundEffect = new Audio(soundEffectURL);
     
     /***********************
@@ -185,9 +188,8 @@ const firebaseConfig = {
       db.ref("leaderboard").once("value")
         .then(snapshot => {
           const data = snapshot.val();
-          if (data) {
-            callback(data);
-          } else {
+          if (data) callback(data);
+          else {
             const defaultLB = [
               { name: "Player 1", score: 0 },
               { name: "Player 2", score: 0 },
@@ -254,7 +256,7 @@ const firebaseConfig = {
       updateLeaderboardDisplay();
     }
     
-    // Modified startGameFromMenu() now asks the user if they want full screen.
+    // When the Start button is pressed, ask for full screen permission.
     function startGameFromMenu() {
       if (window.confirm("Would you like to play in full screen mode?")) {
         toggleFullScreen();
@@ -270,7 +272,7 @@ const firebaseConfig = {
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
     
-    // New function: returns user to main menu.
+    // Function to return to the main menu from the game over overlay.
     function backToMainMenu() {
       document.getElementById("game-over-screen").style.display = "none";
       clearInterval(myGameArea.interval);
@@ -315,7 +317,7 @@ const firebaseConfig = {
     });
     
     /***********************
-     * Global Controls: Spacebar to Fly & "k" to Pause
+     * Global Controls: Spacebar to Fly, "k" to Pause
      ***********************/
     window.addEventListener("keydown", function(e) {
       if (e.code === "Space" || e.keyCode === 32) {
@@ -549,7 +551,7 @@ const firebaseConfig = {
       gameState = "gameover";
     }
     
-    // Modified restartGame now restarts the game (via startGame) instead of going to the main menu.
+    // The Restart button now restarts the game immediately without exiting full screen.
     function restartGame() {
       document.getElementById("game-over-screen").style.display = "none";
       myObstacles = [];
@@ -561,36 +563,19 @@ const firebaseConfig = {
       startGame();
     }
     
-    // New function to go back to Main Menu from game over.
+    // The Main Menu button on the Game Over overlay.
     function backToMainMenu() {
       document.getElementById("game-over-screen").style.display = "none";
       clearInterval(myGameArea.interval);
       showMainMenu();
     }
     
-    // Load the background image, then initialize the game.
+    // Load the background image then initialize.
     bgImage.onload = function() { initGame(); };
+    bgImage.onerror = function() { console.error("Error loading background image. Using fallback."); initGame(); };
     
-    bgImage.onerror = function() {
-      console.error("Error loading background image. Using fallback.");
-      initGame();
-    };
-    
-    // Force full screen mode on page load via a confirm prompt.
-    document.addEventListener("DOMContentLoaded", function() {
-      const container = document.getElementById("game-container");
-      if (window.confirm("Would you like to play in full screen mode?")) {
-        if (container.requestFullscreen) {
-          container.requestFullscreen().catch(err => console.error("Fullscreen request failed:", err));
-        } else if (container.webkitRequestFullscreen) {
-          container.webkitRequestFullscreen();
-        } else if (container.mozRequestFullScreen) {
-          container.mozRequestFullScreen();
-        } else if (container.msRequestFullscreen) {
-          container.msRequestFullscreen();
-        }
-      }
-    });
+    // Remove any full screen request on page load.
+    // Full screen is only requested when the Start button is pressed.
   </script>
 </body>
 </html>
