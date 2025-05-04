@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     /* RESET */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       font-family: Arial, sans-serif;
       background: #222;
@@ -13,29 +17,31 @@
       margin: 0;
       overflow-x: hidden;
     }
-    h1 { text-align: center; margin: 20px 0; }
-    
-    /* Game container – default dimensions 480×270; in full screen these are updated via JavaScript */
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+    }
+    /* Game Container – default dimensions 480×270; in fullscreen, updated via JS */
     #game-container {
       position: relative;
       width: 480px;
       height: 270px;
-      background: #000; /* fallback background */
+      background: #000;
       margin: 0 auto;
       overflow: hidden;
     }
-    
-    /* The canvas container fills the game container */
+    /* Canvas container fills game container */
     #canvas-container {
       width: 100%;
       height: 100%;
     }
-    
-    /* Overlays for Main Menu, Leaderboard, Pause & Game Over */
+    /* Overlays (Main Menu, Leaderboard, Pause, Game Over) */
     .overlay {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(0, 0, 0, 0.85);
       display: flex;
       flex-direction: column;
@@ -46,10 +52,15 @@
       overflow-y: auto;
       text-align: center;
     }
-    /* Only the Main Menu overlay is visible initially */
-    #main-menu { display: flex; }
-    #leaderboard-menu, #pause-menu, #game-over-screen { display: none; }
-    
+    /* Only Main Menu is visible initially */
+    #main-menu {
+      display: flex;
+    }
+    #leaderboard-menu,
+    #pause-menu,
+    #game-over-screen {
+      display: none;
+    }
     /* Main Menu & Leaderboard button styles */
     .menu-button {
       background-color: #ff0000;
@@ -61,12 +72,14 @@
       color: #fff;
       cursor: pointer;
     }
-    /* Extra main menu buttons – hidden by default when not in full screen */
-    .extra-button { display: none; }
-    
-    /* Container for the Full Screen toggle button inside Main Menu */
-    #fs-button-container { margin-top: 15px; }
-    
+    /* Extra main menu buttons – hidden when not in fullscreen */
+    .extra-button {
+      display: none;
+    }
+    /* Container for Full Screen toggle inside Main Menu */
+    #fs-button-container {
+      margin-top: 15px;
+    }
     /* Leaderboard table styling */
     #leaderboard {
       border-collapse: collapse;
@@ -76,13 +89,13 @@
       color: #fff;
       margin-bottom: 10px;
     }
-    #leaderboard th, #leaderboard td {
+    #leaderboard th,
+    #leaderboard td {
       border: 1px solid #fff;
       padding: 8px;
       text-align: center;
     }
-    
-    /* Pause button (visible during gameplay) */
+    /* Pause button – visible during gameplay */
     #pauseButton {
       position: absolute;
       top: 10px;
@@ -113,13 +126,14 @@
     
     <!-- Main Menu Overlay -->
     <div id="main-menu" class="overlay">
-      <!-- Replace the src attribute with your title image URL -->
-      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Recreated by MASONNET and Mason Murphy, Game Title Image" style="max-width:80%; display:block; margin: 0 auto;">
-      <p style="font-size:18px; margin-top:10px;">Version 2.0, Build 0014</p>
+      <!-- Title image replaces the text (update src to your image URL) -->
+      <img src="https://app.masonnet.org/fbrc.png" alt="Game Title" style="max-width:80%; display:block; margin: 0 auto;">
+      <!-- Version string centered beneath the title image -->
+      <p style="font-size: 18px; margin-top: 10px;">Version 2.0, Build 0014</p>
       <p id="high-score-display">High Score: 0</p>
       <!-- Only the Start button is visible initially -->
       <button class="menu-button" onclick="startGameFromMenu();">Start</button>
-      <!-- Extra main menu buttons. These will be shown only if in full screen -->
+      <!-- Extra main menu buttons (Leaderboard, Sound, Full Screen) – hidden by default -->
       <button class="menu-button extra-button" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="menu-button extra-button" id="soundButton" onclick="toggleSound();">Sound: On</button>
       <div id="fs-button-container" class="extra-button">
@@ -140,7 +154,7 @@
       <button class="menu-button" onclick="showMainMenu();">Back</button>
     </div>
     
-    <!-- Pause Overlay with Restart and Main Menu buttons added -->
+    <!-- Pause Overlay with added Restart and Main Menu buttons -->
     <div id="pause-menu" class="overlay">
       <h2>Paused</h2>
       <button class="menu-button" onclick="togglePause();">Resume</button>
@@ -163,7 +177,7 @@
     /*******************************
      * GLOBAL VARIABLES & SOUND SETUP
      *******************************/
-    let gameState = "menu"; // Valid values: "menu", "playing", "paused", "gameover", "leaderboard"
+    let gameState = "menu"; // Allowed: "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
     const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound effect URL
     const soundEffect = new Audio(soundEffectURL);
@@ -216,6 +230,7 @@ const firebaseConfig = {
     }
     
     let leaderboardData = [];
+    
     function updateLeaderboardDisplay() {
       const table = document.getElementById("leaderboard");
       table.innerHTML = `<tr><th>Rank</th><th>Name</th><th>Score</th></tr>`;
@@ -271,9 +286,9 @@ const firebaseConfig = {
       updateLeaderboardDisplay();
     }
     
-    // When the Start button is pressed:
-    // If not in fullscreen, prompt for full screen and then exit (so that user must press Start again).
-    // If in fullscreen, start the game immediately.
+    // When Start is pressed:
+    // If not in fullscreen, prompt for it and then exit (so the user must press Start again once fullscreen is active).
+    // If already in fullscreen, start the game.
     function startGameFromMenu() {
       if (!document.fullscreenElement) {
         if (window.confirm("Would you like to play in full screen mode?")) {
@@ -292,7 +307,7 @@ const firebaseConfig = {
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
     
-    // Return to Main Menu from Game Over overlay.
+    // Return to Main Menu from the Game Over overlay.
     function backToMainMenu() {
       document.getElementById("game-over-screen").style.display = "none";
       clearInterval(myGameArea.interval);
@@ -367,7 +382,7 @@ const firebaseConfig = {
         clearInterval(myGameArea.interval);
         isPaused = true;
         gameState = "paused";
-        // Show the pause overlay which now has Resume, Restart, and Main Menu buttons.
+        // Pause overlay now includes Resume, Restart, and Main Menu buttons.
         document.getElementById("pause-menu").style.display = "flex";
       } else if (isPaused) {
         document.getElementById("pause-menu").style.display = "none";
@@ -405,7 +420,7 @@ const firebaseConfig = {
       });
     }
     
-    // startGame() creates a new game. It sets canvas dimensions according to full screen status.
+    // startGame() resets the game and creates new objects.
     function startGame() {
       document.getElementById("canvas-container").innerHTML = "";
       myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
@@ -475,7 +490,9 @@ const firebaseConfig = {
         this.image = new Image();
         this.image.onload = () => { this.loaded = true; };
         this.image.src = imageSrc;
-      } else { this.image = null; }
+      } else {
+        this.image = null;
+      }
       if (this.type === "text") { this.text = ""; }
       this.newPos = function() {
         this.gravitySpeed += this.gravity;
@@ -582,7 +599,10 @@ const firebaseConfig = {
      * INITIALIZATION
      *******************************/
     bgImage.onload = function() { initGame(); };
-    bgImage.onerror = function() { console.error("Error loading background image. Using fallback."); initGame(); };
+    bgImage.onerror = function() {
+      console.error("Error loading background image. Using fallback.");
+      initGame();
+    };
   </script>
 </body>
 </html>
