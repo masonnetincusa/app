@@ -21,7 +21,7 @@
       text-align: center;
       margin: 20px 0;
     }
-    /* Game Container – default 480×270; in fullscreen, dimensions update via JavaScript */
+    /* Game container – default 480×270; in full‑screen, updated via JS */
     #game-container {
       position: relative;
       width: 480px;
@@ -30,30 +30,30 @@
       margin: 0 auto;
       overflow: hidden;
     }
-    /* Canvas container fills the game container */
+    /* Canvas container fills game container */
     #canvas-container {
       width: 100%;
       height: 100%;
     }
-    /* Overlays for Main Menu, Leaderboard, Pause & Game Over */
+    /* Overlays: Main Menu, Leaderboard, Pause, Game Over */
     .overlay {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
+      width: 100%; 
       height: 100%;
       background: rgba(0, 0, 0, 0.85);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 10000; /* Ensure overlays appear over the canvas */
+      z-index: 10000;  /* Ensure overlays are above everything */
       padding: 20px;
-      overflow-y: auto;
       text-align: center;
+      overflow-y: auto;
     }
-    /* Initially only Main Menu is visible */
-    #main-menu {
+    /* Initially only the Main Menu overlay is visible */
+    #main-menu { 
       display: flex;
     }
     #leaderboard-menu,
@@ -72,11 +72,11 @@
       color: #fff;
       cursor: pointer;
     }
-    /* Extra main menu buttons – hidden until fullscreen */
+    /* Extra buttons in Main Menu (Leaderboard, Sound, Full Screen) – hidden initially */
     .extra-button {
       display: none;
     }
-    /* Container for Full Screen toggle button inside Main Menu */
+    /* Container for Full Screen toggle inside Main Menu */
     #fs-button-container {
       margin-top: 15px;
     }
@@ -89,8 +89,7 @@
       color: #fff;
       margin-bottom: 10px;
     }
-    #leaderboard th,
-    #leaderboard td {
+    #leaderboard th, #leaderboard td {
       border: 1px solid #fff;
       padding: 8px;
       text-align: center;
@@ -112,28 +111,27 @@
     }
   </style>
   
-  <!-- Firebase Libraries – replace these URLs as necessary -->
+  <!-- Firebase Libraries – update these as needed -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
-  
 </head>
 <body>
   <h1>Flappy Bird Recreated</h1>
   
-  <!-- GAME CONTAINER -->
+  <!-- Game Container -->
   <div id="game-container">
     <div id="canvas-container"></div>
     
-    <!-- MAIN MENU OVERLAY -->
+    <!-- Main Menu Overlay -->
     <div id="main-menu" class="overlay">
-      <!-- Replace src with your title image URL -->
+      <!-- Title image: update src with your image-->
       <img src="https://app.masonnet.org/fbrc.png" alt="Game Title" style="max-width:80%; display:block; margin: 0 auto;">
-      <!-- Centered version text -->
+      <!-- Centered version text below the title image -->
       <p style="font-size:18px; margin-top:10px;">Version 2.0, Build 0014</p>
       <p id="high-score-display">High Score: 0</p>
       <button class="menu-button" onclick="startGameFromMenu();">Start</button>
-      <!-- Extra buttons (only visible in fullscreen) -->
+      <!-- Extra buttons hidden until fullscreen -->
       <button class="menu-button extra-button" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="menu-button extra-button" id="soundButton" onclick="toggleSound();">Sound: On</button>
       <div id="fs-button-container" class="extra-button">
@@ -141,7 +139,7 @@
       </div>
     </div>
     
-    <!-- LEADERBOARD OVERLAY -->
+    <!-- Leaderboard Overlay -->
     <div id="leaderboard-menu" class="overlay">
       <h2>Leaderboard</h2>
       <table id="leaderboard">
@@ -154,21 +152,21 @@
       <button class="menu-button" onclick="showMainMenu();">Back</button>
     </div>
     
-    <!-- PAUSE OVERLAY (Resume and Main Menu) -->
+    <!-- Pause Overlay (Resume and Main Menu buttons) -->
     <div id="pause-menu" class="overlay">
       <h2>Paused</h2>
       <button class="menu-button" onclick="togglePause();">Resume</button>
       <button class="menu-button" onclick="backToMainMenu();">Main Menu</button>
     </div>
     
-    <!-- GAME OVER OVERLAY (Restart and Main Menu) -->
+    <!-- Game Over Overlay (Restart and Main Menu buttons) -->
     <div id="game-over-screen" class="overlay">
       <h2>Game Over</h2>
       <button class="menu-button" onclick="restartGame();">Restart</button>
       <button class="menu-button" onclick="backToMainMenu();">Main Menu</button>
     </div>
     
-    <!-- PAUSE BUTTON (visible during gameplay) -->
+    <!-- Pause Button (visible during gameplay) -->
     <button id="pauseButton" onclick="togglePause();">Pause</button>
   </div>
   
@@ -178,11 +176,11 @@
      *********************************/
     let gameState = "menu"; // "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound effect URL
+    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound URL
     const soundEffect = new Audio(soundEffectURL);
     
     /*********************************
-     * FIREBASE CONFIGURATION & LEADERBOARD SETUP
+     * FIREBASE CONFIG & LEADERBOARD SETUP
      *********************************/
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -204,34 +202,30 @@ const firebaseConfig = {
     }
     
     function fetchFirebaseLeaderboard(callback) {
-      db.ref("leaderboard").once("value")
-        .then(snapshot => {
-          const data = snapshot.val();
-          if (data) {
-            callback(data);
-          } else {
-            // Default leaderboard data.
-            const defaultLB = [
-              { name: "Player 1", score: 0 },
-              { name: "Player 2", score: 0 },
-              { name: "Player 3", score: 0 },
-              { name: "Player 4", score: 0 },
-              { name: "Player 5", score: 0 },
-              { name: "Player 6", score: 0 },
-              { name: "Player 7", score: 0 },
-              { name: "Player 8", score: 0 },
-              { name: "Player 9", score: 0 },
-              { name: "Player 10", score: 0 }
-            ];
-            db.ref("leaderboard").set(defaultLB);
-            callback(defaultLB);
-          }
-        })
-        .catch(err => console.error("Fetch LB Error:", err));
+      db.ref("leaderboard").once("value").then(snapshot => {
+        const data = snapshot.val();
+        if (data) {
+          callback(data);
+        } else {
+          const defaultLB = [
+            { name: "Player 1", score: 0 },
+            { name: "Player 2", score: 0 },
+            { name: "Player 3", score: 0 },
+            { name: "Player 4", score: 0 },
+            { name: "Player 5", score: 0 },
+            { name: "Player 6", score: 0 },
+            { name: "Player 7", score: 0 },
+            { name: "Player 8", score: 0 },
+            { name: "Player 9", score: 0 },
+            { name: "Player 10", score: 0 }
+          ];
+          db.ref("leaderboard").set(defaultLB);
+          callback(defaultLB);
+        }
+      }).catch(err => console.error("Fetch LB Error:", err));
     }
     
     let leaderboardData = [];
-    
     function updateLeaderboardDisplay() {
       const table = document.getElementById("leaderboard");
       table.innerHTML = `<tr><th>Rank</th><th>Name</th><th>Score</th></tr>`;
@@ -248,7 +242,6 @@ const firebaseConfig = {
         const playerName = prompt("High score! Enter your name:") || "Anonymous";
         leaderboardData.push({ name: playerName, score: currentScore });
         leaderboardData.sort((a, b) => b.score - a.score);
-        // Keep only top 10 scores.
         leaderboardData = leaderboardData.slice(0, 10);
         updateLeaderboardDisplay();
         updateFirebaseLeaderboard(leaderboardData);
@@ -290,7 +283,9 @@ const firebaseConfig = {
       updateLeaderboardDisplay();
     }
     
-    // Start button: if not fullscreen, prompt and exit so that the user must click Start again.
+    // When Start is pressed:
+    // If not in fullscreen, prompt for fullscreen; then exit (so user must press Start again).
+    // If in fullscreen, start the game.
     function startGameFromMenu() {
       if (!document.fullscreenElement) {
         if (window.confirm("Would you like to play in full screen mode?")) {
@@ -309,7 +304,7 @@ const firebaseConfig = {
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
     
-    // Return to main menu from the Game Over overlay.
+    // Return to Main Menu from the Game Over overlay.
     function backToMainMenu() {
       document.getElementById("game-over-screen").style.display = "none";
       clearInterval(myGameArea.interval);
@@ -317,7 +312,7 @@ const firebaseConfig = {
     }
     
     /*********************************
-     * FULL SCREEN TOGGLE & DYNAMIC SIZING
+     * FULLSCREEN TOGGLE & DYNAMIC SIZING
      *********************************/
     function toggleFullScreen() {
       const elem = document.getElementById("game-container");
@@ -421,25 +416,22 @@ const firebaseConfig = {
       });
     }
     
-    // startGame() resets objects, creates a new canvas, and starts the game loop.
+    // startGame() resets game objects and re-creates the canvas.
     function startGame() {
       const container = document.getElementById("canvas-container");
-      // Remove any existing canvas for a clean restart.
-      while(container.firstChild){
+      while (container.firstChild) {
         container.removeChild(container.firstChild);
       }
-      // Create a new canvas.
+      // Create a new canvas element.
       myGameArea.canvas = document.createElement("canvas");
-      // Reset obstacles and frame counter.
       myObstacles = [];
       myGameArea.frameNo = 0;
-      // Create game objects.
       myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
       myGamePiece.gravity = 0.05;
       myScore = new component("40px", "Arial", "black", 420, 40, "text");
       myScore.value = 0;
       
-      if(document.fullscreenElement) {
+      if (document.fullscreenElement) {
         myGameArea.canvas.width = window.innerWidth;
         myGameArea.canvas.height = window.innerHeight;
       } else {
@@ -480,7 +472,7 @@ const firebaseConfig = {
       },
       clear: function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        if(bgImage.complete && bgImage.naturalWidth > 0) {
+        if (bgImage.complete && bgImage.naturalWidth > 0) {
           this.context.drawImage(bgImage, 0, 0, this.canvas.width, this.canvas.height);
         } else {
           this.context.fillStyle = "#fff";
@@ -499,23 +491,23 @@ const firebaseConfig = {
       this.speedY = 0;
       this.gravity = 0;
       this.gravitySpeed = 0;
-      if(imageSrc) {
+      if (imageSrc) {
         this.image = new Image();
-        this.image.onload = () => { this.loaded = true; };
+        this.image.onload = () => {
+          this.loaded = true;
+        };
         this.image.src = imageSrc;
       } else {
         this.image = null;
       }
-      if(this.type === "text") {
-        this.text = "";
-      }
+      if (this.type === "text") { this.text = ""; }
       
       this.newPos = function() {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
         const TOP_LIMIT = 40;
-        if(this.y < TOP_LIMIT) {
+        if (this.y < TOP_LIMIT) {
           this.y = TOP_LIMIT;
           this.gravitySpeed = 0;
         }
@@ -534,11 +526,11 @@ const firebaseConfig = {
       
       this.update = function() {
         const ctx = myGameArea.context;
-        if(this.type === "text"){
+        if (this.type === "text") {
           ctx.font = this.width + " " + this.height;
           ctx.fillStyle = color;
           ctx.fillText(this.text, this.x, this.y);
-        } else if(this.image && this.loaded){
+        } else if (this.image && this.loaded) {
           ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         } else {
           ctx.fillStyle = color || "blue";
@@ -546,7 +538,7 @@ const firebaseConfig = {
         }
       };
       
-      // Use full bounding box for collision detection.
+      // Use full bounding box collision detection.
       this.crashWith = function(otherobj) {
         return !(
           this.x + this.width < otherobj.x ||
@@ -560,59 +552,59 @@ const firebaseConfig = {
     }
     
     function updateGameArea() {
-      // Floor collision check.
-      if(myGamePiece.y >= myGameArea.canvas.height - myGamePiece.height){
-         clearInterval(myGameArea.interval);
-         displayGameOverScreen();
-         return;
+      // Floor collision check – if the character touches the bottom, game over.
+      if (myGamePiece.y >= myGameArea.canvas.height - myGamePiece.height) {
+        clearInterval(myGameArea.interval);
+        displayGameOverScreen();
+        return;
       }
       
-      // Check obstacle collisions.
-      for(let i = 0; i < myObstacles.length; i++){
-         if(myGamePiece.crashWith(myObstacles[i])){
-            clearInterval(myGameArea.interval);
-            checkAndUpdateLeaderboard(myScore.value);
-            displayGameOverScreen();
-            return;
-         }
+      // Check collisions with obstacles.
+      for (let i = 0; i < myObstacles.length; i++) {
+        if (myGamePiece.crashWith(myObstacles[i])) {
+          clearInterval(myGameArea.interval);
+          checkAndUpdateLeaderboard(myScore.value);
+          displayGameOverScreen();
+          return;
+        }
       }
       
       myGameArea.clear();
       myGameArea.frameNo++;
       
       // Spawn obstacles at intervals.
-      if(myGameArea.frameNo === 1 || everyinterval(150)){
-         const x = myGameArea.canvas.width;
-         const minHeight = 20, maxHeight = 200;
-         const height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
-         const minGap = 80, maxGap = 200;  // Minimum gap to avoid overlapping pipes.
-         let gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
-         
-         // Remove obstacles that have left the screen.
-         myObstacles = myObstacles.filter(ob => (ob.x + ob.width > 0));
-         
-         // Check for overlapping pair (must be at least 80 pixels apart).
-         if(myObstacles.length >= 2){
-           const lastPairX = myObstacles[myObstacles.length - 2].x;
-           if(x - lastPairX >= 80){
-             spawnObstacles(x, height, gap);
-           }
-         } else {
-           spawnObstacles(x, height, gap);
-         }
+      if (myGameArea.frameNo === 1 || everyinterval(150)) {
+        const x = myGameArea.canvas.width;
+        const minHeight = 20, maxHeight = 200;
+        const height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
+        const minGap = 80, maxGap = 200;
+        let gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
+        
+        // Remove obstacles that have left the screen.
+        myObstacles = myObstacles.filter(ob => ob.x + ob.width > 0);
+        
+        // Prevent overlapping pipes: if the last pair is too close, skip spawning.
+        if (myObstacles.length >= 2) {
+          const lastPairX = myObstacles[myObstacles.length - 2].x;
+          if (x - lastPairX >= 80) {
+            spawnObstacles(x, height, gap);
+          }
+        } else {
+          spawnObstacles(x, height, gap);
+        }
       }
       
-      for(let i = 0; i < myObstacles.length; i++){
-         myObstacles[i].x -= 2;
-         myObstacles[i].update();
+      for (let i = 0; i < myObstacles.length; i++) {
+        myObstacles[i].x -= 2;
+        myObstacles[i].update();
       }
       
-      // Award point once per obstacle pair.
-      for(let i = 0; i < myObstacles.length; i += 2){
-         if(!myObstacles[i].passed && (myGamePiece.x > myObstacles[i].x + myObstacles[i].width)){
-            myObstacles[i].passed = true;
-            myScore.value += 1;
-         }
+      // Award one point per obstacle pair.
+      for (let i = 0; i < myObstacles.length; i += 2) {
+        if (!myObstacles[i].passed && myGamePiece.x > myObstacles[i].x + myObstacles[i].width) {
+          myObstacles[i].passed = true;
+          myScore.value += 1;
+        }
       }
       
       myScore.text = " " + myScore.value;
@@ -634,22 +626,20 @@ const firebaseConfig = {
       gameState = "gameover";
     }
     
-    // Restart the game from the Game Over overlay.
+    // Restart function for Game Over overlay.
     function restartGame() {
       document.getElementById("game-over-screen").style.display = "none";
       myObstacles = [];
       myGameArea.frameNo = 0;
       myScore.value = 0;
-      // Reset character's starting position.
       myGamePiece.x = 10;
       myGamePiece.y = 120;
       clearInterval(myGameArea.interval);
-      // Clear the canvas container.
+      
       const container = document.getElementById("canvas-container");
-      while(container.firstChild){
-         container.removeChild(container.firstChild);
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
       }
-      // Recreate the canvas.
       myGameArea.canvas = document.createElement("canvas");
       startGame();
     }
@@ -659,9 +649,10 @@ const firebaseConfig = {
      *********************************/
     let bgImage = new Image();
     bgImage.crossOrigin = "anonymous";
-    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";  // Replace with your background image URL.
-    bgImage.onload = function(){ initGame(); };
-    bgImage.onerror = function(){
+    // Replace with your custom background image URL.
+    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
+    bgImage.onload = function() { initGame(); };
+    bgImage.onerror = function() {
       console.error("Error loading background image. Using fallback.");
       initGame();
     };
