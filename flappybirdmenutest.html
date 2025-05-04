@@ -21,16 +21,16 @@
       text-align: center;
       margin: 20px 0;
     }
-    /* Game container – default dimensions 480×270; if in full screen these are updated via JS */
+    /* Game container – default dimensions 480×270; in full screen updated via JS */
     #game-container {
       position: relative;
       width: 480px;
       height: 270px;
-      background: #000;
+      background: #000; /* fallback background */
       margin: 0 auto;
       overflow: hidden;
     }
-    /* The canvas container fills the game container */
+    /* Canvas container fills the game container */
     #canvas-container {
       width: 100%;
       height: 100%;
@@ -52,7 +52,7 @@
       overflow-y: auto;
       text-align: center;
     }
-    /* Only the Main Menu overlay is visible initially */
+    /* Initially, only the Main Menu overlay is visible */
     #main-menu {
       display: flex;
     }
@@ -72,7 +72,7 @@
       color: #fff;
       cursor: pointer;
     }
-    /* Extra main menu buttons – hidden by default when not in full screen */
+    /* Extra main menu buttons (Leaderboard, Sound, Full Screen) – hidden when not in full screen */
     .extra-button {
       display: none;
     }
@@ -126,7 +126,7 @@
     
     <!-- Main Menu Overlay -->
     <div id="main-menu" class="overlay">
-      <!-- Title image replaces text; update src with your title image URL -->
+      <!-- Replace the image source with your title image URL -->
       <img src="https://app.masonnet.org/fbrc.png" alt="Game Title" style="max-width:80%; display:block; margin: 0 auto;">
       <!-- Centered version text immediately below -->
       <p style="font-size: 18px; margin-top: 10px;">Version 2.0, Build 0014</p>
@@ -153,8 +153,8 @@
       </table>
       <button class="menu-button" onclick="showMainMenu();">Back</button>
     </div>
-    
-    <!-- Pause Overlay with Resume and Main Menu buttons (Restart removed) -->
+
+    <!-- Pause Overlay (with Resume and Main Menu buttons only) -->
     <div id="pause-menu" class="overlay">
       <h2>Paused</h2>
       <button class="menu-button" onclick="togglePause();">Resume</button>
@@ -176,9 +176,9 @@
     /*******************************
      * GLOBAL VARIABLES & SOUND SETUP
      *******************************/
-    let gameState = "menu"; // Allowed: "menu", "playing", "paused", "gameover", "leaderboard"
+    let gameState = "menu"; // Allowed values: "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound effect URL
+    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your actual sound effect URL
     const soundEffect = new Audio(soundEffectURL);
     
     /*******************************
@@ -287,9 +287,9 @@ const firebaseConfig = {
       updateLeaderboardDisplay();
     }
     
-    // When Start is pressed:
-    // If not in fullscreen, prompt for full screen and exit so the user must press Start again.
-    // If in fullscreen, start the game.
+    // When the Start button is pressed:
+    // If not in full screen, prompt for it and then exit (user must then press Start again).
+    // If in full screen, start the game immediately.
     function startGameFromMenu() {
       if (!document.fullscreenElement) {
         if (window.confirm("Would you like to play in full screen mode?")) {
@@ -308,7 +308,7 @@ const firebaseConfig = {
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
     
-    // Return to Main Menu from Game Over overlay.
+    // Return to Main Menu from the Game Over overlay.
     function backToMainMenu() {
       document.getElementById("game-over-screen").style.display = "none";
       clearInterval(myGameArea.interval);
@@ -383,7 +383,7 @@ const firebaseConfig = {
         clearInterval(myGameArea.interval);
         isPaused = true;
         gameState = "paused";
-        // Display the pause overlay with only Resume and Main Menu buttons (restart button removed)
+        // Show pause overlay with Resume and Main Menu buttons (Restart button removed from here)
         document.getElementById("pause-menu").style.display = "flex";
       } else if (isPaused) {
         document.getElementById("pause-menu").style.display = "none";
@@ -421,12 +421,13 @@ const firebaseConfig = {
       });
     }
     
-    // startGame() resets the game and creates new game objects,
-    // then re-creates the canvas based on fullscreen status.
+    // startGame() resets objects and re-creates the canvas based on fullscreen status.
     function startGame() {
       const container = document.getElementById("canvas-container");
-      // Remove any existing canvas
-      while (container.firstChild) { container.removeChild(container.firstChild); }
+      // Remove any existing canvas for a clean restart.
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
       myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
       myGamePiece.gravity = 0.05;
       myScore = new component("40px", "Arial", "black", 420, 40, "text");
@@ -493,12 +494,16 @@ const firebaseConfig = {
       this.gravitySpeed = 0;
       if (imageSrc) {
         this.image = new Image();
-        this.image.onload = () => { this.loaded = true; };
+        this.image.onload = () => {
+          this.loaded = true;
+        };
         this.image.src = imageSrc;
       } else {
         this.image = null;
       }
-      if (this.type === "text") { this.text = ""; }
+      if (this.type === "text") {
+        this.text = "";
+      }
       this.newPos = function() {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
@@ -530,17 +535,21 @@ const firebaseConfig = {
           ctx.fillRect(this.x, this.y, this.width, this.height);
         }
       };
+      // UPDATED COLLISION FUNCTION: Shrink hit boxes by 20% from each side
       this.crashWith = function(otherobj) {
-        const myleft = this.x;
-        const myright = this.x + this.width;
-        const mytop = this.y;
-        const mybottom = this.y + this.height;
-        const otherleft = otherobj.x;
-        const otherright = otherobj.x + otherobj.width;
-        const othertop = otherobj.y;
-        const otherbottom = otherobj.y + otherobj.height;
-        return !(mybottom < othertop || mytop > otherbottom ||
-                 myright < otherleft || myleft > otherright);
+        const buffer = 0.2; // 20% margin on each side
+        const myLeft = this.x + (this.width * buffer);
+        const myRight = this.x + this.width * (1 - buffer);
+        const myTop = this.y + (this.height * buffer);
+        const myBottom = this.y + this.height * (1 - buffer);
+        
+        const otherLeft = otherobj.x + (otherobj.width * buffer);
+        const otherRight = otherobj.x + otherobj.width * (1 - buffer);
+        const otherTop = otherobj.y + (otherobj.height * buffer);
+        const otherBottom = otherobj.y + otherobj.height * (1 - buffer);
+        
+        return !(myBottom < otherTop || myTop > otherBottom ||
+                 myRight < otherLeft || myLeft > otherRight);
       };
       this.newPos = this.newPos.bind(this);
     }
@@ -598,25 +607,6 @@ const firebaseConfig = {
     function displayGameOverScreen() {
       document.getElementById("game-over-screen").style.display = "flex";
       gameState = "gameover";
-    }
-    
-    // Restart function, used in the Game Over overlay.
-    function restartGame() {
-      document.getElementById("game-over-screen").style.display = "none";
-      myObstacles = [];
-      myGameArea.frameNo = 0;
-      myScore.value = 0;
-      myGamePiece.x = 10;
-      myGamePiece.y = 120;
-      clearInterval(myGameArea.interval);
-      // Remove the old canvas by clearing the container completely.
-      const container = document.getElementById("canvas-container");
-      while (container.firstChild) {
-        container.removeChild(container.firstChild);
-      }
-      // Create a new canvas element.
-      myGameArea.canvas = document.createElement("canvas");
-      startGame();
     }
     
     /*******************************
