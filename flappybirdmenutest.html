@@ -21,7 +21,7 @@
       text-align: center;
       margin: 20px 0;
     }
-    /* Game container – default dimensions 480×270; in full screen updated via JS */
+    /* Game Container – default dimensions 480×270; in fullscreen, updated via JS */
     #game-container {
       position: relative;
       width: 480px;
@@ -35,12 +35,12 @@
       width: 100%;
       height: 100%;
     }
-    /* Overlays for Main Menu, Leaderboard, Pause & Game Over */
+    /* Overlays for Main Menu, Leaderboard, Pause, & Game Over */
     .overlay {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%; 
+      width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.85);
       display: flex;
@@ -72,7 +72,7 @@
       color: #fff;
       cursor: pointer;
     }
-    /* Extra main menu buttons (Leaderboard, Sound, Full Screen) – hidden when not in full screen */
+    /* Extra main menu buttons; hidden when not in fullscreen */
     .extra-button {
       display: none;
     }
@@ -111,36 +111,32 @@
       cursor: pointer;
     }
   </style>
-  
-  <!-- Firebase Libraries -->
+  <!-- Firebase Libraries (update URLs if necessary) -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
 </head>
 <body>
   <h1>Flappy Bird Recreated</h1>
-  
   <!-- Game Container -->
   <div id="game-container">
     <div id="canvas-container"></div>
-    
     <!-- Main Menu Overlay -->
     <div id="main-menu" class="overlay">
-      <!-- Replace the image source with your title image URL -->
+      <!-- Title image (update src with your title image URL) -->
       <img src="https://app.masonnet.org/fbrc.png" alt="Game Title" style="max-width:80%; display:block; margin: 0 auto;">
-      <!-- Centered version text immediately below -->
+      <!-- Centered version text beneath the title image -->
       <p style="font-size: 18px; margin-top: 10px;">Version 2.0, Build 0014</p>
       <p id="high-score-display">High Score: 0</p>
       <!-- Only the Start button is visible initially -->
       <button class="menu-button" onclick="startGameFromMenu();">Start</button>
-      <!-- Extra main menu buttons (Leaderboard, Sound, Full Screen) hidden until in fullscreen -->
+      <!-- Extra buttons (Leaderboard, Sound, Full Screen) hidden until fullscreen -->
       <button class="menu-button extra-button" onclick="showLeaderboardMenu();">Leaderboard</button>
       <button class="menu-button extra-button" id="soundButton" onclick="toggleSound();">Sound: On</button>
       <div id="fs-button-container" class="extra-button">
         <button class="menu-button" onclick="toggleFullScreen();">Full Screen</button>
       </div>
     </div>
-    
     <!-- Leaderboard Overlay -->
     <div id="leaderboard-menu" class="overlay">
       <h2>Leaderboard</h2>
@@ -153,21 +149,18 @@
       </table>
       <button class="menu-button" onclick="showMainMenu();">Back</button>
     </div>
-
-    <!-- Pause Overlay (with Resume and Main Menu buttons only) -->
+    <!-- Pause Overlay (only Resume and Main Menu buttons) -->
     <div id="pause-menu" class="overlay">
       <h2>Paused</h2>
       <button class="menu-button" onclick="togglePause();">Resume</button>
       <button class="menu-button" onclick="backToMainMenu();">Main Menu</button>
     </div>
-    
-    <!-- Game Over Overlay -->
+    <!-- Game Over Overlay (Restart and Main Menu buttons) -->
     <div id="game-over-screen" class="overlay">
       <h2>Game Over</h2>
       <button class="menu-button" onclick="restartGame();">Restart</button>
       <button class="menu-button" onclick="backToMainMenu();">Main Menu</button>
     </div>
-    
     <!-- Pause Button (visible during gameplay) -->
     <button id="pauseButton" onclick="togglePause();">Pause</button>
   </div>
@@ -176,9 +169,9 @@
     /*******************************
      * GLOBAL VARIABLES & SOUND SETUP
      *******************************/
-    let gameState = "menu"; // Allowed values: "menu", "playing", "paused", "gameover", "leaderboard"
+    let gameState = "menu"; // "menu", "playing", "paused", "gameover", "leaderboard"
     let soundEnabled = true;
-    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your actual sound effect URL
+    const soundEffectURL = "https://example.com/sound.mp3"; // Replace with your sound effect URL
     const soundEffect = new Audio(soundEffectURL);
     
     /*******************************
@@ -207,8 +200,9 @@ const firebaseConfig = {
       db.ref("leaderboard").once("value")
         .then(snapshot => {
           const data = snapshot.val();
-          if (data) callback(data);
-          else {
+          if (data) {
+            callback(data);
+          } else {
             const defaultLB = [
               { name: "Player 1", score: 0 },
               { name: "Player 2", score: 0 },
@@ -287,9 +281,9 @@ const firebaseConfig = {
       updateLeaderboardDisplay();
     }
     
-    // When the Start button is pressed:
-    // If not in full screen, prompt for it and then exit (user must then press Start again).
-    // If in full screen, start the game immediately.
+    // When Start is pressed:
+    // If not fullscreen, prompt for it then exit (user must press Start again).
+    // If fullscreen, start the game.
     function startGameFromMenu() {
       if (!document.fullscreenElement) {
         if (window.confirm("Would you like to play in full screen mode?")) {
@@ -308,7 +302,7 @@ const firebaseConfig = {
       document.getElementById("soundButton").innerText = soundEnabled ? "Sound: On" : "Sound: Off";
     }
     
-    // Return to Main Menu from the Game Over overlay.
+    // Called from Game Over overlay to return to Main Menu.
     function backToMainMenu() {
       document.getElementById("game-over-screen").style.display = "none";
       clearInterval(myGameArea.interval);
@@ -383,7 +377,6 @@ const firebaseConfig = {
         clearInterval(myGameArea.interval);
         isPaused = true;
         gameState = "paused";
-        // Show pause overlay with Resume and Main Menu buttons (Restart button removed from here)
         document.getElementById("pause-menu").style.display = "flex";
       } else if (isPaused) {
         document.getElementById("pause-menu").style.display = "none";
@@ -421,17 +414,23 @@ const firebaseConfig = {
       });
     }
     
-    // startGame() resets objects and re-creates the canvas based on fullscreen status.
+    // startGame() resets game data, clears the canvas container, creates a new canvas,
+    // resets obstacles, and then starts the game loop.
     function startGame() {
       const container = document.getElementById("canvas-container");
-      // Remove any existing canvas for a clean restart.
+      // Fully remove any existing canvas for a clean restart.
       while (container.firstChild) {
         container.removeChild(container.firstChild);
       }
+      // Create a new canvas element.
+      myGameArea.canvas = document.createElement("canvas");
+      // Reset game objects.
+      myObstacles = [];
       myGamePiece = new component(30, 30, "blue", 10, 120, "image", "https://app.masonnet.org/bird.png");
       myGamePiece.gravity = 0.05;
       myScore = new component("40px", "Arial", "black", 420, 40, "text");
       myScore.value = 0;
+      
       if (document.fullscreenElement) {
         myGameArea.canvas.width = window.innerWidth;
         myGameArea.canvas.height = window.innerHeight;
@@ -494,9 +493,7 @@ const firebaseConfig = {
       this.gravitySpeed = 0;
       if (imageSrc) {
         this.image = new Image();
-        this.image.onload = () => {
-          this.loaded = true;
-        };
+        this.image.onload = () => { this.loaded = true; };
         this.image.src = imageSrc;
       } else {
         this.image = null;
@@ -517,8 +514,10 @@ const firebaseConfig = {
       };
       this.hitBottom = function() {
         const rockbottom = myGameArea.canvas.height - this.height;
-        if (this.y > rockbottom) {
+        if (this.y >= rockbottom) {
           this.y = rockbottom;
+          clearInterval(myGameArea.interval);
+          displayGameOverScreen();
           this.gravitySpeed = 0;
         }
       };
@@ -535,18 +534,19 @@ const firebaseConfig = {
           ctx.fillRect(this.x, this.y, this.width, this.height);
         }
       };
-      // UPDATED COLLISION FUNCTION: Shrink hit boxes by 20% from each side
+      // Adjust collision detection: use a smaller shrink factor for a bigger hitbox.
+      // For example, a shrink of 0.1 gives an effective hitbox that is 80% of the sprite dimensions.
       this.crashWith = function(otherobj) {
-        const buffer = 0.2; // 20% margin on each side
-        const myLeft = this.x + (this.width * buffer);
-        const myRight = this.x + this.width * (1 - buffer);
-        const myTop = this.y + (this.height * buffer);
-        const myBottom = this.y + this.height * (1 - buffer);
+        const shrink = 0.1;  // Use 10% margin on each side.
+        const myLeft = this.x + this.width * shrink;
+        const myRight = this.x + this.width * (1 - shrink);
+        const myTop = this.y + this.height * shrink;
+        const myBottom = this.y + this.height * (1 - shrink);
         
-        const otherLeft = otherobj.x + (otherobj.width * buffer);
-        const otherRight = otherobj.x + otherobj.width * (1 - buffer);
-        const otherTop = otherobj.y + (otherobj.height * buffer);
-        const otherBottom = otherobj.y + otherobj.height * (1 - buffer);
+        const otherLeft = otherobj.x;
+        const otherRight = otherobj.x + otherobj.width;
+        const otherTop = otherobj.y;
+        const otherBottom = otherobj.y + otherobj.height;
         
         return !(myBottom < otherTop || myTop > otherBottom ||
                  myRight < otherLeft || myLeft > otherRight);
@@ -555,6 +555,14 @@ const firebaseConfig = {
     }
     
     function updateGameArea() {
+      // Prevent floor farming: if the character touches the floor, trigger game over.
+      if (myGamePiece.y >= myGameArea.canvas.height - myGamePiece.height) {
+        clearInterval(myGameArea.interval);
+        displayGameOverScreen();
+        return;
+      }
+      
+      // Check collisions with obstacles.
       for (let i = 0; i < myObstacles.length; i++) {
         if (myGamePiece.crashWith(myObstacles[i])) {
           clearInterval(myGameArea.interval);
@@ -565,25 +573,32 @@ const firebaseConfig = {
       }
       myGameArea.clear();
       myGameArea.frameNo++;
+      // Spawn obstacles (if frame count condition met)
       if (myGameArea.frameNo === 1 || everyinterval(150)) {
         const x = myGameArea.canvas.width;
         const minHeight = 20, maxHeight = 200;
         const height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
-        const minGap = 50, maxGap = 200;
-        const gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
-        const topObstacleImage = "https://app.masonnet.org/pipe-green.png";
-        const bottomObstacleImage = "https://app.masonnet.org/pipe-green.png";
-        const obstacleTop = new component(40, height, "", x, 0, "image", topObstacleImage);
-        const obstacleBottom = new component(40, myGameArea.canvas.height - height - gap, "", x, height + gap, "image", bottomObstacleImage);
-        obstacleTop.passed = false;
-        obstacleBottom.passed = false;
-        myObstacles.push(obstacleTop);
-        myObstacles.push(obstacleBottom);
+        // Increase minimum gap to avoid overlapping pipes.
+        const minGap = 80, maxGap = 200;
+        let gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
+        
+        // Check for overlapping pair: if previous pair is too close, skip.
+        if (myObstacles.length >= 2) {
+          const lastPairX = myObstacles[myObstacles.length - 2].x;
+          if (x - lastPairX < 80) {
+            // Skip spawn
+          } else {
+            spawnObstacles(x, height, gap);
+          }
+        } else {
+          spawnObstacles(x, height, gap);
+        }
       }
       for (let i = 0; i < myObstacles.length; i++) {
         myObstacles[i].x -= 2;
         myObstacles[i].update();
       }
+      // Award one point per obstacle pair.
       for (let i = 0; i < myObstacles.length; i += 2) {
         if (!myObstacles[i].passed && myGamePiece.x > myObstacles[i].x + myObstacles[i].width) {
           myObstacles[i].passed = true;
@@ -594,6 +609,17 @@ const firebaseConfig = {
       myScore.update();
       myGamePiece.newPos();
       myGamePiece.update();
+    }
+    
+    function spawnObstacles(x, height, gap) {
+      const topObstacleImage = "https://app.masonnet.org/pipe-green.png";
+      const bottomObstacleImage = "https://app.masonnet.org/pipe-green.png";
+      const obstacleTop = new component(40, height, "", x, 0, "image", topObstacleImage);
+      const obstacleBottom = new component(40, myGameArea.canvas.height - height - gap, "", x, height + gap, "image", bottomObstacleImage);
+      obstacleTop.passed = false;
+      obstacleBottom.passed = false;
+      myObstacles.push(obstacleTop);
+      myObstacles.push(obstacleBottom);
     }
     
     function everyinterval(n) {
@@ -609,9 +635,34 @@ const firebaseConfig = {
       gameState = "gameover";
     }
     
+    // Restart function (used in Game Over overlay)
+    function restartGame() {
+      document.getElementById("game-over-screen").style.display = "none";
+      // Clear obstacles and reset frame counter and score.
+      myObstacles = [];
+      myGameArea.frameNo = 0;
+      myScore.value = 0;
+      // Reset character to starting position.
+      myGamePiece.x = 10;
+      myGamePiece.y = 120;
+      clearInterval(myGameArea.interval);
+      // Remove any existing canvas from the container.
+      const container = document.getElementById("canvas-container");
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      // Create a new canvas.
+      myGameArea.canvas = document.createElement("canvas");
+      startGame();
+    }
+    
     /*******************************
      * INITIALIZATION
      *******************************/
+    bgImage = new Image();
+    bgImage.crossOrigin = "anonymous";
+    // Replace with your custom background image URL.
+    bgImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
     bgImage.onload = function() { initGame(); };
     bgImage.onerror = function() {
       console.error("Error loading background image. Using fallback.");
