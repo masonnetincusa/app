@@ -185,15 +185,17 @@
       /*********************************
        * FIREBASE CONFIGURATION & LEADERBOARD SETUP
        *********************************/
-      const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        databaseURL: "YOUR_DATABASE_URL",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
-      };
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
+  authDomain: "masonnet-app.firebaseapp.com",
+  databaseURL: "https://masonnet-app-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app",
+  storageBucket: "masonnet-app.firebasestorage.app",
+  messagingSenderId: "245878148284",
+  appId: "1:245878148284:web:2b3f54cebc08ad14b594b9",
+  measurementId: "G-NY1MN2R295"
+};
       firebase.initializeApp(firebaseConfig);
       firebase.auth().signInAnonymously().catch(err => console.error("Auth Error:", err));
       const db = firebase.database();
