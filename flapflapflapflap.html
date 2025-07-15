@@ -1,36 +1,20 @@
  <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Flappy Bird with Firebase Leaderboard</title>
+  <meta charset="UTF-8">
+  <title>Flappy Bird Clone</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:Arial,sans-serif; background:#222; color:#fff; overflow-x:hidden; }
     h1 { text-align:center; margin:20px 0; }
     #game-container { position:relative; width:480px; height:270px; background:#000; margin:0 auto; overflow:hidden; }
-    #canvas-container { width:100%; height:100%; }
-    .overlay {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.85); display:flex; flex-direction:column;
-      align-items:center; justify-content:center; z-index:100;
-      text-align:center; padding:20px;
-    }
-    #main-menu { display:flex; }
-    #game-over-screen, #leaderboard-menu, #pause-menu { display:none; }
-    .menu-button {
-      background:#f00; border:none; color:#fff;
-      padding:12px 24px; margin:10px; border-radius:8px;
-      font-size:16px; cursor:pointer;
-    }
-    #pauseButton {
-      position:absolute; top:10px; right:10px;
-      background:#f00; border:none; color:#fff;
-      padding:8px 12px; border-radius:8px;
-      font-size:14px; cursor:pointer; display:none;
-    }
-    #leaderboard-list { margin-top:15px; max-height:150px; overflow-y:auto; text-align:left; }
-    #leaderboard-list div { padding:4px 0; border-bottom:1px solid #444; }
+    #canvas { display:block; }
+    .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10; }
+    .hidden { display:none; }
+    .menu-button { background:#f00; border:none; color:#fff; padding:12px 24px; margin:10px; cursor:pointer; }
+    #pauseBtn { position:absolute; top:10px; right:10px; background:#f00; border:none; color:#fff; padding:8px; cursor:pointer; display:none; z-index:5; }
   </style>
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
@@ -39,279 +23,210 @@
 <body>
   <h1>Flappy Bird Clone</h1>
   <div id="game-container">
-    <div id="canvas-container"></div>
-    <!-- Main Menu -->
+    <canvas id="canvas" width="480" height="270"></canvas>
+    <button id="pauseBtn">Pause</button>
+    
     <div id="main-menu" class="overlay">
-      <img src="https://app.masonnet.org/fbrc.png" alt="Title" style="max-width:80%; margin-bottom:10px;">
+      <img id="titleImg" src="https://app.masonnet.org" alt="Title" style="max-width:80%; margin-bottom:10px;">
       <p>Version 2.0, Build 0014</p>
-      <p id="high-score-display">High Score: 0</p>
-      <button class="menu-button" onclick="startGameFromMenu()">Start</button>
-      <button class="menu-button extra-button" onclick="showLeaderboard()">Leaderboard</button>
-      <button class="menu-button extra-button" onclick="toggleSound()">Sound: On</button>
-      <div class="extra-button" id="fs-button-container">
-        <button class="menu-button" onclick="toggleFullScreen()">Full Screen</button>
-      </div>
+      <p id="highScoreDisplay">High Score: 0</p>
+      <button class="menu-button" onclick="startMenu()">Start</button>
+      <button class="menu-button" onclick="showLeaderboard()">Leaderboard</button>
     </div>
-    <!-- Pause -->
-    <div id="pause-menu" class="overlay">
+    
+    <div id="leaderboard-menu" class="overlay hidden">
+      <h2>Leaderboard</h2>
+      <div id="leaderboardList" style="text-align:left; max-height:150px; overflow-y:auto;"></div>
+      <button class="menu-button" onclick="hideOverlays()">Back</button>
+    </div>
+    
+    <div id="pause-menu" class="overlay hidden">
       <h2>Paused</h2>
       <button class="menu-button" onclick="togglePause()">Resume</button>
-      <button class="menu-button" onclick="backToMainMenu()">Main Menu</button>
+      <button class="menu-button" onclick="goMenu()">Main Menu</button>
     </div>
-    <!-- Game Over with inline leaderboard -->
-    <div id="game-over-screen" class="overlay">
+    
+    <div id="game-over" class="overlay hidden">
       <h2>Game Over</h2>
-      <p>Your Score: <span id="final-score">0</span></p>
-      <div id="leaderboard-list"></div>
-      <button class="menu-button" onclick="restartGame()">Restart</button>
-      <button class="menu-button" onclick="backToMainMenu()">Main Menu</button>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <div id="leaderboardGameOver" style="text-align:left; max-height:150px; overflow-y:auto;"></div>
+      <button class="menu-button" onclick="restart()">Restart</button>
+      <button class="menu-button" onclick="goMenu()">Main Menu</button>
     </div>
-    <!-- Leaderboard Overlay -->
-    <div id="leaderboard-menu" class="overlay">
-      <h2>Top 10 Global Scores</h2>
-      <div id="leaderboard-list"></div>
-      <button class="menu-button" onclick="showMainMenu()">Back</button>
-    </div>
-    <!-- Pause Button -->
-    <button id="pauseButton" onclick="togglePause()">Pause</button>
   </div>
+  
   <script>
-    // FIREBASE SETUP (replace placeholders)
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
-  authDomain: "masonnet-app.firebaseapp.com",
-  databaseURL: "https://masonnet-app-default-rtdb.firebaseio.com",
-  projectId: "masonnet-app",
-  storageBucket: "masonnet-app.firebasestorage.app",
-  messagingSenderId: "245878148284",
-  appId: "1:245878148284:web:2b3f54cebc08ad14b594b9",
-  measurementId: "G-NY1MN2R295"
-};
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // GLOBALS
-    let gameState = "menu", gameLoop, canvas, ctx;
-    let frameNo = 0, obstacles = [], score = 0, player, paused = false;
-    let soundOn = true, sound = new Audio("https://example.com/sound.mp3"); // replace
-
-    // PLAYER CLASS
-    function Component(w,h,cx,cy){
-      this.width=w; this.height=h;
-      this.x=cx; this.y=cy;
-      this.gravity=0.1; this.gravitySpeed=0;
-      this.update = () => {
-        ctx.fillStyle = c; ctx.fillRect(this.x,this.y,w,h);
-      };
-      this.newPos = () => {
-        this.gravitySpeed += this.gravity;
-        this.y += this.gravitySpeed;
-        if(this.y+this.height>=canvas.height){
-          clearInterval(gameLoop);
-          gameOver();
-        }
-      };
-      this.crashWith = (obs) => {
-        return !(this.x+this.width<obs.x ||
-                 this.x>obs.x+obs.width ||
-                 this.y+this.height<obs.y ||
-                 this.y>obs.y+obs.height);
-      };
-    }
-
-    // INITIALIZE
-    window.onload = () => {
-      loadLeaderboard();
-      showMainMenu();
+    // ===== CONFIGURE =====
+    const BACKGROUND_URL = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
+    const BIRD_URL       = "https://app.masonnet.org/bird.png";
+    const PIPE_URL       = "https://app.masonnet.org/pipe-green.png";";
+    const FIREBASE_CFG   = {
+      apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU", authDomain:"masonnet-app.firebaseapp.com", databaseURL:"https://masonnet-app-default-rtdb.firebaseio.com",
+      projectId:"masonnet-app", storageBucket:"masonnet-app.firebasestorage.app",
+      messagingSenderId:"245878148284", appId:"1:245878148284:web:2b3f54cebc08ad14b594b9", measurementId: "G-NY1MN2R295
     };
+    // ===== END CONFIG =====
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
-    // LOAD LEADERBOARD from localStorage
-    let leaderboard = [];
-    function loadLeaderboard(){
-      const data = localStorage.getItem("flappyLB");
-      leaderboard = data ? JSON.parse(data) : [];
-    }
-    function saveLeaderboard(){
-      localStorage.setItem("flappyLB", JSON.stringify(leaderboard));
-    }
+    // Firebase init
+    firebase.initializeApp(FIREBASE_CFG);
+    const db = firebase.database().ref("leaderboard");
 
-    // UI FUNCTIONS
-    function hideAll(){
-      ["main-menu","leaderboard-menu","pause-menu","game-over-screen"]
-        .forEach(id=>document.getElementById(id).style.display="none");
-      document.getElementById("pauseButton").style.display="none";
-    }
-    function showMainMenu(){
-      gameState="menu"; hideAll();
-      document.getElementById("main-menu").style.display="flex";
-      updateHighScoreDisplay();
-    }
-    function showLeaderboard(){
-      gameState="leaderboard"; hideAll();
-      document.getElementById("leaderboard-menu").style.display="flex";
-      renderLeaderboard();
-    }
-    function updateHighScoreDisplay(){
-      const high = leaderboard.length?leaderboard[0].score:0;
-      document.getElementById("high-score-display").innerText = "High Score: "+high;
-    }
-    function renderLeaderboard(){
-      const div = document.getElementById("leaderboard-list");
-      div.innerHTML="";
-      leaderboard.forEach((e,i)=>{
-        const row = document.createElement("div");
-        row.innerText = `${i+1}. ${e.name}: ${e.score}`;
-        div.appendChild(row);
-      });
+    // Globals
+    let canvas, ctx, loopId;
+    let frameNo=0, pipes=[], score=0, bird;
+    let isPaused=false;
+
+    // COMPONENTS
+    class Bird {
+      constructor() {
+        this.img=new Image(); this.img.src=BIRD_URL;
+        this.x=10; this.y=120; this.w=30; this.h=30;
+        this.vy=0; this.gravity=0.2;
+      }
+      draw() { ctx.drawImage(this.img,this.x,this.y,this.w,this.h); }
+      update(){
+        this.vy+=this.gravity; this.y+=this.vy;
+        if(this.y+this.h>canvas.height){ this.y=canvas.height-this.h; gameOver(); }
+      }
+      collides(o){
+        return !(this.x+this.w<o.x || this.x>o.x+o.w ||
+                 this.y+this.h<o.y || this.y>o.y+o.h);
+      }
     }
 
-    // START/GAME FUNCTIONS
-    function startGameFromMenu(){
+    function spawnPipes(){
+      const x=canvas.width;
+      const h=20+Math.random()*(200-20);
+      const gap=80+Math.random()*(150-80);
+      pipes=pipes.filter(p=>p.x+p.w>0);
+      if(pipes.length<2|| x-pipes[pipes.length-2].x>80){
+        pipes.push({x,y:0,w:40,h:h,passed:false});
+        pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false});
+      }
+    }
+
+    function drawBackground(){
+      const img=new Image(); img.src=BACKGROUND_URL;
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    }
+
+    // GAME LOOP
+    function updateGame(){
+      frameNo++;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      drawBackground();
+      if(frameNo===1||frameNo%150===0) spawnPipes();
+      // Draw pipes
+      for(let p of pipes){
+        p.x-=2;
+        ctx.drawImage(Object.pipeImg,p.x,p.y,p.w,p.h);
+      }
+      pipes=pipes.filter(p=>p.x+p.w>0);
+      // Score
+      for(let i=0;i<pipes.length;i+=2){
+        const p=pipes[i];
+        if(!p.passed && bird.x>p.x+p.w){
+          p.passed=true; score++;
+        }
+      }
+      ctx.fillStyle="black"; ctx.font="30px Arial";
+      ctx.fillText(score,canvas.width-60,40);
+      bird.update(); bird.draw();
+      // Collision
+      for(let p of pipes) if(bird.collides(p)) gameOver();
+    }
+
+    function startLoop(){
+      clearInterval(loopId);
+      loopId=setInterval(()=>{ if(!isPaused)updateGame(); },20);
+    }
+
+    // GAME STATES
+    function startMenu(){
       if(!document.fullscreenElement){
-        if(confirm("Full screen?")) toggleFullScreen();
+        if(confirm("Fullscreen?")) toggleFullScreen();
         return;
       }
-      startGame();
+      hideOverlays(); resetGame(); startLoop();
     }
-    function startGame(){
-      gameState="playing"; hideAll();
-      // reset
-      frameNo=0; obstacles=[]; score=0;
-      document.getElementById("pauseButton").style.display="block";
-      // canvas
-      const container = document.getElementById("canvas-container");
-      container.innerHTML="";
-      canvas = document.createElement("canvas");
-      canvas.width = document.fullscreenElement?window.innerWidth:480;
-      canvas.height = document.fullscreenElement?window.innerHeight:270;
-      ctx = canvas.getContext("2d");
-      container.appendChild(canvas);
-      // player
-      player = new Component(30,30, "blue", 10,120);
-      // loop
-      clearInterval(gameLoop);
-      gameLoop = setInterval(updateGameArea,20);
+    function resetGame(){
+      frameNo=0; pipes=[]; score=0;
+      bird=new Bird();
+      showPause(false);
     }
-
     function gameOver(){
-      gameState="gameover";
-      updateLeaderboard();
-      clearInterval(gameLoop);
-      document.getElementById("final-score").innerText = score;
-      showGameOverOverlay();
+      clearInterval(loopId);
+      document.getElementById("finalScore").innerText=score;
+      hideOverlays(); document.getElementById("game-over").classList.remove("hidden");
+      updateLeaderboard(score);
     }
-    function restartGame(){
-      hideAll(); startGame();
+    function restart(){
+      hideOverlays(); resetGame(); startLoop();
     }
-    function backToMainMenu(){
-      clearInterval(gameLoop); showMainMenu();
+    function goMenu(){
+      clearInterval(loopId); hideOverlays(); document.getElementById("main-menu").classList.remove("hidden");
     }
-
-    function updateGameArea(){
-      // floor
-      if(player.y+player.height>=canvas.height){
-        clearInterval(gameLoop); return gameOver();
-      }
-      // collisions
-      for(let obs of obstacles){
-        if(player.crashWith(obs)){
-          clearInterval(gameLoop); return gameOver();
-        }
-      }
-      // draw
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      frameNo++;
-      // spawn obstacles
-      if(frameNo===1 || frameNo%150===0){
-        const x=canvas.width;
-        const minH=20,maxH=200;
-        const h=Math.floor(Math.random()*(maxH-minH)+minH);
-        const minGap=80,maxGap=200;
-        const gap = Math.floor(Math.random()*(maxGap-minGap)+minGap);
-        // remove offscreen
-        obstacles=obstacles.filter(o=>o.x+o.width>0);
-        // avoid overlap
-        if(obstacles.length<2 || x - obstacles[obstacles.length-2].x >= 80){
-          obstacles.push({x,y:0,width:40,height:h,passed:false});
-          obstacles.push({x,y:h+gap,width:40,height:canvas.height-h-gap,passed:false});
-        }
-      }
-      // move+draw obstacles
-      for(let obs of obstacles){
-        obs.x-=2;
-        ctx.fillStyle="green";
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-      }
-      // score
-      for(let i=0;i<obstacles.length;i+=2){
-        if(!obstacles[i].passed && player.x>obstacles[i].x+obstacles[i].width){
-          obstacles[i].passed=true; score++;
-        }
-      }
-      ctx.fillStyle="black";
-      ctx.font="30px Arial";
-      ctx.fillText(score,canvas.width-60,40);
-      // player
-      player.newPos(); player.update();
+    function hideOverlays(){
+      ["main-menu","leaderboard-menu","pause-menu","game-over"]
+        .forEach(id=>document.getElementById(id).classList.add("hidden"));
     }
-
-    // PAUSE
     function togglePause(){
-      if(gameState==="playing"){
-        clearInterval(gameLoop);
-        gameState="paused";
-        hideAll();
-        document.getElementById("pause-menu").style.display="flex";
-      } else if(gameState==="paused"){
-        document.getElementById("pause-menu").style.display="none";
-        gameState="playing";
-        gameLoop=setInterval(updateGameArea,20);
-      }
+      if(state!=="playing"&&state!=="paused")return;
+      isPaused=!isPaused;
+      showPause(isPaused);
+    }
+    function showPause(val){
+      if(val) document.getElementById("pause-menu").classList.remove("hidden");
+      else document.getElementById("pause-menu").classList.add("hidden");
     }
 
     // FULLSCREEN
     function toggleFullScreen(){
       const e=document.getElementById("game-container");
-      if(!document.fullscreenElement) e.requestFullscreen?.();
-      else document.exitFullscreen?.();
+      if(!document.fullscreenElement) e.requestFullscreen();
+      else document.exitFullscreen();
     }
 
-    // SOUND
+    // SOUND (stub)
     function toggleSound(){
-      soundOn = !soundOn;
-      sound.muted = !soundOn;
-      document.getElementById("soundButton").innerText = "Sound: "+(soundOn?"On":"Off");
+      soundOn=!soundOn; flySound.muted=!soundOn;
+      document.getElementById("soundButton").innerText="Sound: "+(soundOn?"On":"Off");
     }
 
-    function accelerate(n){
-      player.gravity = n;
+    // LEADERBOARD
+    function updateLeaderboard(score){
+      const name=prompt("Name?","Anon")||"Anon";
+      db.push({name,score}).then(showLeaderboard);
+    }
+    function showLeaderboard(){
+      hideOverlays(); document.getElementById("leaderboard-menu").classList.remove("hidden");
+      const div=document.getElementById("leaderboard-list"); div.innerHTML="";
+      db.orderByChild("score").limitToLast(10).once("value")
+        .then(snap=>{
+          const arr=[]; snap.forEach(c=>arr.push(c.val()));
+          arr.sort((a,b)=>b.score-a.score);
+          arr.forEach((e,i)=>{
+            const d=document.createElement("div");
+            d.innerText=`${i+1}. ${e.name}: ${e.score}`;
+            div.appendChild(d);
+          });
+        });
     }
 
+    // INIT
+    window.onload = () => {
+      Object.pipeImg=new Image();
+      Object.pipeImg.src=PIPE_URL;
+      renderLeaderboard();
+      showMainMenu();
+    };
+
+    // CONTROLS
     window.addEventListener("keydown",e=>{
-      if(e.code==="Space"){ accelerate(-0.5); e.preventDefault(); }
+      if(e.code==="Space"){ bird.vy=-4; e.preventDefault(); }
       if(e.key==="k"){ togglePause(); e.preventDefault(); }
     });
-    window.addEventListener("keyup",e=>{
-      if(e.code==="Space"){ accelerate(0.1); e.preventDefault(); }
-    });
-
-    // LEADERBOARD (localStorage)
-    function updateLeaderboard(){
-      const name = prompt("High Score! Enter name:")||"Anon";
-      leaderboard.push({name,score});
-      leaderboard.sort((a,b)=>b.score-a.score);
-      leaderboard = leaderboard.slice(0,10);
-      saveLeaderboard();
-    }
-    function saveLeaderboard(){
-      localStorage.setItem("flappyLB",JSON.stringify(leaderboard));
-    }
-    function showGameOverOverlay(){
-      hideAll();
-      document.getElementById("game-over-screen").style.display="flex";
-      renderLeaderboard();
-    }
   </script>
 </body>
 </html>
