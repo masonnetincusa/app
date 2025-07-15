@@ -2,27 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Bird – Pause Fix</title>
+  <title>Flappy Bird Fixed Menu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
-    html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#222; }
+    html, body { margin:0; padding:0; height:100%; background:#222; color:#fff; overflow:hidden; }
     #game-container { position:relative; width:100%; height:100%; background:#000; }
     canvas { display:block; width:100%; height:100%; }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.85); color:#fff;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      font-family:Arial,sans-serif; text-align:center; z-index:10;
+      background:rgba(0,0,0,0.85); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center; z-index:10;
     }
     .hidden { display:none; }
     button {
       background:#f00; border:none; color:#fff;
       padding:12px 24px; margin:10px; font-size:16px; cursor:pointer;
     }
-    #score { position:absolute; top:10px; left:10px; font-size:24px; color:#fff; z-index:5; }
+    #score { position:absolute; top:10px; left:10px; font-size:24px; z-index:5; }
     #pauseBtn {
-      position:absolute; top:10px; right:10px; background:#f00; border:none; color:#fff;
-      padding:8px; font-size:14px; cursor:pointer; z-index:5;
+      position:absolute; top:10px; right:10px;
+      background:#f00; border:none; color:#fff; padding:8px; cursor:pointer; z-index:5;
     }
     #leaderboard-list { text-align:left; width:80%; max-height:150px; overflow-y:auto; margin-bottom:15px; }
     #leaderboard-list div { border-bottom:1px solid #444; padding:4px 0; }
@@ -32,7 +31,7 @@
   <div id="game-container">
     <canvas id="canvas"></canvas>
     <div id="score">0</div>
-    <button id="pauseBtn" onclick="togglePause()">Pause</button>
+    <button id="pauseBtn" class="hidden">Pause</button>
 
     <!-- Main Menu -->
     <div id="menu" class="overlay">
@@ -48,7 +47,7 @@
       <button id="backFromLbBtn">Back</button>
     </div>
 
-    <!-- Pause Menu -->
+    <!-- Pause -->
     <div id="pause" class="overlay hidden">
       <h2>Paused</h2>
       <button id="resumeBtn">Resume</button>
@@ -66,197 +65,191 @@
   </div>
 
   <script>
-    // Canvas
+    // Canvas setup
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-    window.addEventListener('resize',resize);
-    resize();
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // State
-    let bird, pipes, score, frameNo, loopId;
-    let paused = false;
+    // Game variables
+    let bird, pipes, score, frameNo, gameLoopId, paused = false;
 
-    // LocalLeaderboard
+    // Bird class
+    class Bird {
+      constructor() {
+        this.w = 30; this.h = 30;
+        this.x = 50; this.y = canvas.height / 2 - this.h / 2;
+        this.vy = 0; this.gravity = 0.2;
+      }
+      update() {
+        this.vy += this.gravity;
+        this.y += this.vy;
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.h > canvas.height) endGame();
+      }
+      draw() {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+      }
+      flap() {
+        this.vy = -6;
+      }
+      collides(pipe) {
+        return !(this.x + this.w < pipe.x ||
+                 this.x > pipe.x + pipe.w ||
+                 this.y + this.h < pipe.y ||
+                 this.y > pipe.y + pipe.h);
+      }
+    }
+
+    // Pipe spawner
+    function spawnPipes() {
+      const x = canvas.width;
+      const h = 20 + Math.random() * (canvas.height / 2 - 20);
+      const gap = 120 + Math.random() * 80;
+      pipes = pipes.filter(p => p.x + p.w > 0);
+      if (pipes.length < 2 || x - pipes[pipes.length - 2].x > 150) {
+        pipes.push({x, y:0, w:40, h, passed:false});
+        pipes.push({x, y:h+gap, w:40, h:canvas.height - h - gap, passed:false});
+      }
+    }
+
+    // Update loop
+    function update() {
+      if (paused) return;
+      frameNo++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // BG
+      ctx.fillStyle = '#88c';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Pipes
+      if (frameNo === 1 || frameNo % 150 === 0) spawnPipes();
+      pipes.forEach(p => {
+        p.x -= 2;
+        ctx.fillStyle = 'green';
+        ctx.fillRect(p.x, p.y, p.w, p.h);
+      });
+      pipes = pipes.filter(p => p.x + p.w > 0);
+      // Bird
+      bird.update();
+      bird.draw();
+      // Score & collision
+      pipes.forEach((p, i) => {
+        if (!p.passed && bird.x > p.x + p.w) {
+          p.passed = true;
+          score++;
+          document.getElementById('score').innerText = score;
+        }
+        if (bird.collides(p)) {
+          endGame();
+        }
+      });
+    }
+
+    // End game
+    function endGame() {
+      clearInterval(gameLoopId);
+      showOverlay('gameover');
+      document.getElementById('finalScore').innerText = score;
+    }
+
+    // Start game
+    document.getElementById('startBtn').addEventListener('click', () => {
+      hideAll();
+      score = 0;
+      frameNo = 0;
+      pipes = [];
+      bird = new Bird();
+      document.getElementById('score').innerText = score;
+      document.getElementById('pauseBtn').classList.remove('hidden');
+      paused = false;
+      clearInterval(gameLoopId);
+      gameLoopId = setInterval(update, 20);
+    });
+
+    // Pause / Resume
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      if (!paused) {
+        paused = true;
+        clearInterval(gameLoopId);
+        showOverlay('pause');
+      }
+    });
+    document.getElementById('resumeBtn')?.addEventListener('click', () => {
+      hideAll();
+      document.getElementById('pauseBtn').classList.remove('hidden');
+      paused = false;
+      clearInterval(gameLoopId);
+      gameLoopId = setInterval(update, 20);
+    });
+
+    // Restart
+    document.getElementById('restartBtn')?.addEventListener('click', () => {
+      hideAll();
+      score = 0;
+      frameNo = 0;
+      pipes = [];
+      bird = new Bird();
+      document.getElementById('score').innerText = score;
+      paused = false;
+      document.getElementById('pauseBtn').classList.remove('hidden');
+      clearInterval(gameLoopId);
+      gameLoopId = setInterval(update, 20);
+    });
+
+    // Leaderboard (placeholder localStorage)
     let lb = JSON.parse(localStorage.getItem('flappyLB')||'[]');
-    function saveLB(){ localStorage.setItem('flappyLB', JSON.stringify(lb)); }
-    function renderLB(selector){
-      const div = document.querySelector(selector);
-      div.innerHTML='';
-      lb.slice(0,10).forEach((e,i)=>{
-        const d=document.createElement('div');
+    function saveLB() { localStorage.setItem('flappyLB', JSON.stringify(lb)); }
+    function renderLB() {
+      const div = document.getElementById('leaderboard-list');
+      div.innerHTML = '';
+      lb.slice(0,10).forEach((e,i) => {
+        const d = document.createElement('div');
         d.innerText = `${i+1}. ${e.name}: ${e.score}`;
         div.appendChild(d);
       });
     }
+    document.getElementById('showLbBtn').addEventListener('click', () => {
+      hideAll(); showOverlay('leaderboard');
+      renderLB();
+    });
+    document.getElementById('backFromLbBtn').addEventListener('click', () => {
+      hideAll(); showOverlay('menu');
+    });
 
-    // Bird
-    class Bird {
-      constructor(){
-        this.w=30; this.h=30;
-        this.x=50; this.y=canvas.height/2 - this.h/2;
-        this.vy=0; this.gravity=0.2;
-      }
-      update(){
-        this.vy+=this.gravity; this.y+=this.vy;
-        // clamp top
-        if(this.y<0){ this.y=0; this.vy=0; }
-        // floor
-        if(this.y+this.h>canvas.height) endGame();
-      }
-      draw(){
-        ctx.fillStyle='yellow';
-        ctx.fillRect(this.x, this.y, this.w, this.h);
-      }
-      flap(){ this.vy=-6; }
-      collides(p){
-        return !(this.x+this.w<p.x || this.x>p.x+p.w ||
-                 this.y+this.h<p.y || this.y>p.y+p.h);
-      }
-    }
+    // Main Menu Button from Pause & GameOver
+    document.getElementById('backFromPauseBtn')?.addEventListener('click', () => {
+      hideAll(); showOverlay('menu'); clearInterval(gameLoopId);
+    });
+    document.getElementById('backFromGameOverBtn')?.addEventListener('click', () => {
+      hideAll(); showOverlay('menu');
+    });
 
-    // Spawn pipes
-    function spawnPipes(){
-      const x=canvas.width;
-      const h=20+Math.random()*(canvas.height/2-20);
-      const gap=120+Math.random()*80;
-      pipes = pipes.filter(o=>o.x+o.w>0);
-      if(pipes.length<2 || x - pipes[pipes.length-2].x >150){
-        pipes.push({x,y:0,w:40,h,passed:false});
-        pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false});
+    // Touch & Space
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') { bird?.flap(); e.preventDefault(); }
+      if (e.key === 'k') {
+        if (!paused) document.getElementById('pauseBtn').click();
       }
-    }
+    });
+    window.addEventListener('touchstart', e => {
+      if (bird && !paused) bird.flap();
+      e.preventDefault();
+    });
 
-    // Show/hide overlays
-    function hideAll(){
+    // Helpers
+    function hideAll() {
       ['menu','leaderboard','pause','gameover']
-        .forEach(id=>document.getElementById(id).classList.add('hidden'));
+        .forEach(id => document.getElementById(id).classList.add('hidden'));
       document.getElementById('pauseBtn').classList.add('hidden');
     }
-    function showOverlay(id){
+    function showOverlay(id) {
       hideAll();
-      if(id) document.getElementById(id).classList.remove('hidden');
-    }
-
-    // Start
-    document.getElementById('startBtn').onclick = start;
-    function start(){
-      showOverlay(null);
-      document.getElementById('pauseBtn').classList.remove('hidden');
-      score=0; frameNo=0; pipes=[]; paused=false;
-      bird=new Bird();
-      document.getElementById('score').innerText=score;
-      clearInterval(loopId);
-      loopId = setInterval(update,20);
-    }
-
-    // Update
-    function update(){
-      if(paused) return;
-      frameNo++;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      // background
-      ctx.fillStyle='#88c'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      // spawn pipes
-      if(frameNo===1 || frameNo%150===0) spawnPipes();
-      // draw pipes
-      for(let p of pipes){
-        p.x-=2;
-        ctx.fillStyle='green';
-        ctx.fillRect(p.x,p.y,p.w,p.h);
-      }
-      pipes = pipes.filter(o=>o.x+o.w>0);
-      // bird
-      bird.update(); bird.draw();
-      // score & collision
-      for(let i=0;i<pipes.length;i+=2){
-        const p=pipes[i];
-        if(!p.passed && bird.x>p.x+p.w){
-          p.passed=true; score++;
-          document.getElementById('score').innerText = score;
-        }
-        if(bird.collides(p) || bird.collides(pipes[i+1])){
-          return endGame();
-        }
-      }
-    }
-
-    // Pause
-    document.getElementById('pauseBtn').onclick = togglePause;
-    document.getElementById('resumeBtn')?.onclick = togglePause;
-    function togglePause(){
-      if(state==='playing' || (!loopId && paused)){} // ignore
-      paused = !paused;
-      if(paused){
-        clearInterval(loopId);
-        showOverlay('pause');
-      } else {
-        showOverlay(null);
-        loopId = setInterval(update,20);
-      }
-    }
-
-    // Leaderboard
-    document.getElementById('showLbBtn').onclick = ()=>showOverlay('leaderboard');
-    document.getElementById('backFromLbBtn').onclick = ()=>showOverlay('menu');
-    renderLB('#leaderboard-list');
-
-    // End game
-    document.getElementById('restartBtn')?.onclick = start;
-    document.getElementById('backFromGameOverBtn')?.onclick = ()=>showOverlay('menu');
-    function endGame(){
-      clearInterval(loopId);
-      showOverlay('gameover');
-      document.getElementById('finalScore').innerText = score;
-      // save LB
-      const name=prompt("Your name:","Anon")||"Anon";
-      lb.unshift({name,score}); lb.sort((a,b)=>b.score-a.score); lb=lb.slice(0,10);
-      saveLB(); renderLB('#leaderboard-list');
-    }
-
-    // Controls
-    window.addEventListener('keydown',e=>{
-      if(e.code==='Space') { bird?.flap(); e.preventDefault(); }
-      if(e.key==='k') togglePause();
-    });
-    window.addEventListener('touchstart',e=>{
-      bird?.flap(); e.preventDefault();
-    });
-
-    // State tracking
-    let state='menu';
-    function setState(s){
-      state=s;
-    }
-    // Override start/end/pause to call setState
-    function start(){
-      setState('playing');
-      hideAll();
-      document.getElementById('pauseBtn').classList.remove('hidden');
-      score=0; frameNo=0; pipes=[]; paused=false;
-      bird=new Bird(); document.getElementById('score').innerText=score;
-      clearInterval(loopId);
-      loopId=setInterval(update,20);
-    }
-    function endGame(){
-      clearInterval(loopId);
-      setState('gameover');
-      showOverlay('gameover');
-      document.getElementById('finalScore').innerText=score;
-      const name=prompt("Name:","Anon")||"Anon";
-      lb.unshift({name,score}); lb.sort((a,b)=>b.score-a.score); lb=lb.slice(0,10);
-      saveLB(); renderLB('#leaderboard-list');
-    }
-    function togglePause(){
-      if(state!=='playing' && state!=='paused') return;
-      if(state==='playing'){
-        paused=true; clearInterval(loopId); setState('paused');
-        showOverlay('pause');
-      } else {
-        paused=false; setState('playing');
-        hideAll(); document.getElementById('pauseBtn').classList.remove('hidden');
-        loopId=setInterval(update,20);
-      }
+      document.getElementById(id).classList.remove('hidden');
     }
   </script>
 </body>
