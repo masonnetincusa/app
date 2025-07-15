@@ -1,0 +1,299 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Flappy Bird Clone</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:Arial,sans-serif; background:#222; color:#fff; overflow-x:hidden; }
+    h1 { text-align:center; margin:20px 0; }
+    #game-container { position:relative; width:480px; height:270px; background:#000; margin:0 auto; overflow:hidden; }
+    @media(max-width:500px){ #game-container{width:100%;height:60vh;} }
+    #canvas { display:block; }
+    .overlay {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.85); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; z-index:10; text-align:center; padding:20px;
+    }
+    .hidden { display:none; }
+    .btn {
+      background:#f00; border:none; color:#fff;
+      padding:12px 24px; margin:10px; border-radius:8px;
+      font-size:16px; cursor:pointer;
+    }
+    #pauseBtn {
+      position:absolute; top:10px; right:10px;
+      background:#f00; border:none; color:#fff;
+      padding:8px; border-radius:8px;
+      font-size:14px; cursor:pointer; z-index:5; display:none;
+    }
+    #leaderboard-list { text-align:left; max-height:150px; overflow-y:auto; width:80%; }
+    #leaderboard-list div { border-bottom:1px solid #444; padding:4px 0; }
+  </style>
+
+  <!-- Firebase SDK (update if needed) -->
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <h1>Flappy Bird Clone</h1>
+  <div id="game-container">
+    <canvas id="canvas"></canvas>
+    <button id="pauseBtn">Pause</button>
+
+    <!-- MAIN MENU -->
+    <div id="main-menu" class="overlay">
+      <img id="titleImg" src="YOUR_BACKGROUND_IMG_URL" alt="Background" style="max-width:80%;margin-bottom:10px;">
+      <p>Version 2.0, Build 0014</p>
+      <p id="highScoreDisplay">High Score: 0</p>
+      <button class="btn" id="startBtn">Start</button>
+      <button class="btn" id="leaderboardMenuBtn">Leaderboard</button>
+    </div>
+
+    <!-- LEADERBOARD MENU -->
+    <div id="leaderboard-menu" class="overlay hidden">
+      <h2>Global Leaderboard</h2>
+      <div id="leaderboard-list"></div>
+      <button class="btn" id="backFromLeaderboardBtn">Back</button>
+    </div>
+
+    <!-- PAUSE MENU -->
+    <div id="pause-menu" class="overlay hidden">
+      <h2>Paused</h2>
+      <button class="btn" id="resumeBtn">Resume</button>
+      <button class="btn" id="backToMenuBtn">Main Menu</button>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="game-over" class="overlay hidden">
+      <h2>Game Over</h2>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <div id="leaderboard-list"></div>
+      <button class="btn" id="restartBtn">Restart</button>
+      <button class="btn" id="backToMenuBtn2">Main Menu</button>
+    </div>
+  </div>
+
+  <script>
+        // ==== CONFIGURE YOUR ASSETS HERE ====
+    const BACKGROUND_URL = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
+    const BIRD_URL       = "https://app.masonnet.org/bird.png";
+    const PIPE_URL       = "https://app.masonnet.org/pipe-green.png";
+    // ====================================
+
+    // ======== FIREBASE CONFIG ===========
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
+  authDomain: "masonnet-app.firebaseapp.com",
+  databaseURL: "https://masonnet-app-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app",
+  storageBucket: "masonnet-app.firebasestorage.app",
+  messagingSenderId: "245878148284",
+  appId: "1:245878148284:web:2b3f54cebc08ad14b594b9",
+  measurementId: "G-NY1MN2R295"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref("leaderboard");
+    // ====================================
+    firebase.initializeApp(firebaseConfig);
+    const leaderboardRef = firebase.database().ref("leaderboard");
+
+    // GLOBALS
+    let canvas, ctx, loopId;
+    let bird, obstacles = [], frameNo = 0, score = 0;
+    let paused = false;
+
+    // Load leaderboard into memory
+    let leaderboard = [];
+    function loadLeaderboard(){
+      leaderboardRef.orderByChild("score").limitToLast(10)
+        .on("value", snap => {
+          leaderboard = [];
+          snap.forEach(child => leaderboard.push(child.val()));
+          leaderboard.reverse(); // descending
+          document.getElementById("highScoreDisplay").innerText =
+            "High Score: " + (leaderboard[0]?.score || 0);
+        });
+    }
+
+    // PLAYER CLASS
+    class Bird {
+      constructor(){
+        this.img = new Image();
+        this.img.src = BIRD_URL;
+        this.x = 10; this.y = 120;
+        this.w = 30; this.h = 30;
+        this.vy = 0; this.gravity = 0.2;
+      }
+      draw(){
+        ctx.drawImage(this.img, this.x, this.y, this.w, this.h);
+      }
+      update(){
+        this.vy += this.gravity;
+        this.y += this.vy;
+        // floor check
+        if(this.y + this.h >= canvas.height){
+          this.y = canvas.height - this.h;
+          endGame();
+        }
+      }
+      collides(o){
+        return !(this.x+this.w<o.x||this.x>o.x+o.w||
+                 this.y+this.h<o.y||this.y>o.y+o.h);
+      }
+    }
+
+    // PIPE SPAWNER
+    function spawnPipes(){
+      const x = canvas.width;
+      const minH=20, maxH=200;
+      const h = Math.random()*(maxH-minH)+minH;
+      const minGap=80, maxGap=150;
+      const gap = Math.random()*(maxGap-minGap)+minGap;
+      // remove old
+      obstacles = obstacles.filter(o => o.x + o.w > 0);
+      if(obstacles.length < 2 || x - obstacles[obstacles.length-2].x > 100){
+        obstacles.push({ x, y:0, w:40, h, passed:false });
+        obstacles.push({ x, y:h+gap, w:40, h:canvas.height - h - gap, passed:false });
+      }
+    }
+
+    // INITIALIZE ON LOAD
+    window.onload = () => {
+      loadLeaderboard();
+      setupUI();
+      showMenu();
+    };
+
+    // SET UP CANVAS AND UI LISTENERS
+    function setupUI(){
+      canvas = document.getElementById("canvas");
+      ctx = canvas.getContext("2d");
+      document.getElementById("startBtn").onclick = startGame;
+      document.getElementById("leaderboardMenuBtn").onclick = () => showMode("leaderboard");
+      document.getElementById("backFromLeaderboardBtn").onclick = showMenu;
+      document.getElementById("pauseBtn").onclick = togglePause;
+      document.getElementById("resumeBtn").onclick = togglePause;
+      document.getElementById("backToMenuBtn").onclick = showMenu;
+      document.getElementById("backToMenuBtn2").onclick = showMenu;
+      document.getElementById("restartBtn").onclick = restartGame;
+      // Touch support
+      canvas.addEventListener("touchstart", e=>{ bird.vy = -4; e.preventDefault(); });
+      // Keyboard support
+      window.addEventListener("keydown", e=>{
+        if(e.code==="Space"){ bird.vy=-4; e.preventDefault(); }
+        if(e.key==="k") togglePause();
+      });
+    }
+
+    // SHOW/HIDE OVERLAYS
+    function hideAll(){
+      ["main-menu","leaderboard-menu","pause-menu","game-over"]
+        .forEach(id=>document.getElementById(id).classList.add("hidden"));
+      document.getElementById("pauseBtn").style.display="none";
+    }
+    function showMenu(){
+      hideAll();
+      document.getElementById("main-menu").classList.remove("hidden");
+    }
+    function showMode(mode){
+      hideAll();
+      document.getElementById(mode+"-menu").classList.remove("hidden");
+      if(mode==="leaderboard") renderLeaderboard("#leaderboard-list");
+      if(mode==="game-over") renderLeaderboard("#leaderboard-list");
+    }
+
+    // START / RESTART
+    function startGame(){
+      // Fullscreen prompt on mobile/desktop
+      if(!document.fullscreenElement){
+        document.getElementById("game-container").requestFullscreen?.();
+      }
+      hideAll();
+      score = 0; frameNo = 0; obstacles = [];
+      bird = new Bird();
+      document.getElementById("pauseBtn").style.display="block";
+      clearInterval(loopId);
+      loopId = setInterval(gameLoop,20);
+    }
+    function restartGame(){
+      clearInterval(loopId);
+      startGame();
+    }
+
+    // PAUSE
+    function togglePause(){
+      if(!loopId) return;
+      if(loopId){
+        clearInterval(loopId); loopId = null;
+        showMode("pause");
+      } else {
+        hideAll();
+        loopId = setInterval(gameLoop,20);
+      }
+    }
+
+    // GAME OVER
+    function endGame(){
+      clearInterval(loopId);
+      document.getElementById("finalScore").innerText = score;
+      showMode("game-over");
+      // push to Firebase
+      const name = prompt("Enter name:","Anon")||"Anon";
+      leaderboardRef.push({ name, score });
+    }
+
+    // GLOBAL LEADERBOARD RENDER
+    function renderLeaderboard(selector){
+      const div = document.querySelector(selector);
+      div.innerHTML = "";
+      db.orderByChild("score")
+        .limitToLast(10).once("value")
+        .then(snap => {
+          let arr=[];
+          snap.forEach(c=>arr.push(c.val()));
+          arr.sort((a,b)=>b.score-a.score);
+          arr.forEach((e,i)=>{
+            const line = document.createElement("div");
+            line.innerText = `${i+1}. ${e.name}: ${e.score}`;
+            div.appendChild(line);
+          });
+        });
+    }
+
+    // GAME LOOP
+    function gameLoop(){
+      frameNo++;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // draw background
+      const bg = new Image(); bg.src = BACKGROUND_URL;
+      ctx.drawImage(bg,0,0,canvas.width,canvas.height);
+      // spawn
+      if(frameNo===1||frameNo%150===0) spawnPipes();
+      // draw pipes
+      for(let p of obstacles){
+        p.x -= 2;
+        ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
+      }
+      // check collisions
+      for(let p of obstacles) if(bird.collides(p)) return endGame();
+      // score
+      for(let i=0;i<obstacles.length;i+=2){
+        if(!obstacles[i].passed && bird.x>obstacles[i].x+obstacles[i].w){
+          obstacles[i].passed=true; score++;
+        }
+      }
+      ctx.fillStyle="#000"; ctx.font="30px Arial";
+      ctx.fillText(score,canvas.width-60,40);
+      // update + draw bird
+      bird.update(); bird.draw();
+    }
+
+    // PRELOAD PIPE IMG
+    const pipeImg=new Image();
+    pipeImg.src=PIPE_URL;
+  </script>
+</body>
+</html>
