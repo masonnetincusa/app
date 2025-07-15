@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flappy Bird Clone</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    /* RESET */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    h1 { text-align:center; margin:20px 0; }
+    #game-container {
+      position: relative;
+      width: 480px; height: 270px;
+      background: #000;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    #canvas-container {
+      width:100%; height:100%;
+    }
+    .overlay {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.85);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      z-index:1000; text-align:center; padding:20px;
+    }
+    /* Show only main menu initially */
+    #main-menu { display:flex; }
+    #leaderboard-menu, #pause-menu, #game-over-screen { display:none; }
+    .menu-button {
+      background:#f00; border:none; color:#fff;
+      padding:12px 24px; margin:10px; border-radius:8px;
+      font-size:16px; cursor:pointer;
+    }
+    .extra-button { display:none; }
+    #fs-button-container { margin-top:10px; }
+    #leaderboard {
+      border-collapse:collapse; width:80%; max-width:400px;
+      background:#000; color:#fff; margin-bottom:10px;
+    }
+    #leaderboard th, #leaderboard td {
+      border:1px solid #fff; padding:8px; text-align:center;
+    }
+    #pauseButton {
+      position:absolute; top:10px; right:10px;
+      background:#f00; border:none; color:#fff;
+      padding:8px 12px; border-radius:8px;
+      font-size:14px; cursor:pointer; display:none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Flappy Bird Clone</h1>
+  <div id="game-container">
+    <div id="canvas-container"></div>
+    <!-- Main Menu -->
+    <div id="main-menu" class="overlay">
+      <img src="https://via.placeholder.com/300x80?text=Flappy+Bird" alt="Title"
+           style="max-width:80%; margin-bottom:10px;">
+      <p style="font-size:18px;">Version 2.0, Build 0014</p>
+      <p id="high-score-display">High Score: 0</p>
+      <button class="menu-button" onclick="startGameFromMenu()">Start</button>
+      <button class="menu-button extra-button" onclick="showLeaderboard()">Leaderboard</button>
+      <button class="menu-button extra-button" onclick="toggleSound()">Sound: On</button>
+      <div id="fs-button-container" class="extra-button">
+        <button class="menu-button" onclick="toggleFullScreen()">Full Screen</button>
+      </div>
+    </div>
+    <!-- Leaderboard -->
+    <div id="leaderboard-menu" class="overlay">
+      <h2>Leaderboard</h2>
+      <table id="leaderboard">
+        <tr><th>Rank</th><th>Name</th><th>Score</th></tr>
+      </table>
+      <button class="menu-button" onclick="showMainMenu()">Back</button>
+    </div>
+    <!-- Pause -->
+    <div id="pause-menu" class="overlay">
+      <h2>Paused</h2>
+      <button class="menu-button" onclick="togglePause()">Resume</button>
+      <button class="menu-button" onclick="backToMainMenu()">Main Menu</button>
+    </div>
+    <!-- Game Over -->
+    <div id="game-over-screen" class="overlay">
+      <h2>Game Over</h2>
+      <button class="menu-button" onclick="restartGame()">Restart</button>
+      <button class="menu-button" onclick="backToMainMenu()">Main Menu</button>
+    </div>
+    <button id="pauseButton" onclick="togglePause()">Pause</button>
+  </div>
+
+  <script>
+    // GLOBALS
+    let gameState = "menu";
+    let soundOn = true;
+    let leaderboard = [];
+    let canvas, ctx;
+    let frameNo, obstacles, score, player;
+    const highScoreKey = "flappyHighScores";
+
+    // PLAYER COMPONENT
+    function Component(w,h,c,x,y,type,img){
+      this.width=w; this.height=h; this.x=x; this.y=y;
+      this.gravity=0.1; this.gravitySpeed=0;
+      this.update=function(){
+        if(type==="image"&&img){
+          ctx.drawImage(img,this.x,this.y,w,h);
+        } else {
+          ctx.fillStyle=c; ctx.fillRect(this.x,this.y,w,h);
+        }
+      };
+      this.newPos=function(){
+        this.gravitySpeed+=this.gravity;
+        this.y+=this.gravitySpeed;
+        if(this.y+this.height>canvas.height){
+          clearInterval(gameLoop);
+          gameOver();
+        }
+      };
+      this.crashWith=function(obs){
+        return !(this.x+this.width<obs.x ||
+                 this.x>obs.x+obs.width ||
+                 this.y+this.height<obs.y ||
+                 this.y>obs.y+obs.height);
+      };
+      this.newPos.bind(this);
+    }
+
+    // INITIALIZE
+    window.onload=function(){
+      loadLeaderboard();
+      showMainMenu();
+    };
+
+    function initGame(){
+      // Create canvas
+      canvas=document.createElement("canvas");
+      canvas.width=gameState==="playing"&&document.fullscreenElement?window.innerWidth:480;
+      canvas.height=gameState==="playing"&&document.fullscreenElement?window.innerHeight:270;
+      ctx=canvas.getContext("2d");
+      const cont=document.getElementById("canvas-container");
+      cont.innerHTML=""; cont.appendChild(canvas);
+
+      // Setup game
+      frameNo=0; obstacles=[];
+      score=0;
+      player=new Component(30,30,"blue",10,120,"image",new Image());
+      player.image.src="https://app.masonnet.org/bird.png";
+      document.getElementById("pauseButton").style.display="block";
+      gameLoop=setInterval(updateGameArea,20);
+    }
+
+    // UPDATE
+    let gameLoop;
+    function updateGameArea(){
+      // Floor collision
+      if(player.y+player.height>=canvas.height){
+        clearInterval(gameLoop); gameOver(); return;
+      }
+      // Obstacle collision
+      for(let obs of obstacles){
+        if(player.crashWith(obs)){
+          clearInterval(gameLoop); gameOver(); return;
+        }
+      }
+      // Clear
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // Spawn obstacles
+      frameNo++;
+      if(frameNo===1||frameNo%150===0){
+        const x=canvas.width;
+        const minH=20,maxH=200;
+        const h=Math.floor(Math.random()*(maxH-minH)+minH);
+        const minGap=80,maxGap=200;
+        const gap=Math.floor(Math.random()*(maxGap-minGap)+minGap);
+        // Remove off-screen obstacles
+        obstacles=obstacles.filter(o=>o.x+o.width>0);
+        // Prevent overlap
+        if(obstacles.length<2||x-obstacles[obstacles.length-2].x>=80){
+          obstacles.push(new Component(40,h,"green",x,0));
+          obstacles.push(new Component(40,canvas.height-h-gap,"green",x,h+gap));
+        }
+      }
+      // Move & draw obstacles
+      for(let obs of obstacles){
+        obs.x-=2; obs.update();
+      }
+      // Score
+      for(let i=0;i<obstacles.length;i+=2){
+        if(!obstacles[i].passed&&player.x>obstacles[i].x+obstacles[i].width){
+          obstacles[i].passed=true; score++;
+        }
+      }
+      ctx.fillStyle="black"; ctx.font="30px Arial";
+      ctx.fillText(score,canvas.width-60,40);
+      // Player
+      player.newPos(); player.update();
+    }
+
+    // GAME OVER
+    function gameOver(){
+      updateLeaderboard(score);
+      document.getElementById("game-over-screen").style.display="flex";
+      document.getElementById("pauseButton").style.display="none";
+    }
+
+    function restartGame(){
+      document.getElementById("game-over-screen").style.display="none";
+      startGame();
+    }
+
+    // MENU HANDLERS
+    function showMainMenu(){
+      gameState="menu";
+      hideAll();
+      document.getElementById("main-menu").style.display="flex";
+      document.getElementById("canvas-container").innerHTML="";
+    }
+    function showLeaderboard(){
+      gameState="leaderboard";
+      hideAll();
+      document.getElementById("leaderboard-menu").style.display="flex";
+      renderLeaderboard();
+    }
+    function backToMainMenu(){
+      clearInterval(gameLoop);
+      showMainMenu();
+    }
+    function hideAll(){
+      document.getElementById("main-menu").style.display="none";
+      document.getElementById("leaderboard-menu").style.display="none";
+      document.getElementById("pause-menu").style.display="none";
+      document.getElementById("game-over-screen").style.display="none";
+      document.getElementById("pauseButton").style.display="none";
+    }
+
+    function startGame(){
+      hideAll();
+      initGame();
+    }
+
+    function startGameFromMenu(){
+      if(!document.fullscreenElement){
+        if(confirm("Play in full-screen?")) toggleFullScreen();
+        return;
+      }
+      startGame();
+    }
+
+    // PAUSE
+    function togglePause(){
+      if(gameState==="playing"){
+        clearInterval(gameLoop);
+        gameState="paused";
+        document.getElementById("pause-menu").style.display="flex";
+      } else if(gameState==="paused"){
+        document.getElementById("pause-menu").style.display="none";
+        gameState="playing";
+        gameLoop=setInterval(updateGameArea,20);
+      }
+    }
+
+    // FULLSCREEN
+    function toggleFullScreen(){
+      const elem = document.getElementById("game-container");
+      if(!document.fullscreenElement){
+        elem.requestFullscreen?.();
+      } else {
+        document.exitFullscreen?.();
+      }
+    }
+
+    // SOUND
+    function toggleSound(){
+      soundOn = !soundOn;
+      soundEffect.muted = !soundOn;
+      document.getElementById("soundButton").innerText = "Sound: " + (soundOn?"On":"Off");
+    }
+
+    function accelerate(n){
+      player.gravity = n;
+    }
+
+    window.addEventListener("keydown", e=>{
+      if(e.code==="Space"){ accelerate(-0.5); e.preventDefault(); }
+      if(e.key==="k"){ togglePause(); e.preventDefault(); }
+    });
+    window.addEventListener("keyup", e=>{
+      if(e.code==="Space"){ accelerate(0.1); e.preventDefault(); }
+    });
+
+    // LOCALSTORAGE LEADERBOARD
+    function loadLeaderboard(){
+      const raw = localStorage.getItem(highScoreKey);
+      if(raw) leaderboard = JSON.parse(raw);
+      else {
+        leaderboard = Array(10).fill().map((_,i)=>({name:`Player${i+1}`,score:0}));
+        localStorage.setItem(highScoreKey, JSON.stringify(leaderboard));
+      }
+    }
+    function updateLeaderboard(score){
+      if(score <= leaderboard[9].score) return;
+      const name = prompt("New High Score! Enter name:") || "Anon";
+      leaderboard.push({name,score});
+      leaderboard.sort((a,b)=>b.score-a.score);
+      leaderboard = leaderboard.slice(0,10);
+      localStorage.setItem(highScoreKey, JSON.stringify(leaderboard));
+    }
+    function renderLeaderboard(){
+      const table = document.getElementById("leaderboard");
+      table.innerHTML = "<tr><th>Rank</th><th>Name</th><th>Score</th></tr>";
+      leaderboard.forEach((e,i)=>{
+        const row = table.insertRow();
+        row.insertCell(0).innerText = i+1;
+        row.insertCell(1).innerText = e.name;
+        row.insertCell(2).innerText = e.score;
+      });
+    }
+
+    // IMAGE PRELOAD for background
+    let bgImage = new Image();
+    bgImage.crossOrigin = "anonymous";
+    bgImage.src = "https://your-custom-background-url.jpg"; // replace with yours
+    bgImage.onload = initGame;
+    bgImage.onerror = initGame;
+  </script>
+</body>
+</html>
