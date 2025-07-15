@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Bird – Fixed Scoring</title>
+  <title>Flappy Bird – Fully Working</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#222; color:#fff; }
@@ -11,8 +11,8 @@
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.85); display:flex; flex-direction:column;
-      align-items:center; justify-content:center; font-family:Arial, sans-serif;
-      text-align:center; z-index:10;
+      align-items:center; justify-content:center; text-align:center;
+      font-family:Arial,sans-serif; z-index:10;
     }
     .hidden { display:none; }
     button {
@@ -24,17 +24,19 @@
       position:absolute; top:10px; right:10px; background:#f00; border:none; color:#fff;
       padding:8px; font-size:14px; cursor:pointer; z-index:5; display:none;
     }
-    #leaderboard-list {
+    #leaderboard-list, #leaderboard-list-over {
       text-align:left; width:80%; max-height:150px; overflow-y:auto; margin-bottom:15px;
     }
-    #leaderboard-list div { border-bottom:1px solid #444; padding:4px 0; }
+    #leaderboard-list div, #leaderboard-list-over div {
+      border-bottom:1px solid #444; padding:4px 0;
+    }
   </style>
 </head>
 <body>
   <div id="game-container">
     <canvas id="canvas"></canvas>
     <div id="score">0</div>
-    <button id="pauseBtn" onclick="togglePause()">Pause</button>
+    <button id="pauseBtn">Pause</button>
 
     <!-- Main Menu -->
     <div id="menu" class="overlay">
@@ -43,32 +45,32 @@
       <button id="showLbBtn">Leaderboard</button>
     </div>
 
-    <!-- Leaderboard -->
+    <!-- Leaderboard Menu -->
     <div id="leaderboard" class="overlay hidden">
       <h2>Top Scores</h2>
       <div id="leaderboard-list"></div>
       <button id="backFromLbBtn">Back</button>
     </div>
 
-    <!-- Pause -->
+    <!-- Pause Menu -->
     <div id="pause" class="overlay hidden">
       <h2>Paused</h2>
       <button id="resumeBtn">Resume</button>
       <button id="backFromPauseBtn">Main Menu</button>
     </div>
 
-    <!-- Game Over -->
+    <!-- Game Over Menu -->
     <div id="gameover" class="overlay hidden">
       <h2>Game Over</h2>
       <p>Your Score: <span id="finalScore">0</span></p>
-      <div id="leaderboard-list"></div>
+      <div id="leaderboard-list-over"></div>
       <button id="restartBtn">Restart</button>
       <button id="backFromGameOverBtn">Main Menu</button>
     </div>
   </div>
 
   <script>
-    // ---- Canvas Setup ----
+    // Canvas setup
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     function resize() {
@@ -78,23 +80,23 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // ---- Game State ----
+    // Game variables
     let bird, pipes, score, frameNo, loopId, paused = false;
 
-    // ---- Leaderboard (localStorage) ----
+    // Leaderboard (localStorage)
     let lb = JSON.parse(localStorage.getItem('flappyLB') || '[]');
     function saveLB() { localStorage.setItem('flappyLB', JSON.stringify(lb)); }
-    function renderLB(selector) {
-      const div = document.querySelector(selector);
+    function renderLB(target) {
+      const div = document.querySelector(target);
       div.innerHTML = '';
       lb.slice(0,10).forEach((e,i) => {
-        const row = document.createElement('div');
-        row.innerText = `${i+1}. ${e.name}: ${e.score}`;
-        div.appendChild(row);
+        const d = document.createElement('div');
+        d.innerText = `${i+1}. ${e.name}: ${e.score}`;
+        div.appendChild(d);
       });
     }
 
-    // ---- Bird Class ----
+    // Bird class
     class Bird {
       constructor() {
         this.w = 30; this.h = 30;
@@ -104,12 +106,8 @@
       update() {
         this.vy += this.gravity;
         this.y += this.vy;
-        if (this.y < 0) {
-          this.y = 0; this.vy = 0;
-        }
-        if (this.y + this.h > canvas.height) {
-          endGame();
-        }
+        if (this.y < 0) { this.y = 0; this.vy = 0; }
+        if (this.y + this.h > canvas.height) endGame();
       }
       draw() {
         ctx.fillStyle = 'yellow';
@@ -128,47 +126,46 @@
       }
     }
 
-    // ---- Pipe Spawner (with isTop flag) ----
+    // Spawn pipes
     function spawnPipes() {
       const x = canvas.width;
-      const h = 20 + Math.random() * (canvas.height/2 - 20);
-      const gap = 120 + Math.random() * 80;
-      pipes = pipes.filter(p => p.x + p.w > 0);
+      const h = 20 + Math.random()*(canvas.height/2 - 20);
+      const gap = 120 + Math.random()*80;
+      pipes = pipes.filter(o => o.x + o.w > 0);
       if (pipes.length < 2 || x - pipes[pipes.length-2].x > 150) {
         pipes.push({ x, y:0, w:40, h, passed:false, isTop:true });
-        pipes.push({ x, y:h+gap, w:40, h:canvas.height - h - gap, passed:false, isTop:false });
+        pipes.push({ x, y:h+gap, w:40, h:canvas.height-h-gap, passed:false, isTop:false });
       }
     }
 
-    // ---- Main Game Loop ----
+    // Main update loop
     function update() {
       if (paused) return;
       frameNo++;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      // Background
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // background
       ctx.fillStyle = '#88c';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      // Spawn
+      // spawn
       if (frameNo === 1 || frameNo % 150 === 0) spawnPipes();
-      // Draw pipes
+      // draw pipes
       for (let p of pipes) {
         p.x -= 2;
         ctx.fillStyle = 'green';
         ctx.fillRect(p.x, p.y, p.w, p.h);
       }
-      // Clean
+      // clean
       pipes = pipes.filter(p => p.x + p.w > 0);
-      // Bird
+      // draw bird
       bird.update();
       bird.draw();
-      // Scoring: only top pipes
+      // scoring & collision
       for (let p of pipes) {
         if (p.isTop && !p.passed && bird.x > p.x + p.w) {
           p.passed = true;
           score++;
           document.getElementById('score').innerText = score;
         }
-        // Collision
         if (bird.collides(p)) {
           endGame();
           return;
@@ -176,100 +173,89 @@
       }
     }
 
-    // ---- Game Controls ----
+    // Start game
     document.getElementById('startBtn').onclick = () => {
       hideAll();
-      document.getElementById('pauseBtn').classList.remove('hidden');
-      score = 0; frameNo = 0; pipes = [];
-      bird = new Bird();
+      document.getElementById('pauseBtn').style.display = 'block';
+      score = 0; frameNo = 0; pipes = []; bird = new Bird(); paused = false;
       document.getElementById('score').innerText = score;
-      paused = false;
       clearInterval(loopId);
       loopId = setInterval(update, 20);
     };
 
+    // Pause / Resume
     document.getElementById('pauseBtn').onclick = () => {
-      if (!paused) {
-        paused = true;
-        clearInterval(loopId);
-        showOverlay('pause');
-      }
+      paused = true;
+      clearInterval(loopId);
+      showOverlay('pause');
     };
     document.getElementById('resumeBtn')?.onclick = () => {
       hideAll();
-      document.getElementById('pauseBtn').classList.remove('hidden');
+      document.getElementById('pauseBtn').style.display = 'block';
       paused = false;
       clearInterval(loopId);
       loopId = setInterval(update, 20);
     };
 
+    // Restart
     document.getElementById('restartBtn')?.onclick = () => {
+      document.getElementById('pauseBtn').style.display = 'block';
       hideAll();
-      document.getElementById('pauseBtn').classList.remove('hidden');
-      score = 0; frameNo = 0; pipes = [];
-      bird = new Bird();
+      score = 0; frameNo = 0; pipes = []; bird = new Bird(); paused = false;
       document.getElementById('score').innerText = score;
-      paused = false;
       clearInterval(loopId);
       loopId = setInterval(update, 20);
     };
 
-    document.getElementById('backFromGameOverBtn')?.onclick = () => {
-      hideAll();
-      showOverlay('menu');
-    };
+    // End game
+    function endGame() {
+      clearInterval(loopId);
+      showOverlay('gameover');
+      document.getElementById('finalScore').innerText = score;
+      // save to LB
+      const name = prompt("Your name:", "Anon") || "Anon";
+      lb.unshift({name,score});
+      lb.sort((a,b)=>b.score-a.score);
+      lb = lb.slice(0,10);
+      saveLB();
+      renderLB('#leaderboard-list-over');
+    }
 
+    // Leaderboard
     document.getElementById('showLbBtn').onclick = () => {
       hideAll();
       renderLB('#leaderboard-list');
       showOverlay('leaderboard');
     };
-    document.getElementById('backFromLbBtn').onclick = () => {
-      hideAll();
+    document.getElementById('backFromLbBtn').onclick = () => showOverlay('menu');
+
+    // Back to menu from pause/gameover
+    document.getElementById('backFromPauseBtn')?.onclick = () => {
+      clearInterval(loopId);
+      showOverlay('menu');
+    };
+    document.getElementById('backFromGameOverBtn')?.onclick = () => {
       showOverlay('menu');
     };
 
-    // Touch + Spacebar
+    // Controls: Space and touch
     window.addEventListener('keydown', e => {
-      if (e.code === 'Space' && bird) {
-        bird.flap();
-        e.preventDefault();
-      }
-      if (e.key === 'k') {
-        document.getElementById('pauseBtn').click();
-      }
+      if (e.code === 'Space') { bird?.flap(); e.preventDefault(); }
+      if (e.key === 'k') document.getElementById('pauseBtn').click();
     });
     window.addEventListener('touchstart', e => {
-      if (bird && !paused) {
-        bird.flap();
-        e.preventDefault();
-      }
+      bird?.flap(); e.preventDefault();
     });
 
-    // Hide/Show helpers
+    // Helpers
     function hideAll() {
-      ['menu','leaderboard','pause','gameover'].forEach(id =>
-        document.getElementById(id).classList.add('hidden')
-      );
-      document.getElementById('pauseBtn').classList.add('hidden');
+      ['menu','leaderboard','pause','gameover']
+        .forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById('pauseBtn').style.display = 'none';
     }
     function showOverlay(id) {
       hideAll();
       document.getElementById(id).classList.remove('hidden');
-    }
-
-    // End game procedure
-    function endGame() {
-      clearInterval(loopId);
-      showOverlay('gameover');
-      document.getElementById('finalScore').innerText = score;
-      // Save to localStorage
-      const name = prompt('Enter name:','Anon')||'Anon';
-      lb.unshift({name,score});
-      lb.sort((a,b)=>b.score-a.score);
-      lb = lb.slice(0,10);
-      saveLB();
-      renderLB('#leaderboard-list');
     }
   </script>
 </body>
