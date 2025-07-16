@@ -5,27 +5,27 @@
   <title>Flappy Bird – Images + Firebase</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    html,body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff }
-    #game-container { position:relative; width:100%; height:100% }
-    canvas { display:block; width:100%; height:100% }
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
+    #game-container { position:relative; width:100%; height:100%; }
+    canvas { display:block; width:100%; height:100%; }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.8); display:flex; flex-direction:column;
-      align-items:center; justify-content:center; text-align:center;
-      font-family:Arial,sans-serif; z-index:10
+      align-items:center; justify-content:center; text-align:center; z-index:10;
+      font-family:Arial, sans-serif;
     }
-    .hidden { display:none }
+    .hidden { display:none; }
     button {
       background:#e74c3c; border:none; color:#fff;
       padding:12px 24px; margin:8px; font-size:16px; cursor:pointer;
       touch-action: manipulation;
     }
-    #score { position:absolute; top:10px; left:10px; font-size:24px; z-index:5 }
-    #pauseBtn { position:absolute; top:10px; right:10px; display:none }
+    #score { position:absolute; top:10px; left:10px; font-size:24px; z-index:5; }
+    #pauseBtn { position:absolute; top:10px; right:10px; display:none; z-index:5; }
     #lb-list, #lb-list-go {
-      text-align:left; width:80%; max-height:150px; overflow-y:auto; margin:12px 0
+      text-align:left; width:80%; max-height:150px; overflow-y:auto; margin:12px 0;
     }
-    #lb-list div,#lb-list-go div { border-bottom:1px solid #444; padding:4px 0 }
+    #lb-list div, #lb-list-go div { border-bottom:1px solid #444; padding:4px 0; }
   </style>
 
   <!-- Firebase SDK -->
@@ -71,51 +71,51 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // ============ CONFIGURE YOUR IMAGES & FIREBASE =============
-    const BACKGROUND_URL = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
-    const BIRD_URL       = "https://app.masonnet.org/bird.png";
-    const PIPE_URL       = "https://app.masonnet.org/pipe-green.png";
+    // ----- CONFIGURE YOUR ASSETS & FIREBASE -----
+    const BACKGROUND_URL = "YOUR_BACKGROUND_IMG_URL";
+    const BIRD_IMG_URL   = "YOUR_BIRD_IMG_URL";
+    const PIPE_IMG_URL   = "YOUR_PIPE_IMG_URL";
     const firebaseConfig = {
-  apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
-  authDomain: "masonnet-app.firebaseapp.com",
-  databaseURL: "https://masonnet-app-default-rtdb.firebaseio.com",
-  projectId: "masonnet-app",
-  storageBucket: "masonnet-app.firebasestorage.app",
-  messagingSenderId: "245878148284",
-  appId: "1:245878148284:web:2b3f54cebc08ad14b594b9",
-  measurementId: "G-NY1MN2R295"
-};
-    // ==============================================================
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    // ---------------------------------------------
 
-    // initialize Firebase
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref("leaderboard");
 
-    // Canvas & elements
-    const canvas     = document.getElementById("canvas");
-    const ctx        = canvas.getContext("2d");
-    const scoreDiv   = document.getElementById("score");
-    const pauseBtn   = document.getElementById("pauseBtn");
-    const startBtn   = document.getElementById("startBtn");
-    const lbBtn      = document.getElementById("leaderboardBtn");
-    const backLbBtn  = document.getElementById("backFromLbBtn");
-    const resumeBtn  = document.getElementById("resumeBtn");
-    const backPause  = document.getElementById("backFromPauseBtn");
-    const restartBtn = document.getElementById("restartBtn");
-    const backGoBtn  = document.getElementById("backFromGameOverBtn");
-    const finalScore = document.getElementById("finalScore");
+    // Canvas & UI elements
+    const canvas   = document.getElementById("canvas");
+    const ctx      = canvas.getContext("2d");
+    const scoreDiv = document.getElementById("score");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const finalScoreEl = document.getElementById("finalScore");
 
-    // preload images
+    // DOM overlays
+    const overlays = {
+      menu:       document.getElementById("menu"),
+      leaderboard:document.getElementById("leaderboard"),
+      pause:      document.getElementById("pause"),
+      gameover:   document.getElementById("gameover")
+    };
+
+    // Preload images
     const bgImg   = new Image(); bgImg.src   = BACKGROUND_URL;
     const birdImg = new Image(); birdImg.src = BIRD_IMG_URL;
     const pipeImg = new Image(); pipeImg.src = PIPE_IMG_URL;
 
-    // game state
-    let state = "menu"; // menu, leaderboard, playing, paused, gameover
+    // Game state
+    let state   = "menu"; // menu, leaderboard, playing, paused, gameover
     let bird, pipes, score, frame, animId;
 
-    // resize canvas
-    function resize(){
+    // Resize canvas on window resize
+    function resize() {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
     }
@@ -125,9 +125,10 @@
     // Bird class
     class Bird {
       constructor(){
-        this.w = 30; this.h = 30;
-        this.x = 50; this.y = (canvas.height - this.h)/2;
-        this.vy = 0; this.g = 0.3;
+        this.w  = 30; this.h = 30;
+        this.x  = 50;
+        this.y  = (canvas.height - this.h) / 2;
+        this.vy = 0;  this.g = 0.3;
       }
       update(){
         this.vy += this.g;
@@ -151,19 +152,19 @@
       }
     }
 
-    // spawn pipes (tag top only)
-    function spawn(){
+    // Spawn pipes (tag only the top pipe for scoring)
+    function spawnPipes(){
       const x   = canvas.width;
-      const h   = 20 + Math.random()*(canvas.height/2 - 20);
-      const gap = 120 + Math.random()*80;
+      const h   = 20 + Math.random() * (canvas.height/2 - 20);
+      const gap = 120 + Math.random() * 80;
       pipes = pipes.filter(p => p.x + p.w > 0);
-      if(pipes.length < 2 || x - pipes[pipes.length-2].x > 200){
+      if(pipes.length < 2 || x - pipes[pipes.length-2].x > 200) {
         pipes.push({ x, y:0,    w:40, h,                 passed:false, isTop:true  });
         pipes.push({ x, y:h+gap,w:40, h:canvas.height-h-gap, passed:false, isTop:false });
       }
     }
 
-    // main loop
+    // Main game loop
     function loop(){
       if(state !== "playing") return;
       frame++;
@@ -171,7 +172,7 @@
       ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
       // spawn & draw pipes
-      if(frame === 1 || frame % 150 === 0) spawn();
+      if(frame === 1 || frame % 150 === 0) spawnPipes();
       pipes.forEach(p => {
         p.x -= 2;
         ctx.drawImage(pipeImg, p.x, p.y, p.w, p.h);
@@ -182,7 +183,7 @@
       bird.update();
       bird.draw();
 
-      // scoring & collision
+      // score & collisions
       pipes.forEach(p => {
         if(p.isTop && !p.passed && bird.x > p.x + p.w){
           p.passed = true;
@@ -195,23 +196,22 @@
       animId = requestAnimationFrame(loop);
     }
 
-    // overlays
+    // Show/hide overlays
     function hideAll(){
-      ["menu","leaderboard","pause","gameover"]
-        .forEach(id => document.getElementById(id).classList.add("hidden"));
+      Object.values(overlays).forEach(el => el.classList.add("hidden"));
       pauseBtn.style.display = "none";
     }
     function show(id){
       hideAll();
       if(id === "playing"){
         pauseBtn.style.display = "block";
-      } else if(id){
-        document.getElementById(id).classList.remove("hidden");
+      } else if(id in overlays){
+        overlays[id].classList.remove("hidden");
       }
     }
 
-    // fetch & render Firebase Top 10
-    function fetchLB(target){
+    // Fetch & render global top-10 from Firebase
+    function fetchLeaderboard(target){
       const list = document.querySelector(target);
       list.innerHTML = "";
       db.orderByChild("score").limitToLast(10).once("value", snap => {
@@ -226,9 +226,9 @@
       });
     }
 
-    // actions
+    // Game actions
     function startGame(){
-      state = "playing";
+      state  = "playing";
       bird   = new Bird();
       pipes  = [];
       score  = 0;
@@ -240,7 +240,7 @@
     }
     function showLeaderboard(){
       state = "leaderboard";
-      fetchLB("#lb-list");
+      fetchLeaderboard("#lb-list");
       show("leaderboard");
     }
     function pauseGame(){
@@ -263,42 +263,44 @@
     function endGame(){
       cancelAnimationFrame(animId);
       state = "gameover";
-      finalScore.textContent = score;
+      finalScoreEl.textContent = score;
       show("gameover");
       const name = prompt("Enter name for leaderboard","Anon")||"Anon";
-      db.push({ name, score }).then(()=>{
-        fetchLB("#lb-list-go");
+      db.push({ name, score }).then(() => {
+        fetchLeaderboard("#lb-list-go");
       });
     }
     function restartGame(){
       startGame();
     }
 
-    // bind click + touchend
+    // Utility: bind both click + touchend to support desktop & mobile
     function bind(id, fn){
       const el = document.getElementById(id);
       el.addEventListener("click", fn);
-      el.addEventListener("touchend", e => { e.preventDefault(); fn() });
+      el.addEventListener("touchend", e => { e.preventDefault(); fn(); });
     }
-    bind("startBtn",         startGame);
-    bind("leaderboardBtn",   showLeaderboard);
-    bind("backFromLbBtn",    backToMenu);
-    bind("pauseBtn",         pauseGame);
-    bind("resumeBtn",        resumeGame);
-    bind("backFromPauseBtn", backToMenu);
-    bind("restartBtn",       restartGame);
+
+    // Wire up buttons
+    bind("startBtn",           startGame);
+    bind("leaderboardBtn",     showLeaderboard);
+    bind("backFromLbBtn",      backToMenu);
+    bind("pauseBtn",           pauseGame);
+    bind("resumeBtn",          resumeGame);
+    bind("backFromPauseBtn",   backToMenu);
+    bind("restartBtn",         restartGame);
     bind("backFromGameOverBtn", backToMenu);
 
-    // controls
+    // Keyboard/touch controls
     window.addEventListener("keydown", e => {
-      if(e.code==="Space" && state==="playing"){ bird.flap(); e.preventDefault(); }
-      if(e.key==="k" && state==="playing"){ pauseGame(); }
+      if(e.code==="Space" && state==="playing") { bird.flap(); e.preventDefault(); }
+      if(e.key==="k"     && state==="playing")   { pauseGame(); }
     });
     window.addEventListener("touchstart", e => {
-      if(state==="playing"){ bird.flap(); e.preventDefault(); }
+      if(state==="playing") { bird.flap(); e.preventDefault(); }
     });
 
-    // initial menu
+    // Show initial Main Menu
     show("menu");
   });
   </script>
