@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – Start Fix</title>
+  <title>Flappy Bird – Final Build</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
@@ -77,7 +77,7 @@
 
     // Game state
     let state = 'menu'; // menu, leaderboard, playing, paused, gameover
-    let bird, pipes, score, frame, anim;
+    let bird, pipes, score, frame, animId;
 
     // Resize canvas
     function resize(){
@@ -87,137 +87,134 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Bird
+    // Bird class
     class Bird {
       constructor(){
         this.w=30; this.h=30;
         this.x=50; this.y=(canvas.height - this.h)/2;
-        this.vy=0; this.g=0.3;
+        this.vy=0; this.gravity=0.3;
       }
       update(){
-        this.vy+=this.g; this.y+=this.vy;
-        if(this.y<0) this.y=0;
-        if(this.y+this.h>canvas.height) this.y=canvas.height - this.h;
+        this.vy += this.gravity;
+        this.y += this.vy;
+        if(this.y < 0) this.y = 0;
+        if(this.y + this.h > canvas.height) this.y = canvas.height - this.h;
       }
       draw(){
-        ctx.fillStyle='yellow';
-        ctx.fillRect(this.x,this.y,this.w,this.h);
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
       }
-      flap(){ this.vy=-6; }
+      flap(){ this.vy = -6; }
       collides(p){
         return !(
-          this.x+this.w < p.x ||
-          this.x     > p.x+p.w ||
-          this.y+this.h < p.y ||
-          this.y     > p.y+p.h
+          this.x + this.w < p.x ||
+          this.x > p.x + p.w ||
+          this.y + this.h < p.y ||
+          this.y > p.y + p.h
         );
       }
     }
 
-    // Spawn pipes (tag top only)
+    // Spawn pipes (tag only top for scoring)
     function spawn(){
       const x   = canvas.width;
-      const h   = 20 + Math.random()*(canvas.height/2 - 20);
-      const gap = 120 + Math.random()*80;
-      pipes = pipes.filter(p=>p.x + p.w > 0);
-      if(pipes.length<2 || x - pipes[pipes.length-2].x > 200){
-        pipes.push({ x, y:0,     w:40, h,                 passed:false, isTop:true  });
-        pipes.push({ x, y:h+gap, w:40, h:canvas.height-h-gap, passed:false, isTop:false });
+      const h   = 20 + Math.random() * (canvas.height/2 - 20);
+      const gap = 120 + Math.random() * 80;
+      pipes = pipes.filter(p => p.x + p.w > 0);
+      if(pipes.length < 2 || x - pipes[pipes.length-2].x > 200){
+        pipes.push({ x, y:0,    w:40, h, passed:false, isTop:true  });
+        pipes.push({ x, y:h+gap,w:40, h:canvas.height-h-gap, passed:false, isTop:false });
       }
     }
 
-    // Main loop
+    // Main game loop
     function loop(){
-      if(state!=='playing') return;
+      if(state !== 'playing') return;
       frame++;
       ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      if(frame===1 || frame%150===0) spawn();
-      pipes.forEach(p=>{
-        p.x-=2;
-        ctx.fillStyle='green';
-        ctx.fillRect(p.x,p.y,p.w,p.h);
+      if(frame === 1 || frame % 150 === 0) spawn();
+      pipes.forEach(p => {
+        p.x -= 2;
+        ctx.fillStyle = 'green';
+        ctx.fillRect(p.x, p.y, p.w, p.h);
       });
-      pipes = pipes.filter(p=>p.x + p.w>0);
+      pipes = pipes.filter(p => p.x + p.w > 0);
 
       bird.update(); bird.draw();
 
-      pipes.forEach(p=>{
-        if(p.isTop && !p.passed && bird.x>p.x+p.w){
-          p.passed=true; score++;
+      pipes.forEach(p => {
+        if(p.isTop && !p.passed && bird.x > p.x + p.w){
+          p.passed = true;
+          score++;
           scoreDiv.textContent = score;
         }
         if(bird.collides(p)) endGame();
       });
 
-      anim = requestAnimationFrame(loop);
+      animId = requestAnimationFrame(loop);
     }
 
-    // Overlay helpers
+    // Show/hide overlays
     function hideAll(){
-      ['menu','leaderboard','pause','gameover']
-        .forEach(id=>document.getElementById(id).classList.add('hidden'));
+      ['menu','leaderboard','pause','gameover'].forEach(id => 
+        document.getElementById(id).classList.add('hidden')
+      );
       pauseBtn.style.display = 'none';
     }
     function show(id){
       hideAll();
-      if(id==='playing'){
-        pauseBtn.style.display='block';
-        return;
+      if(id === 'playing'){
+        pauseBtn.style.display = 'block';
+      } else if(id){
+        document.getElementById(id).classList.remove('hidden');
       }
-      document.getElementById(id).classList.remove('hidden');
     }
 
-    // Start
+    // Game actions
     function startGame(){
-      state='playing';
+      state = 'playing';
       bird   = new Bird();
       pipes  = [];
       score  = 0;
       frame  = 0;
       scoreDiv.textContent = score;
       show('playing');
-      cancelAnimationFrame(anim);
+      cancelAnimationFrame(animId);
       loop();
     }
-
-    // Leaderboard
-    function showLB(){
-      state='leaderboard';
+    function showLeaderboard(){
+      state = 'leaderboard';
       show('leaderboard');
     }
-
-    // Pause
     function pauseGame(){
-      if(state!=='playing') return;
-      state='paused';
-      cancelAnimationFrame(anim);
+      if(state !== 'playing') return;
+      state = 'paused';
+      cancelAnimationFrame(animId);
       show('pause');
     }
     function resumeGame(){
-      if(state!=='paused') return;
-      state='playing';
+      if(state !== 'paused') return;
+      state = 'playing';
       show('playing');
-      cancelAnimationFrame(anim);
+      cancelAnimationFrame(animId);
       loop();
     }
-
-    // Game Over
+    function backToMenu(){
+      state = 'menu';
+      show('menu');
+    }
     function endGame(){
-      cancelAnimationFrame(anim);
-      state='gameover';
+      cancelAnimationFrame(animId);
+      state = 'gameover';
       finalScore.textContent = score;
       show('gameover');
     }
     function restartGame(){
       startGame();
     }
-    function backToMenu(){
-      state='menu';
-      show('menu');
-    }
 
-    // Bind one click+touch for each action
+    // Utility: bind click + touchend
     function bind(id, fn){
       const el = document.getElementById(id);
       el.addEventListener('click', fn);
@@ -227,21 +224,22 @@
       });
     }
 
-    bind('startBtn',       startGame);
-    bind('leaderboardBtn', showLB);
-    bind('backFromLbBtn',  backToMenu);
-    bind('pauseBtn',       pauseGame);
-    bind('resumeBtn',      resumeGame);
+    // Bind all buttons
+    bind('startBtn',         startGame);
+    bind('leaderboardBtn',   showLeaderboard);
+    bind('backFromLbBtn',    backToMenu);
+    bind('pauseBtn',         pauseGame);
+    bind('resumeBtn',        resumeGame);
     bind('backFromPauseBtn', backToMenu);
-    bind('restartBtn',     restartGame);
+    bind('restartBtn',       restartGame);
     bind('backFromGameOverBtn', backToMenu);
 
-    // Controls
-    window.addEventListener('keydown', e=>{
+    // Controls: Space/K and touch
+    window.addEventListener('keydown', e => {
       if(e.code==='Space' && state==='playing'){ bird.flap(); e.preventDefault(); }
-      if(e.key==='k'    && state==='playing'){ pauseGame(); }
+      if(e.key==='k' && state==='playing'){ pauseGame(); }
     });
-    window.addEventListener('touchstart', e=>{
+    window.addEventListener('touchstart', e => {
       if(state==='playing'){ bird.flap(); e.preventDefault(); }
     });
 
