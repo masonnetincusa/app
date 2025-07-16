@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird Minimal Test – Fixed</title>
+  <title>Flappy Bird Minimal – One Point Fix</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
@@ -65,13 +65,13 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById('canvas');
-      const ctx    = canvas.getContext('2d');
+      const canvas    = document.getElementById('canvas');
+      const ctx       = canvas.getContext('2d');
       const scoreDiv  = document.getElementById('score');
       const pauseBtn  = document.getElementById('pauseBtn');
       const finalScore= document.getElementById('finalScore');
 
-      let state = 'menu';          // menu, playing, paused, leaderboard, gameover
+      let state = 'menu';
       let bird, pipes, score, frame, loopId;
 
       // Resize canvas
@@ -82,75 +82,73 @@
       window.addEventListener('resize', resize);
       resize();
 
-      // Bird class
+      // Bird
       class Bird {
         constructor(){
-          this.w = 30; this.h = 30;
-          this.x = 50; this.y = canvas.height/2 - this.h/2;
-          this.vy = 0; this.g = 0.3;
+          this.w=30; this.h=30;
+          this.x=50; this.y=canvas.height/2-this.h/2;
+          this.vy=0; this.g=0.3;
         }
         update(){
-          this.vy += this.g; this.y += this.vy;
-          if(this.y < 0) this.y = 0;
-          if(this.y + this.h > canvas.height) this.y = canvas.height - this.h;
+          this.vy+=this.g; this.y+=this.vy;
+          if(this.y<0) this.y=0;
+          if(this.y+this.h>canvas.height) this.y=canvas.height-this.h;
         }
         draw(){
-          ctx.fillStyle = 'yellow';
-          ctx.fillRect(this.x, this.y, this.w, this.h);
+          ctx.fillStyle='yellow';
+          ctx.fillRect(this.x,this.y,this.w,this.h);
         }
-        flap(){
-          this.vy = -6;
-        }
+        flap(){ this.vy=-6; }
         collides(p){
           return !(
-            this.x + this.w < p.x ||
-            this.x > p.x + p.w ||
-            this.y + this.h < p.y ||
-            this.y > p.y + p.h
+            this.x+this.w<p.x ||
+            this.x>p.x+p.w ||
+            this.y+this.h<p.y ||
+            this.y>p.y+p.h
           );
         }
       }
 
-      // Spawn pipes
+      // Spawn pipes with isTop flag
       function spawn(){
-        const x = canvas.width;
-        const h = 20 + Math.random()*(canvas.height/2 - 20);
+        const x   = canvas.width;
+        const h   = 20 + Math.random()*(canvas.height/2 - 20);
         const gap = 120 + Math.random()*80;
         pipes = pipes.filter(p => p.x + p.w > 0);
-        if(pipes.length < 2 || x - pipes[pipes.length-2].x > 200){
-          pipes.push({x,y:0,w:40,h,passed:false});
-          pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false});
+        if(pipes.length<2 || x - pipes[pipes.length-2].x > 200){
+          // top pipe
+          pipes.push({ x, y:0,   w:40, h, passed:false, isTop:true });
+          // bottom pipe
+          pipes.push({ x, y:h+gap,w:40,h:canvas.height-h-gap,passed:false, isTop:false });
         }
       }
 
       // Main loop
       function loop(){
-        if(state !== 'playing') return;
+        if(state!=='playing') return;
         frame++;
         ctx.clearRect(0,0,canvas.width,canvas.height);
 
-        // Pipes
-        if(frame===1 || frame%150===0) spawn();
+        // pipes
+        if(frame===1||frame%150===0) spawn();
         pipes.forEach(p=>{
-          p.x -= 2;
-          ctx.fillStyle = 'green';
+          p.x-=2;
+          ctx.fillStyle='green';
           ctx.fillRect(p.x,p.y,p.w,p.h);
         });
-        pipes = pipes.filter(p => p.x + p.w > 0);
+        pipes = pipes.filter(p=>p.x+p.w>0);
 
-        // Bird
+        // bird
         bird.update(); bird.draw();
 
-        // Score & collision
+        // scoring & collision (only top pipes)
         pipes.forEach(p=>{
-          if(!p.passed && bird.x > p.x + p.w){
+          if(p.isTop && !p.passed && bird.x>p.x+p.w){
             p.passed = true;
             score++;
             scoreDiv.textContent = score;
           }
-          if(bird.collides(p)) {
-            endGame();
-          }
+          if(bird.collides(p)) endGame();
         });
 
         loopId = requestAnimationFrame(loop);
@@ -167,9 +165,9 @@
         if(id) document.getElementById(id).classList.remove('hidden');
       }
 
-      // Start Game
+      // Start
       function startGame(){
-        state = 'playing';
+        state='playing';
         hideAll();
         bird   = new Bird();
         pipes  = [];
@@ -181,21 +179,20 @@
         loop();
       }
 
-      // End Game
+      // End
       function endGame(){
         cancelAnimationFrame(loopId);
-        state = 'gameover';
+        state='gameover';
         finalScore.textContent = score;
         show('gameover');
       }
 
-      // Bind Buttons (click + touchend)
-      const bind = (id, fn) => {
+      // Bind click+touch
+      function bind(id, fn){
         const el = document.getElementById(id);
         el.addEventListener('click', fn);
         el.addEventListener('touchend', fn);
-      };
-
+      }
       bind('startBtn', startGame);
       bind('leaderboardBtn', ()=> show('leaderboard'));
       bind('backFromLb', ()=> show('menu'));
@@ -208,24 +205,27 @@
       });
       bind('resumeBtn', ()=> {
         if(state==='paused'){
-          startGame(); // restart loop but keep state
           state='playing';
+          hideAll();
+          pauseBtn.classList.remove('hidden');
+          cancelAnimationFrame(loopId);
+          loop();
         }
       });
       bind('backFromPause', ()=> show('menu'));
-      bind('restartBtn', ()=> startGame());
+      bind('restartBtn', startGame);
       bind('backFromGameOver', ()=> show('menu'));
 
       // Controls
-      window.addEventListener('keydown', e => {
-        if(e.code==='Space' && state==='playing'){ bird.flap(); e.preventDefault(); }
-        if(e.key==='k' && state==='playing'){ document.getElementById('pauseBtn').click(); }
+      window.addEventListener('keydown', e=>{
+        if(e.code==='Space'&&state==='playing'){ bird.flap(); e.preventDefault(); }
+        if(e.key==='k'&&state==='playing'){ document.getElementById('pauseBtn').click(); }
       });
-      window.addEventListener('touchstart', e => {
+      window.addEventListener('touchstart', e=>{
         if(state==='playing'){ bird.flap(); e.preventDefault(); }
       });
 
-      // Initial menu
+      // show initial
       show('menu');
     });
   </script>
