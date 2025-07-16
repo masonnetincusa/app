@@ -1,59 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Debug Pause→Menu</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Button Tap Debug</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <style>
-    body,html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
+    body, html { margin:0; padding:0; height:100%; background:#000; color:#fff; }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
-      display:flex; align-items:center; justify-content:center; flex-direction:column;
-      background:rgba(0,0,0,0.8); font-family:Arial,sans-serif; text-align:center;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      font-family:Arial, sans-serif; text-align:center;
     }
-    button { padding:12px 24px; margin:8px; font-size:16px; }
+    button {
+      background:#e74c3c; border:none; color:#fff;
+      padding:16px 32px; margin:12px; font-size:18px;
+      touch-action: manipulation;
+    }
   </style>
 </head>
 <body>
   <div id="menu" class="overlay">
     <h1>Main Menu</h1>
-    <button id="toPause">Go to Pause</button>
+    <button 
+      onclick="alert('onclick fired')"
+      ontouchstart="alert('ontouchstart fired')">
+      Test Button
+    </button>
   </div>
-
-  <div id="pause" class="overlay" style="display:none">
-    <h1>Paused</h1>
-    <button id="backToMenu">Back to Menu</button>
-  </div>
-
-  <script>
-    // 1) Alert on load
-    alert('Script loaded');
-
-    const menu = document.getElementById('menu');
-    const pause = document.getElementById('pause');
-    const toPauseBtn = document.getElementById('toPause');
-    const backBtn = document.getElementById('backToMenu');
-
-    function showMenu(){
-      console.log('showMenu()');
-      menu.style.display = 'flex';
-      pause.style.display = 'none';
-    }
-    function showPause(){
-      console.log('showPause()');
-      menu.style.display = 'none';
-      pause.style.display = 'flex';
-    }
-
-    // 2) Log clicks/taps
-    toPauseBtn.addEventListener('click', ()=>{ console.log('toPause clicked (click)'); showPause(); });
-    toPauseBtn.addEventListener('touchend',()=>{ console.log('toPause clicked (touch)'); showPause(); });
-
-    backBtn.addEventListener('click', ()=>{ console.log('back clicked (click)'); showMenu(); });
-    backBtn.addEventListener('touchend',()=>{ console.log('back clicked (touch)'); showMenu(); });
-
-    // 3) Start on Main Menu
-    showMenu();
-  </script>
 </body>
 </html>
