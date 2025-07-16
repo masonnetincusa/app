@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Bird – Pause Fixed</title>
+  <title>Flappy Bird – Custom Images & Firebase</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
-    html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#222; color:#fff; }
+    html, body { margin:0; padding:0; width:100%; height:100%; background:#222; color:#fff; overflow:hidden; }
     #game-container { position:relative; width:100%; height:100%; background:#000; }
     canvas { display:block; width:100%; height:100%; }
     .overlay {
@@ -17,21 +17,22 @@
     .hidden { display:none; }
     button {
       background:#f00; border:none; color:#fff;
-      padding:12px 24px; margin:10px; font-size:16px; cursor:pointer;
+      padding:12px 24px; margin:8px; font-size:16px; cursor:pointer;
     }
     #score { position:absolute; top:10px; left:10px; font-size:24px; z-index:5; }
     #pauseBtn {
-      position:absolute; top:10px; right:10px;
-      background:#f00; border:none; color:#fff;
-      padding:8px; font-size:14px; cursor:pointer; z-index:5;
+      position:absolute; top:10px; right:10px; background:#f00; border:none; color:#fff;
+      padding:8px 16px; font-size:14px; cursor:pointer; z-index:5;
     }
-    #leaderboard-list, #leaderboard-list-over {
-      text-align:left; width:80%; max-height:150px; overflow-y:auto; margin-bottom:15px;
+    #lb-list, #lb-list-go {
+      text-align:left; width:80%; max-height:150px; overflow-y:auto; margin-bottom:12px;
     }
-    #leaderboard-list div, #leaderboard-list-over div {
-      border-bottom:1px solid #444; padding:4px 0;
-    }
+    #lb-list div, #lb-list-go div { border-bottom:1px solid #444; padding:4px 0; }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 </head>
 <body>
   <div id="game-container">
@@ -46,10 +47,10 @@
       <button id="showLbBtn">Leaderboard</button>
     </div>
 
-    <!-- Leaderboard -->
+    <!-- Leaderboard Menu -->
     <div id="leaderboard" class="overlay hidden">
-      <h2>Top Scores</h2>
-      <div id="leaderboard-list"></div>
+      <h2>Global Top 10</h2>
+      <div id="lb-list"></div>
       <button id="backFromLbBtn">Back</button>
     </div>
 
@@ -60,209 +61,254 @@
       <button id="backFromPauseBtn">Main Menu</button>
     </div>
 
-    <!-- Game Over -->
+    <!-- Game Over Menu -->
     <div id="gameover" class="overlay hidden">
       <h2>Game Over</h2>
       <p>Your Score: <span id="finalScore">0</span></p>
-      <div id="leaderboard-list-over"></div>
+      <div id="lb-list-go"></div>
       <button id="restartBtn">Restart</button>
       <button id="backFromGameOverBtn">Main Menu</button>
     </div>
   </div>
 
   <script>
-    // Canvas setup
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    function resize(){
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    document.addEventListener('DOMContentLoaded', () => {
+      // -- CONFIGURE YOUR ASSETS & FIREBASE HERE --
+      const BACKGROUND_URL = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/089918d8-99ff-45de-a084-3fe85d0e3fcc/dg34rsu-29a3d144-dc3f-473e-a949-f73a4ba1ef7c.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDU3IiwicGF0aCI6IlwvZlwvMDg5OTE4ZDgtOTlmZi00NWRlLWEwODQtM2ZlODVkMGUzZmNjXC9kZzM0cnN1LTI5YTNkMTQ0LWRjM2YtNDczZS1hOTQ5LWY3M2E0YmExZWY3Yy5wbmciLCJ3aWR0aCI6Ijw9NjA4In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0._FI7nnUO3ZCIz23z4_juaIbbiEa_LQd1lX6MK-0iUEE";
+      const BIRD_URL       = "https://app.masonnet.org/bird.png";
+      const PIPE_URL       = "https://app.masonnet.org/pipe-green.png";
 
-    // Game state
-    let bird, pipes, score, frameNo, loopId, paused = false;
+      const firebaseConfig = {
+  apiKey: "AIzaSyA4YGz73C13yVjqqMzpM2oJHHqJebYwnOU",
+  authDomain: "masonnet-app.firebaseapp.com",
+  databaseURL: "https://masonnet-app-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app",
+  storageBucket: "masonnet-app.firebasestorage.app",
+  messagingSenderId: "245878148284",
+  appId: "1:245878148284:web:2b3f54cebc08ad14b594b9",
+  measurementId: "G-NY1MN2R295"
+};
+      // ---------------------------------------------
 
-    // Leaderboard (localStorage)
-    let lb = JSON.parse(localStorage.getItem('flappyLB') || '[]');
-    function saveLB(){ localStorage.setItem('flappyLB', JSON.stringify(lb)); }
-    function renderLB(selector){
-      const div = document.querySelector(selector);
-      div.innerHTML = '';
-      lb.slice(0,10).forEach((e,i)=>{
-        const d = document.createElement('div');
-        d.innerText = `${i+1}. ${e.name}: ${e.score}`;
-        div.appendChild(d);
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database().ref('leaderboard');
+
+      // Canvas setup
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // Preload images
+      const bgImg   = new Image(); bgImg.src   = BACKGROUND_URL;
+      const birdImg = new Image(); birdImg.src = BIRD_IMG_URL;
+      const pipeImg = new Image(); pipeImg.src = PIPE_IMG_URL;
+
+      // Game state
+      let state = 'menu'; // menu, playing, paused, leaderboard, gameover
+      let bird, pipes, score, frameNo, animId;
+
+      // Leaderboard cache
+      let lbCache = [];
+
+      // Render global leaderboard
+      function fetchAndRenderLB(selector) {
+        const list = document.querySelector(selector);
+        list.innerHTML = '';
+        db.orderByChild('score').limitToLast(10).once('value', snap => {
+          const arr = [];
+          snap.forEach(c => arr.push(c.val()));
+          arr.sort((a,b)=>b.score - a.score);
+          arr.forEach((e,i)=>{
+            const d = document.createElement('div');
+            d.textContent = `${i+1}. ${e.name}: ${e.score}`;
+            list.appendChild(d);
+          });
+        });
+      }
+
+      // Bird class
+      class Bird {
+        constructor() {
+          this.w = 30; this.h = 30;
+          this.x = 50; this.y = canvas.height/2 - this.h/2;
+          this.vy = 0; this.g = 0.2;
+        }
+        update() {
+          this.vy += this.g;
+          this.y += this.vy;
+          if (this.y < 0) { this.y = 0; this.vy = 0; }
+          if (this.y + this.h > canvas.height) endGame();
+        }
+        draw() {
+          ctx.drawImage(birdImg, this.x, this.y, this.w, this.h);
+        }
+        flap() { this.vy = -6; }
+        collides(p) {
+          return !(
+            this.x + this.w < p.x ||
+            this.x > p.x + p.w ||
+            this.y + this.h < p.y ||
+            this.y > p.y + p.h
+          );
+        }
+      }
+
+      // Spawn pipes (top/bottom pair)
+      function spawnPipes() {
+        const x = canvas.width;
+        const h = 20 + Math.random()*(canvas.height/2 - 20);
+        const gap = 120 + Math.random()*80;
+        pipes = pipes.filter(o => o.x + o.w > 0);
+        if (pipes.length < 2 || x - pipes[pipes.length-2].x > 150) {
+          pipes.push({x,y:0,w:40,h,passed:false,isTop:true});
+          pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false,isTop:false});
+        }
+      }
+
+      // Main loop
+      function loop() {
+        if (state !== 'playing') return;
+        frameNo++;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        // Draw background
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        // Spawn pipes
+        if (frameNo === 1 || frameNo % 150 === 0) spawnPipes();
+        // Draw pipes
+        pipes.forEach(p => {
+          p.x -= 2;
+          ctx.drawImage(pipeImg, p.x, p.y, p.w, p.h);
+        });
+        pipes = pipes.filter(p => p.x + p.w > 0);
+        // Draw bird
+        bird.update();
+        bird.draw();
+        // Score & collisions
+        pipes.forEach(p => {
+          if (p.isTop && !p.passed && bird.x > p.x + p.w) {
+            p.passed = true;
+            score++;
+            document.getElementById('score').textContent = score;
+          }
+          if (bird.collides(p)) endGame();
+        });
+        animId = requestAnimationFrame(loop);
+      }
+
+      // Overlay helpers
+      function hideAll() {
+        ['menu','leaderboard','pause','gameover']
+          .forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById('pauseBtn').classList.add('hidden');
+      }
+      function show(id) {
+        hideAll();
+        if (id) document.getElementById(id).classList.remove('hidden');
+      }
+
+      // Start game
+      document.getElementById('startBtn').onclick = () => {
+        state = 'playing';
+        hideAll();
+        bird   = new Bird();
+        pipes  = [];
+        score  = 0;
+        frameNo= 0;
+        document.getElementById('score').textContent = score;
+        document.getElementById('pauseBtn').classList.remove('hidden');
+        cancelAnimationFrame(animId);
+        loop();
+      };
+
+      // Pause
+      document.getElementById('pauseBtn').onclick = () => {
+        if (state === 'playing') {
+          state = 'paused';
+          cancelAnimationFrame(animId);
+          show('pause');
+        }
+      };
+      document.getElementById('resumeBtn')?.onclick = () => {
+        if (state === 'paused') {
+          state = 'playing';
+          show(null);
+          document.getElementById('pauseBtn').classList.remove('hidden');
+          cancelAnimationFrame(animId);
+          loop();
+        }
+      };
+
+      // Restart
+      document.getElementById('restartBtn')?.onclick = () => {
+        state = 'playing';
+        hideAll();
+        bird   = new Bird();
+        pipes  = [];
+        score  = 0;
+        frameNo= 0;
+        document.getElementById('score').textContent = score;
+        document.getElementById('pauseBtn').classList.remove('hidden');
+        cancelAnimationFrame(animId);
+        loop();
+      };
+
+      // Main Menu from Pause/Game Over
+      document.getElementById('backFromPauseBtn')?.onclick = () => {
+        cancelAnimationFrame(animId);
+        state = 'menu';
+        show('menu');
+      };
+      document.getElementById('backFromGameOverBtn')?.onclick = () => {
+        state = 'menu';
+        show('menu');
+      };
+
+      // Game Over
+      function endGame() {
+        cancelAnimationFrame(animId);
+        state = 'gameover';
+        show('gameover');
+        document.getElementById('finalScore').textContent = score;
+        const name = prompt('Enter name for leaderboard','Anon')||'Anon';
+        db.push({ name, score }).then(() => {
+          fetchAndRenderLB('#lb-list-go');
+        });
+      }
+
+      // Leaderboard
+      document.getElementById('showLbBtn').onclick = () => {
+        state = 'leaderboard';
+        show('leaderboard');
+        fetchAndRenderLB('#lb-list');
+      };
+      document.getElementById('backFromLbBtn').onclick = () => {
+        state = 'menu';
+        show('menu');
+      };
+
+      // Controls
+      window.addEventListener('keydown', e => {
+        if (e.code==='Space' && state==='playing') {
+          bird.flap(); e.preventDefault();
+        }
+        if (e.key==='k' && state==='playing') {
+          document.getElementById('pauseBtn').click();
+        }
       });
-    }
-
-    // Bird class
-    class Bird {
-      constructor(){
-        this.w = 30; this.h = 30;
-        this.x = 50; this.y = canvas.height/2 - this.h/2;
-        this.vy = 0; this.gravity = 0.2;
-      }
-      update(){
-        this.vy += this.gravity;
-        this.y += this.vy;
-        if(this.y < 0){ this.y = 0; this.vy = 0; }
-        if(this.y + this.h > canvas.height) endGame();
-      }
-      draw(){
-        ctx.fillStyle = 'yellow';
-        ctx.fillRect(this.x, this.y, this.w, this.h);
-      }
-      flap(){
-        this.vy = -6;
-      }
-      collides(p){
-        return !(
-          this.x + this.w < p.x ||
-          this.x > p.x + p.w ||
-          this.y + this.h < p.y ||
-          this.y > p.y + p.h
-        );
-      }
-    }
-
-    // Spawn pipes (tag top pipes)
-    function spawnPipes(){
-      const x = canvas.width;
-      const h = 20 + Math.random()*(canvas.height/2 - 20);
-      const gap = 120 + Math.random()*80;
-      pipes = pipes.filter(p=>p.x + p.w > 0);
-      if(pipes.length < 2 || x - pipes[pipes.length-2].x > 150){
-        pipes.push({x, y:0, w:40, h, passed:false, isTop:true});
-        pipes.push({x, y:h+gap, w:40, h:canvas.height-h-gap, passed:false, isTop:false});
-      }
-    }
-
-    // Main update loop
-    function update(){
-      if(paused) return;
-      frameNo++;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      // background
-      ctx.fillStyle = '#88c';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      // spawn
-      if(frameNo===1 || frameNo%150===0) spawnPipes();
-      // draw pipes
-      for(let p of pipes){
-        p.x -= 2;
-        ctx.fillStyle = 'green';
-        ctx.fillRect(p.x, p.y, p.w, p.h);
-      }
-      // remove offscreen
-      pipes = pipes.filter(p=>p.x + p.w > 0);
-      // bird
-      bird.update();
-      bird.draw();
-      // scoring & collision
-      for(let p of pipes){
-        if(p.isTop && !p.passed && bird.x > p.x + p.w){
-          p.passed = true;
-          score++;
-          document.getElementById('score').innerText = score;
+      window.addEventListener('touchstart', e => {
+        if (state==='playing') {
+          bird.flap(); e.preventDefault();
         }
-        if(bird.collides(p)){
-          endGame();
-          return;
-        }
-      }
-    }
+      });
 
-    // Helpers to show/hide overlays
-    function hideAll(){
-      ['menu','leaderboard','pause','gameover']
-        .forEach(id=>document.getElementById(id).classList.add('hidden'));
-      document.getElementById('pauseBtn').classList.add('hidden');
-    }
-    function showOverlay(id){
-      hideAll();
-      if(id) document.getElementById(id).classList.remove('hidden');
-    }
-
-    // Start button
-    document.getElementById('startBtn').onclick = () => {
-      hideAll();
-      bird = new Bird();
-      pipes = [];
-      score = 0;
-      frameNo = 0;
-      paused = false;
-      document.getElementById('score').innerText = score;
-      document.getElementById('pauseBtn').classList.remove('hidden');
-      clearInterval(loopId);
-      loopId = setInterval(update, 20);
-    };
-
-    // Pause button
-    document.getElementById('pauseBtn').onclick = () => {
-      paused = true;
-      clearInterval(loopId);
-      showOverlay('pause');
-    };
-
-    // Resume button
-    document.getElementById('resumeBtn')?.onclick = () => {
-      hideAll();
-      document.getElementById('pauseBtn').classList.remove('hidden');
-      paused = false;
-      clearInterval(loopId);
-      loopId = setInterval(update, 20);
-    };
-
-    // Restart button
-    document.getElementById('restartBtn')?.onclick = () => {
-      hideAll();
-      bird = new Bird();
-      pipes = [];
-      score = 0;
-      frameNo = 0;
-      paused = false;
-      document.getElementById('score').innerText = score;
-      document.getElementById('pauseBtn').classList.remove('hidden');
-      clearInterval(loopId);
-      loopId = setInterval(update, 20);
-    };
-
-    // Back to menu from gameover
-    document.getElementById('backFromGameOverBtn')?.onclick = () => showOverlay('menu');
-
-    // Leaderboard menu
-    document.getElementById('showLbBtn').onclick = () => {
-      hideAll();
-      renderLB('#leaderboard-list');
-      showOverlay('leaderboard');
-    };
-    document.getElementById('backFromLbBtn').onclick = () => showOverlay('menu');
-
-    // Back to menu from pause
-    document.getElementById('backFromPauseBtn')?.onclick = () => showOverlay('menu');
-
-    // End game
-    function endGame(){
-      clearInterval(loopId);
-      showOverlay('gameover');
-      document.getElementById('finalScore').innerText = score;
-      const name = prompt('Enter name:','Anon')||'Anon';
-      lb.unshift({name,score});
-      lb.sort((a,b)=>b.score-a.score);
-      lb = lb.slice(0,10);
-      saveLB();
-      renderLB('#leaderboard-list-over');
-    }
-
-    // Controls
-    window.addEventListener('keydown', e => {
-      if(e.code==='Space' && bird && !paused){ bird.flap(); e.preventDefault(); }
-      if(e.key==='k'){ document.getElementById('pauseBtn').click(); }
-    });
-    window.addEventListener('touchstart', e => {
-      if(bird && !paused){ bird.flap(); e.preventDefault(); }
+      // Initial menu
+      show('menu');
     });
   </script>
 </body>
