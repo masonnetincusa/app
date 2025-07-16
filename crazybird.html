@@ -2,54 +2,57 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Pause→Menu Test</title>
+  <title>Debug Pause→Menu</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { margin:0; overflow:hidden; }
+    body,html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.8); color:#fff;
       display:flex; align-items:center; justify-content:center; flex-direction:column;
-      font-family:Arial; text-align:center;
+      background:rgba(0,0,0,0.8); font-family:Arial,sans-serif; text-align:center;
     }
-    #pauseOverlay, #menuOverlay {
-      display:none;
-    }
-    button { padding:10px 20px; margin:10px; font-size:16px; }
+    button { padding:12px 24px; margin:8px; font-size:16px; }
   </style>
 </head>
 <body>
-  <div id="menuOverlay" class="overlay">
+  <div id="menu" class="overlay">
     <h1>Main Menu</h1>
     <button id="toPause">Go to Pause</button>
   </div>
 
-  <div id="pauseOverlay" class="overlay">
+  <div id="pause" class="overlay" style="display:none">
     <h1>Paused</h1>
-    <button id="backToMenu">Main Menu</button>
+    <button id="backToMenu">Back to Menu</button>
   </div>
 
   <script>
-    const menuOverlay = document.getElementById('menuOverlay');
-    const pauseOverlay = document.getElementById('pauseOverlay');
+    // 1) Alert on load
+    alert('Script loaded');
+
+    const menu = document.getElementById('menu');
+    const pause = document.getElementById('pause');
     const toPauseBtn = document.getElementById('toPause');
-    const backToMenuBtn = document.getElementById('backToMenu');
+    const backBtn = document.getElementById('backToMenu');
 
-    function showMenu() {
-      menuOverlay.style.display = 'flex';
-      pauseOverlay.style.display = 'none';
+    function showMenu(){
+      console.log('showMenu()');
+      menu.style.display = 'flex';
+      pause.style.display = 'none';
     }
-    function showPause() {
-      menuOverlay.style.display = 'none';
-      pauseOverlay.style.display = 'flex';
+    function showPause(){
+      console.log('showPause()');
+      menu.style.display = 'none';
+      pause.style.display = 'flex';
     }
 
-    toPauseBtn.addEventListener('click', showPause);
-    toPauseBtn.addEventListener('touchend', showPause);
+    // 2) Log clicks/taps
+    toPauseBtn.addEventListener('click', ()=>{ console.log('toPause clicked (click)'); showPause(); });
+    toPauseBtn.addEventListener('touchend',()=>{ console.log('toPause clicked (touch)'); showPause(); });
 
-    backToMenuBtn.addEventListener('click', showMenu);
-    backToMenuBtn.addEventListener('touchend', showMenu);
+    backBtn.addEventListener('click', ()=>{ console.log('back clicked (click)'); showMenu(); });
+    backBtn.addEventListener('touchend',()=>{ console.log('back clicked (touch)'); showMenu(); });
 
-    // Start at Main Menu
+    // 3) Start on Main Menu
     showMenu();
   </script>
 </body>
