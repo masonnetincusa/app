@@ -2,33 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – Firebase Leaderboard v2</title>
+  <title>Flappy Bird – Firebase Leaderboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
-    #game-container { position:relative; width:100%; height:100%; }
-    canvas { display:block; width:100%; height:100%; }
-    .overlay {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.8); display:flex; flex-direction:column;
-      align-items:center; justify-content:center; text-align:center;
-      font-family:Arial,sans-serif; z-index:10;
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: #000; color: #fff;
+      overflow: hidden;
     }
-    .hidden { display:none; }
+    #game-container {
+      position: relative;
+      width: 100%; height: 100%;
+    }
+    canvas {
+      display: block;
+      width: 100%; height: 100%;
+    }
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      z-index: 10;
+    }
+    .hidden { display: none; }
     button {
-      background:#e74c3c; border:none; color:#fff;
-      padding:12px 24px; margin:8px; font-size:16px; cursor:pointer;
+      background: #e74c3c;
+      border: none;
+      color: #fff;
+      padding: 12px 24px;
+      margin: 8px;
+      font-size: 16px;
+      cursor: pointer;
       touch-action: manipulation;
     }
-    #score { position:absolute; top:10px; left:10px; font-size:48px; font-weight:bold; z-index:5; }
-    #pauseBtn { position:absolute; top:10px; right:10px; display:none; z-index:5; }
-    #lb-list, #lb-list-go {
-      text-align:left; width:80%; max-height:150px; overflow-y:auto; margin:12px 0;
+    #score {
+      position: absolute;
+      top: 10px; left: 10px;
+      font-size: 48px;
+      font-weight: bold;
+      z-index: 5;
     }
-    #lb-list div, #lb-list-go div { border-bottom:1px solid #444; padding:4px 0; }
+    #pauseBtn {
+      position: absolute;
+      top: 10px; right: 10px;
+      z-index: 5;
+      display: none;
+    }
+    #lb-list, #lb-list-go {
+      text-align: left;
+      width: 80%;
+      max-height: 150px;
+      overflow-y: auto;
+      margin: 12px 0;
+    }
+    #lb-list div, #lb-list-go div {
+      border-bottom: 1px solid #444;
+      padding: 4px 0;
+    }
   </style>
 
-  <!-- Firebase v9 Compat -->
+  <!-- Firebase v9 compat -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 </head>
@@ -45,7 +86,7 @@
       <button id="leaderboardBtn">Leaderboard</button>
     </div>
 
-    <!-- Leaderboard Overlay -->
+    <!-- Global Leaderboard -->
     <div id="leaderboard" class="overlay hidden">
       <h2>Global Top 10</h2>
       <div id="lb-list"></div>
@@ -71,7 +112,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // ----- YOUR FIREBASE CONFIG HERE -----
+    // ----- CONFIGURE FIREBASE -----
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
@@ -83,11 +124,10 @@ const firebaseConfig = {
   appId: "1:783919367562:web:b7bb809332a4e873f3b473",
   measurementId: "G-X1YKV5VK7J"
 };
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref("leaderboard");
+    // --------------------------------
 
-    // UI elements
     const canvas      = document.getElementById("canvas");
     const ctx         = canvas.getContext("2d");
     const scoreDiv    = document.getElementById("score");
@@ -100,206 +140,236 @@ const firebaseConfig = {
       gameover:    document.getElementById("gameover")
     };
 
-    let state="menu", bird, pipes, score, frame, animId;
+    let state = "menu",
+        bird, pipes, score, frame, animId;
 
-    // Resize canvas
-    function resize(){
+    // Resize canvas to fill window
+    function resize() {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
     }
     window.addEventListener("resize", resize);
     resize();
 
-    // Bird
+    // Bird class
     class Bird {
-      constructor(){
-        this.w=30; this.h=30;
-        this.x=50; this.y=(canvas.height - this.h)/2;
-        this.vy=0; this.g=0.3;
+      constructor() {
+        this.w  = 30; this.h = 30;
+        this.x  = 50;
+        this.y  = (canvas.height - this.h)/2;
+        this.vy = 0;  this.g = 0.3;
       }
-      update(){
-        this.vy += this.g; this.y += this.vy;
-        if(this.y<0){ this.y=0; this.vy=0; }
-        if(this.y+this.h>=canvas.height){
+      update() {
+        this.vy += this.g;
+        this.y  += this.vy;
+        if (this.y < 0) {
+          this.y = 0; this.vy = 0;
+        }
+        if (this.y + this.h >= canvas.height) {
           this.y = canvas.height - this.h;
           endGame();
         }
       }
-      draw(){
-        ctx.fillStyle="yellow";
-        ctx.fillRect(this.x,this.y,this.w,this.h);
+      draw() {
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(this.x, this.y, this.w, this.h);
       }
-      flap(){ this.vy=-6; }
-      collides(p){
+      flap() {
+        this.vy = -6;
+      }
+      collides(p) {
         return !(
-          this.x+this.w<p.x ||
-          this.x>p.x+p.w ||
-          this.y+this.h<p.y ||
-          this.y>p.y+p.h
+          this.x + this.w < p.x ||
+          this.x > p.x + p.w ||
+          this.y + this.h < p.y ||
+          this.y > p.y + p.h
         );
       }
     }
 
-    // Spawn pipes
-    function spawnPipes(){
+    // Spawn pipe pairs
+    function spawnPipes() {
       const x   = canvas.width;
       const h   = 20 + Math.random()*(canvas.height/2 - 20);
       const gap = 120 + Math.random()*80;
-      pipes = pipes.filter(p=>p.x+p.w>0);
-      if(pipes.length<2 || x - pipes[pipes.length-2].x>200){
-        pipes.push({x,y:0,w:40,h,passed:false,isTop:true});
-        pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false,isTop:false});
+
+      pipes = pipes.filter(p => p.x + p.w > 0);
+      if (pipes.length < 2 || x - pipes[pipes.length-2].x > 200) {
+        pipes.push({ x, y:0,    w:40, h, passed:false, isTop:true  });
+        pipes.push({ x, y:h+gap,w:40, h:canvas.height-h-gap, passed:false, isTop:false });
       }
     }
 
-    // Main loop
-    function loop(){
-      if(state!=="playing") return;
+    // Game loop
+    function loop() {
+      if (state !== "playing") return;
       frame++;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if(frame===1||frame%150===0) spawnPipes();
-      pipes.forEach(p=>{
-        p.x-=2;
-        ctx.fillStyle="green";
-        ctx.fillRect(p.x,p.y,p.w,p.h);
+      if (frame === 1 || frame % 150 === 0) spawnPipes();
+      pipes.forEach(p => {
+        p.x -= 2;
+        ctx.fillStyle = "green";
+        ctx.fillRect(p.x, p.y, p.w, p.h);
       });
-      pipes=pipes.filter(p=>p.x+p.w>0);
+      pipes = pipes.filter(p => p.x + p.w > 0);
 
       bird.update();
       bird.draw();
 
-      pipes.forEach(p=>{
-        if(bird.collides(p)){
-          endGame(); return;
+      pipes.forEach(p => {
+        if (bird.collides(p)) {
+          endGame();
+          return;
         }
-        if(p.isTop && !p.passed && bird.x>p.x+p.w){
-          p.passed=true;
+        if (p.isTop && !p.passed && bird.x > p.x + p.w) {
+          p.passed = true;
           score++;
-          scoreDiv.textContent=score;
+          scoreDiv.textContent = score;
         }
       });
 
-      animId=requestAnimationFrame(loop);
+      animId = requestAnimationFrame(loop);
     }
 
     // Show/hide overlays
-    function hideAll(){
-      Object.values(overlays).forEach(o=>o.classList.add("hidden"));
-      pauseBtn.style.display="none";
+    function hideAll() {
+      Object.values(overlays).forEach(o => o.classList.add("hidden"));
+      pauseBtn.style.display = "none";
     }
-    function show(id){
+    function show(id) {
       hideAll();
-      if(id==="playing"){
-        pauseBtn.style.display="block";
-      } else if(overlays[id]){
+      if (id === "playing") {
+        pauseBtn.style.display = "block";
+      } else if (overlays[id]) {
         overlays[id].classList.remove("hidden");
       }
     }
 
-    // Render Firebase Top-10
-    function renderGlobalLB(sel){
-      const el=document.querySelector(sel);
-      el.innerHTML="";
-      db.orderByChild("score").limitToLast(10).once("value",snap=>{
-        const arr=[];
-        snap.forEach(c=>arr.push(c.val()));
-        arr.sort((a,b)=>b.score-a.score);
-        arr.forEach((e,i)=>{
-          const d=document.createElement("div");
-          d.textContent=`${i+1}. ${e.name}: ${e.score}`;
-          el.appendChild(d);
+    // Fetch & render global top-10
+    function renderGlobalLB(selector) {
+      const container = document.querySelector(selector);
+      container.innerHTML = "";
+      db.orderByChild("score")
+        .limitToLast(10)
+        .once("value", snap => {
+          const arr = [];
+          snap.forEach(ch => arr.push(ch.val()));
+          arr.sort((a,b) => b.score - a.score);
+          arr.forEach((entry, idx) => {
+            const div = document.createElement("div");
+            div.textContent = `${idx+1}. ${entry.name}: ${entry.score}`;
+            container.appendChild(div);
+          });
         });
-      });
     }
 
-    // Actions
-    function startGame(){
-      state="playing"; bird=new Bird(); pipes=[]; score=0; frame=0;
-      scoreDiv.textContent=score;
-      show("playing"); cancelAnimationFrame(animId); loop();
+    // Game actions
+    function startGame() {
+      state = "playing";
+      bird  = new Bird();
+      pipes = [];
+      score = 0;
+      frame = 0;
+      scoreDiv.textContent = score;
+      show("playing");
+      cancelAnimationFrame(animId);
+      loop();
     }
 
-    function showLeaderboard(){
-      state="leaderboard";
+    function showLeaderboard() {
+      state = "leaderboard";
       renderGlobalLB("#lb-list");
       show("leaderboard");
     }
 
-    function pauseGame(){
-      if(state!=="playing") return;
-      state="paused"; cancelAnimationFrame(animId); show("pause");
-    }
-
-    function resumeGame(){
-      if(state!=="paused") return;
-      state="playing"; show("playing"); cancelAnimationFrame(animId); loop();
-    }
-
-    function backToMenu(){
-      state="menu"; show("menu");
-    }
-
-    function endGame(){
+    function pauseGame() {
+      if (state !== "playing") return;
+      state = "paused";
       cancelAnimationFrame(animId);
-      state="gameover";
-      finalScoreE.textContent=score;
+      show("pause");
+    }
 
-      // decide if new high score
-      db.orderByChild("score").limitToLast(10).once("value",snap=>{
-        const arr=[];
-        snap.forEach(c=>arr.push(c.val()));
-        arr.sort((a,b)=>b.score-a.score);
-        const lowest = arr.length<10 ? 0 : arr[arr.length-1].score;
+    function resumeGame() {
+      if (state !== "paused") return;
+      state = "playing";
+      show("playing");
+      cancelAnimationFrame(animId);
+      loop();
+    }
 
-        if(score>lowest){
-          const name = prompt("🎉 New High Score! Enter your name:","Anon")||"Anon";
-          db.push({name,score}).then(()=>{
+    function backToMenu() {
+      state = "menu";
+      show("menu");
+    }
+
+    function endGame() {
+      cancelAnimationFrame(animId);
+      state = "gameover";
+      finalScoreE.textContent = score;
+
+      // Determine lowest of current top-10
+      db.orderByChild("score")
+        .limitToLast(10)
+        .once("value", snap => {
+          const arr = [];
+          snap.forEach(ch => arr.push(ch.val()));
+          arr.sort((a,b) => b.score - a.score);
+          const threshold = arr.length < 10 ? 0 : arr[arr.length - 1].score;
+
+          if (score > threshold) {
+            const name = prompt("🎉 New High Score! Enter your name:", "Anon") || "Anon";
+            db.push({ name, score })
+              .then(() => {
+                renderGlobalLB("#lb-list-go");
+                show("gameover");
+              });
+          } else {
             renderGlobalLB("#lb-list-go");
             show("gameover");
-          });
-        } else {
-          renderGlobalLB("#lb-list-go");
-          show("gameover");
-        }
-      });
+          }
+        });
     }
 
-    function restartGame(){
+    function restartGame() {
       startGame();
     }
 
-    // Bind UI buttons
-    function bind(id,fn){
-      const el=document.getElementById(id);
-      el.addEventListener("click",fn);
-      el.addEventListener("touchend",e=>{e.preventDefault();fn();});
+    // Bind buttons (click + touch)
+    function bind(id, fn) {
+      const el = document.getElementById(id);
+      el.addEventListener("click", fn);
+      el.addEventListener("touchend", e => { e.preventDefault(); fn(); });
     }
-    bind("startBtn",startGame);
-    bind("leaderboardBtn",showLeaderboard);
-    bind("backFromLbBtn",backToMenu);
-    bind("pauseBtn",pauseGame);
-    bind("resumeBtn",resumeGame);
-    bind("backFromPauseBtn",backToMenu);
-    bind("restartBtn",restartGame);
-    bind("backFromGameOverBtn",backToMenu);
+    bind("startBtn", startGame);
+    bind("leaderboardBtn", showLeaderboard);
+    bind("backFromLbBtn", backToMenu);
+    bind("pauseBtn", pauseGame);
+    bind("resumeBtn", resumeGame);
+    bind("backFromPauseBtn", backToMenu);
+    bind("restartBtn", restartGame);
+    bind("backFromGameOverBtn", backToMenu);
 
-    // Controls: Space/K/tap/click
-    window.addEventListener("keydown",e=>{
-      if(e.code==="Space"&&state==="playing"){bird.flap();e.preventDefault();}
-      if(e.key==="k"&&state==="playing"){pauseGame();}
+    // Controls: Space, K, tap/click on canvas
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space" && state === "playing") {
+        bird.flap(); e.preventDefault();
+      }
+      if (e.key === "k" && state === "playing") {
+        pauseGame();
+      }
     });
-    window.addEventListener("touchstart",e=>{
-      if(state==="playing"){bird.flap();e.preventDefault();}
+    window.addEventListener("touchstart", e => {
+      if (state === "playing") { bird.flap(); e.preventDefault(); }
     });
-    canvas.addEventListener("click",e=>{
-      if(state==="playing"){bird.flap();e.preventDefault();}
+    canvas.addEventListener("click", e => {
+      if (state === "playing") { bird.flap(); e.preventDefault(); }
     });
-    canvas.addEventListener("mousedown",e=>{
-      if(state==="playing"){bird.flap();e.preventDefault();}
+    canvas.addEventListener("mousedown", e => {
+      if (state === "playing") { bird.flap(); e.preventDefault(); }
     });
 
-    // Initial menu
+    // Start at main menu
     show("menu");
   });
   </script>
