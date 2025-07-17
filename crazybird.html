@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – LocalStorage Only</title>
+  <title>Flappy Bird – Click/Tap to Flap</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
@@ -74,13 +74,13 @@
     const finalScore  = document.getElementById('finalScore');
 
     const overlays = {
-      menu: document.getElementById('menu'),
-      leaderboard: document.getElementById('leaderboard'),
-      pause: document.getElementById('pause'),
-      gameover: document.getElementById('gameover')
+      menu:       document.getElementById('menu'),
+      leaderboard:document.getElementById('leaderboard'),
+      pause:      document.getElementById('pause'),
+      gameover:   document.getElementById('gameover')
     };
 
-    // Leaderboard in localStorage
+    // localStorage leaderboard
     let lb = JSON.parse(localStorage.getItem('flappyLB')||'[]');
     function saveLB() { localStorage.setItem('flappyLB', JSON.stringify(lb)); }
     function renderLB(sel) {
@@ -96,8 +96,8 @@
     let state='menu', bird, pipes, score, frame, animId;
 
     function resize(){
-      canvas.width = window.innerWidth;
-      canvas.height= window.innerHeight;
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
     window.addEventListener('resize', resize);
     resize();
@@ -180,9 +180,7 @@
     function startGame(){
       state='playing'; bird=new Bird(); pipes=[]; score=0; frame=0;
       scoreDiv.textContent=score;
-      show('playing');
-      cancelAnimationFrame(animId);
-      loop();
+      show('playing'); cancelAnimationFrame(animId); loop();
     }
     function showLeaderboard(){
       state='leaderboard'; renderLB('#lb-list'); show('leaderboard');
@@ -225,6 +223,7 @@
     bind('restartBtn',      restartGame);
     bind('backFromGameOverBtn',backToMenu);
 
+    // keyboard & touch controls
     window.addEventListener('keydown',e=>{
       if(e.code==='Space'&&state==='playing'){ bird.flap(); e.preventDefault(); }
       if(e.key==='k'&&state==='playing'){ pauseGame(); }
@@ -233,6 +232,15 @@
       if(state==='playing'){ bird.flap(); e.preventDefault(); }
     });
 
+    // make the canvas itself flap on click/mousedown
+    canvas.addEventListener('click', e => {
+      if(state==='playing'){ bird.flap(); e.preventDefault(); }
+    });
+    canvas.addEventListener('mousedown', e => {
+      if(state==='playing'){ bird.flap(); e.preventDefault(); }
+    });
+
+    // initial menu
     show('menu');
   });
   </script>
