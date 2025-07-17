@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – Click/Tap to Flap</title>
+  <title>Flappy Bird – Floor Collision Game Over</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
@@ -67,11 +67,11 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const canvas      = document.getElementById('canvas');
-    const ctx         = canvas.getContext('2d');
-    const scoreDiv    = document.getElementById('score');
-    const pauseBtn    = document.getElementById('pauseBtn');
-    const finalScore  = document.getElementById('finalScore');
+    const canvas     = document.getElementById('canvas');
+    const ctx        = canvas.getContext('2d');
+    const scoreDiv   = document.getElementById('score');
+    const pauseBtn   = document.getElementById('pauseBtn');
+    const finalScore = document.getElementById('finalScore');
 
     const overlays = {
       menu:       document.getElementById('menu'),
@@ -80,167 +80,213 @@
       gameover:   document.getElementById('gameover')
     };
 
-    // localStorage leaderboard
-    let lb = JSON.parse(localStorage.getItem('flappyLB')||'[]');
-    function saveLB() { localStorage.setItem('flappyLB', JSON.stringify(lb)); }
+    // LocalStorage leaderboard
+    let lb = JSON.parse(localStorage.getItem('flappyLB') || '[]');
+    function saveLB() {
+      localStorage.setItem('flappyLB', JSON.stringify(lb));
+    }
     function renderLB(sel) {
       const div = document.querySelector(sel);
       div.innerHTML = '';
-      lb.slice(0,10).forEach((e,i)=>{
-        const d=document.createElement('div');
-        d.textContent=`${i+1}. ${e.name}: ${e.score}`;
+      lb.slice(0,10).forEach((e,i) => {
+        const d = document.createElement('div');
+        d.textContent = `${i+1}. ${e.name}: ${e.score}`;
         div.appendChild(d);
       });
     }
 
-    let state='menu', bird, pipes, score, frame, animId;
+    let state = 'menu', bird, pipes, score, frame, animId;
 
-    function resize(){
+    function resize() {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
     }
     window.addEventListener('resize', resize);
     resize();
 
+    // Bird class with floor-collision in update()
     class Bird {
-      constructor(){
-        this.w=30; this.h=30;
-        this.x=50; this.y=(canvas.height - this.h)/2;
-        this.vy=0; this.g=0.3;
+      constructor() {
+        this.w  = 30;
+        this.h  = 30;
+        this.x  = 50;
+        this.y  = (canvas.height - this.h) / 2;
+        this.vy = 0;
+        this.g  = 0.3;
       }
-      update(){
-        this.vy+=this.g; this.y+=this.vy;
-        if(this.y<0) this.y=0;
-        if(this.y+this.h>canvas.height) this.y=canvas.height-this.h;
+
+      update() {
+        this.vy += this.g;
+        this.y  += this.vy;
+
+        // ceiling clamp
+        if (this.y < 0) {
+          this.y  = 0;
+          this.vy = 0;
+        }
+
+        // floor collision → immediate Game Over
+        if (this.y + this.h >= canvas.height) {
+          this.y = canvas.height - this.h;
+          endGame();
+        }
       }
-      draw(){
-        ctx.fillStyle='yellow';
-        ctx.fillRect(this.x,this.y,this.w,this.h);
+
+      draw() {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
       }
-      flap(){ this.vy=-6; }
-      collides(p){
+
+      flap() {
+        this.vy = -6;
+      }
+
+      collides(p) {
         return !(
-          this.x+this.w<p.x ||
-          this.x>p.x+p.w ||
-          this.y+this.h<p.y ||
-          this.y>p.y+p.h
+          this.x + this.w < p.x ||
+          this.x > p.x + p.w ||
+          this.y + this.h < p.y ||
+          this.y > p.y + p.h
         );
       }
     }
 
-    function spawnPipes(){
-      const x=canvas.width;
-      const h=20+Math.random()*(canvas.height/2-20);
-      const gap=120+Math.random()*80;
-      pipes=pipes.filter(p=>p.x+p.w>0);
-      if(pipes.length<2||x-pipes[pipes.length-2].x>200){
-        pipes.push({x,y:0,w:40,h,passed:false,isTop:true});
-        pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false,isTop:false});
+    function spawnPipes() {
+      const x   = canvas.width;
+      const h   = 20 + Math.random() * (canvas.height/2 - 20);
+      const gap = 120 + Math.random() * 80;
+      pipes = pipes.filter(p => p.x + p.w > 0);
+      if (pipes.length < 2 || x - pipes[pipes.length-2].x > 200) {
+        pipes.push({ x, y:0,    w:40, h,                 passed:false, isTop:true  });
+        pipes.push({ x, y:h+gap,w:40, h:canvas.height-h-gap, passed:false, isTop:false });
       }
     }
 
-    function loop(){
-      if(state!=='playing') return;
+    function loop() {
+      if (state !== 'playing') return;
       frame++;
       ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      if(frame===1||frame%150===0) spawnPipes();
-      pipes.forEach(p=>{
-        p.x-=2;
-        ctx.fillStyle='green';
-        ctx.fillRect(p.x,p.y,p.w,p.h);
+      // pipes
+      if (frame===1 || frame%150===0) spawnPipes();
+      pipes.forEach(p => {
+        p.x -= 2;
+        ctx.fillStyle = 'green';
+        ctx.fillRect(p.x, p.y, p.w, p.h);
       });
-      pipes=pipes.filter(p=>p.x+p.w>0);
+      pipes = pipes.filter(p => p.x + p.w > 0);
 
-      bird.update(); bird.draw();
+      // bird
+      bird.update();
+      bird.draw();
 
-      pipes.forEach(p=>{
-        if(p.isTop&&!p.passed&&bird.x>p.x+p.w){
-          p.passed=true; score++; scoreDiv.textContent=score;
+      // scoring & collision with pipes
+      pipes.forEach(p => {
+        if (p.isTop && !p.passed && bird.x > p.x + p.w) {
+          p.passed = true;
+          score++;
+          scoreDiv.textContent = score;
         }
-        if(bird.collides(p)) endGame();
+        if (bird.collides(p)) endGame();
       });
 
-      animId=requestAnimationFrame(loop);
+      animId = requestAnimationFrame(loop);
     }
 
-    function hideAll(){
-      Object.values(overlays).forEach(o=>o.classList.add('hidden'));
-      pauseBtn.style.display='none';
+    function hideAll() {
+      Object.values(overlays).forEach(o => o.classList.add('hidden'));
+      pauseBtn.style.display = 'none';
     }
-    function show(id){
+    function show(id) {
       hideAll();
-      if(id==='playing'){
-        pauseBtn.style.display='block';
-      } else if(overlays[id]){
+      if (id === 'playing') {
+        pauseBtn.style.display = 'block';
+      } else if (overlays[id]) {
         overlays[id].classList.remove('hidden');
       }
     }
 
-    function startGame(){
-      state='playing'; bird=new Bird(); pipes=[]; score=0; frame=0;
-      scoreDiv.textContent=score;
-      show('playing'); cancelAnimationFrame(animId); loop();
-    }
-    function showLeaderboard(){
-      state='leaderboard'; renderLB('#lb-list'); show('leaderboard');
-    }
-    function pauseGame(){
-      if(state!=='playing') return;
-      state='paused'; cancelAnimationFrame(animId); show('pause');
-    }
-    function resumeGame(){
-      if(state!=='paused') return;
-      state='playing'; show('playing'); cancelAnimationFrame(animId); loop();
-    }
-    function backToMenu(){
-      state='menu'; show('menu');
-    }
-    function endGame(){
+    // Game actions
+    function startGame() {
+      state = 'playing';
+      bird  = new Bird();
+      pipes = [];
+      score = 0;
+      frame = 0;
+      scoreDiv.textContent = score;
+      show('playing');
       cancelAnimationFrame(animId);
-      state='gameover';
-      finalScore.textContent=score;
-      const name=prompt('Enter name:','Anon')||'Anon';
+      loop();
+    }
+    function showLeaderboard() {
+      state = 'leaderboard';
+      renderLB('#lb-list');
+      show('leaderboard');
+    }
+    function pauseGame() {
+      if (state !== 'playing') return;
+      state = 'paused';
+      cancelAnimationFrame(animId);
+      show('pause');
+    }
+    function resumeGame() {
+      if (state !== 'paused') return;
+      state = 'playing';
+      show('playing');
+      cancelAnimationFrame(animId);
+      loop();
+    }
+    function backToMenu() {
+      state = 'menu';
+      show('menu');
+    }
+    function endGame() {
+      cancelAnimationFrame(animId);
+      state = 'gameover';
+      finalScore.textContent = score;
+      const name = prompt('Enter name:','Anon')||'Anon';
       lb.unshift({name,score});
       lb.sort((a,b)=>b.score-a.score);
-      lb=lb.slice(0,10);
-      saveLB(); renderLB('#lb-list-go');
+      lb = lb.slice(0,10);
+      saveLB();
+      renderLB('#lb-list-go');
       show('gameover');
     }
-    function restartGame(){ startGame(); }
-
-    function bind(id,fn){
-      const el=document.getElementById(id);
-      el.addEventListener('click',fn);
-      el.addEventListener('touchend',e=>{e.preventDefault();fn();});
+    function restartGame() {
+      startGame();
     }
-    bind('startBtn',        startGame);
-    bind('leaderboardBtn',  showLeaderboard);
-    bind('backFromLbBtn',   backToMenu);
-    bind('pauseBtn',        pauseGame);
-    bind('resumeBtn',       resumeGame);
-    bind('backFromPauseBtn',backToMenu);
-    bind('restartBtn',      restartGame);
+
+    // Bind buttons (click + touchend)
+    function bind(id, fn) {
+      const el = document.getElementById(id);
+      el.addEventListener('click', fn);
+      el.addEventListener('touchend', e => { e.preventDefault(); fn(); });
+    }
+    bind('startBtn',           startGame);
+    bind('leaderboardBtn',     showLeaderboard);
+    bind('backFromLbBtn',      backToMenu);
+    bind('pauseBtn',           pauseGame);
+    bind('resumeBtn',          resumeGame);
+    bind('backFromPauseBtn',   backToMenu);
+    bind('restartBtn',         restartGame);
     bind('backFromGameOverBtn',backToMenu);
 
-    // keyboard & touch controls
-    window.addEventListener('keydown',e=>{
-      if(e.code==='Space'&&state==='playing'){ bird.flap(); e.preventDefault(); }
-      if(e.key==='k'&&state==='playing'){ pauseGame(); }
+    // Controls: keyboard, touch, click/mousedown on canvas
+    window.addEventListener('keydown', e => {
+      if (e.code==='Space' && state==='playing') { bird.flap(); e.preventDefault(); }
+      if (e.key==='k' && state==='playing') { pauseGame(); }
     });
-    window.addEventListener('touchstart',e=>{
-      if(state==='playing'){ bird.flap(); e.preventDefault(); }
+    window.addEventListener('touchstart', e => {
+      if (state==='playing') { bird.flap(); e.preventDefault(); }
     });
-
-    // make the canvas itself flap on click/mousedown
     canvas.addEventListener('click', e => {
-      if(state==='playing'){ bird.flap(); e.preventDefault(); }
+      if (state==='playing') { bird.flap(); e.preventDefault(); }
     });
     canvas.addEventListener('mousedown', e => {
-      if(state==='playing'){ bird.flap(); e.preventDefault(); }
+      if (state==='playing') { bird.flap(); e.preventDefault(); }
     });
 
-    // initial menu
+    // Show initial Main Menu
     show('menu');
   });
   </script>
