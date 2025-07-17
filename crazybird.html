@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – Firebase Leaderboard</title>
+  <title>Flappy Bird – Firebase Leaderboard v2</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    html,body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; }
     #game-container { position:relative; width:100%; height:100%; }
     canvas { display:block; width:100%; height:100%; }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.8); display:flex; flex-direction:column;
-      align-items:center; justify-content:center; font-family:Arial,sans-serif;
-      text-align:center; z-index:10;
+      align-items:center; justify-content:center; text-align:center;
+      font-family:Arial,sans-serif; z-index:10;
     }
     .hidden { display:none; }
     button {
@@ -28,7 +28,7 @@
     #lb-list div, #lb-list-go div { border-bottom:1px solid #444; padding:4px 0; }
   </style>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase v9 Compat -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 </head>
@@ -71,36 +71,38 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // ====== CONFIGURE FIREBASE ======
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      databaseURL: "YOUR_DATABASE_URL",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+    // ----- YOUR FIREBASE CONFIG HERE -----
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+  authDomain: "masonnet-app-official.firebaseapp.com",
+  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app-official",
+  storageBucket: "masonnet-app-official.firebasestorage.app",
+  messagingSenderId: "783919367562",
+  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+  measurementId: "G-X1YKV5VK7J"
+};
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref("leaderboard");
-    // =================================
 
-    // Canvas & UI
+    // UI elements
     const canvas      = document.getElementById("canvas");
     const ctx         = canvas.getContext("2d");
     const scoreDiv    = document.getElementById("score");
     const pauseBtn    = document.getElementById("pauseBtn");
     const finalScoreE = document.getElementById("finalScore");
-    const overlays = {
-      menu:       document.getElementById("menu"),
-      leaderboard:document.getElementById("leaderboard"),
-      pause:      document.getElementById("pause"),
-      gameover:   document.getElementById("gameover")
+    const overlays    = {
+      menu:        document.getElementById("menu"),
+      leaderboard: document.getElementById("leaderboard"),
+      pause:       document.getElementById("pause"),
+      gameover:    document.getElementById("gameover")
     };
 
     let state="menu", bird, pipes, score, frame, animId;
 
-    // Resize
+    // Resize canvas
     function resize(){
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -108,18 +110,18 @@
     window.addEventListener("resize", resize);
     resize();
 
-    // Bird Class
+    // Bird
     class Bird {
       constructor(){
         this.w=30; this.h=30;
-        this.x=50; this.y=(canvas.height-this.h)/2;
+        this.x=50; this.y=(canvas.height - this.h)/2;
         this.vy=0; this.g=0.3;
       }
       update(){
         this.vy += this.g; this.y += this.vy;
         if(this.y<0){ this.y=0; this.vy=0; }
         if(this.y+this.h>=canvas.height){
-          this.y = canvas.height-this.h;
+          this.y = canvas.height - this.h;
           endGame();
         }
       }
@@ -127,7 +129,7 @@
         ctx.fillStyle="yellow";
         ctx.fillRect(this.x,this.y,this.w,this.h);
       }
-      flap(){ this.vy = -6; }
+      flap(){ this.vy=-6; }
       collides(p){
         return !(
           this.x+this.w<p.x ||
@@ -138,13 +140,13 @@
       }
     }
 
-    // Pipes
+    // Spawn pipes
     function spawnPipes(){
       const x   = canvas.width;
       const h   = 20 + Math.random()*(canvas.height/2 - 20);
       const gap = 120 + Math.random()*80;
       pipes = pipes.filter(p=>p.x+p.w>0);
-      if(pipes.length<2 || x-pipes[pipes.length-2].x>200){
+      if(pipes.length<2 || x - pipes[pipes.length-2].x>200){
         pipes.push({x,y:0,w:40,h,passed:false,isTop:true});
         pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false,isTop:false});
       }
@@ -156,32 +158,32 @@
       frame++;
       ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      if(frame===1 || frame%150===0) spawnPipes();
+      if(frame===1||frame%150===0) spawnPipes();
       pipes.forEach(p=>{
         p.x-=2;
         ctx.fillStyle="green";
         ctx.fillRect(p.x,p.y,p.w,p.h);
       });
-      pipes = pipes.filter(p=>p.x+p.w>0);
+      pipes=pipes.filter(p=>p.x+p.w>0);
 
       bird.update();
       bird.draw();
 
       pipes.forEach(p=>{
         if(bird.collides(p)){
-          endGame();
+          endGame(); return;
         }
         if(p.isTop && !p.passed && bird.x>p.x+p.w){
           p.passed=true;
           score++;
-          scoreDiv.textContent = score;
+          scoreDiv.textContent=score;
         }
       });
 
-      animId = requestAnimationFrame(loop);
+      animId=requestAnimationFrame(loop);
     }
 
-    // Show / Hide Overlays
+    // Show/hide overlays
     function hideAll(){
       Object.values(overlays).forEach(o=>o.classList.add("hidden"));
       pauseBtn.style.display="none";
@@ -195,10 +197,10 @@
       }
     }
 
-    // Render global leaderboard
+    // Render Firebase Top-10
     function renderGlobalLB(sel){
-      const el = document.querySelector(sel);
-      el.innerHTML = "";
+      const el=document.querySelector(sel);
+      el.innerHTML="";
       db.orderByChild("score").limitToLast(10).once("value",snap=>{
         const arr=[];
         snap.forEach(c=>arr.push(c.val()));
@@ -211,17 +213,11 @@
       });
     }
 
-    // Game actions
+    // Actions
     function startGame(){
-      state="playing";
-      bird   = new Bird();
-      pipes  = [];
-      score  = 0;
-      frame  = 0;
-      scoreDiv.textContent = score;
-      show("playing");
-      cancelAnimationFrame(animId);
-      loop();
+      state="playing"; bird=new Bird(); pipes=[]; score=0; frame=0;
+      scoreDiv.textContent=score;
+      show("playing"); cancelAnimationFrame(animId); loop();
     }
 
     function showLeaderboard(){
@@ -232,45 +228,37 @@
 
     function pauseGame(){
       if(state!=="playing") return;
-      state="paused";
-      cancelAnimationFrame(animId);
-      show("pause");
+      state="paused"; cancelAnimationFrame(animId); show("pause");
     }
 
     function resumeGame(){
       if(state!=="paused") return;
-      state="playing";
-      show("playing");
-      cancelAnimationFrame(animId);
-      loop();
+      state="playing"; show("playing"); cancelAnimationFrame(animId); loop();
     }
 
     function backToMenu(){
-      state="menu";
-      show("menu");
+      state="menu"; show("menu");
     }
 
     function endGame(){
       cancelAnimationFrame(animId);
       state="gameover";
-      finalScoreE.textContent = score;
+      finalScoreE.textContent=score;
 
-      // fetch current top-10, decide if we prompt:
+      // decide if new high score
       db.orderByChild("score").limitToLast(10).once("value",snap=>{
         const arr=[];
         snap.forEach(c=>arr.push(c.val()));
         arr.sort((a,b)=>b.score-a.score);
-        const lowest = (arr.length<10) ? 0 : arr[arr.length-1].score;
+        const lowest = arr.length<10 ? 0 : arr[arr.length-1].score;
 
         if(score>lowest){
-          // only prompt if new high score
           const name = prompt("🎉 New High Score! Enter your name:","Anon")||"Anon";
-          db.push({ name, score }).then(()=>{
+          db.push({name,score}).then(()=>{
             renderGlobalLB("#lb-list-go");
             show("gameover");
           });
         } else {
-          // no prompt
           renderGlobalLB("#lb-list-go");
           show("gameover");
         }
@@ -281,37 +269,37 @@
       startGame();
     }
 
-    // Bind buttons (click + touchend)
+    // Bind UI buttons
     function bind(id,fn){
       const el=document.getElementById(id);
       el.addEventListener("click",fn);
-      el.addEventListener("touchend",e=>{ e.preventDefault(); fn(); });
+      el.addEventListener("touchend",e=>{e.preventDefault();fn();});
     }
-    bind("startBtn",         startGame);
-    bind("leaderboardBtn",   showLeaderboard);
-    bind("backFromLbBtn",    backToMenu);
-    bind("pauseBtn",         pauseGame);
-    bind("resumeBtn",        resumeGame);
-    bind("backFromPauseBtn", backToMenu);
-    bind("restartBtn",       restartGame);
-    bind("backFromGameOverBtn", backToMenu);
+    bind("startBtn",startGame);
+    bind("leaderboardBtn",showLeaderboard);
+    bind("backFromLbBtn",backToMenu);
+    bind("pauseBtn",pauseGame);
+    bind("resumeBtn",resumeGame);
+    bind("backFromPauseBtn",backToMenu);
+    bind("restartBtn",restartGame);
+    bind("backFromGameOverBtn",backToMenu);
 
-    // Keyboard / touch / canvas click to flap
-    window.addEventListener("keydown", e=>{
-      if(e.code==="Space" && state==="playing"){ bird.flap(); e.preventDefault(); }
-      if(e.key==="k" && state==="playing"){ pauseGame(); }
+    // Controls: Space/K/tap/click
+    window.addEventListener("keydown",e=>{
+      if(e.code==="Space"&&state==="playing"){bird.flap();e.preventDefault();}
+      if(e.key==="k"&&state==="playing"){pauseGame();}
     });
-    window.addEventListener("touchstart", e=>{
-      if(state==="playing"){ bird.flap(); e.preventDefault(); }
+    window.addEventListener("touchstart",e=>{
+      if(state==="playing"){bird.flap();e.preventDefault();}
     });
-    canvas.addEventListener("click", e=>{
-      if(state==="playing"){ bird.flap(); e.preventDefault(); }
+    canvas.addEventListener("click",e=>{
+      if(state==="playing"){bird.flap();e.preventDefault();}
     });
-    canvas.addEventListener("mousedown", e=>{
-      if(state==="playing"){ bird.flap(); e.preventDefault(); }
+    canvas.addEventListener("mousedown",e=>{
+      if(state==="playing"){bird.flap();e.preventDefault();}
     });
 
-    // kick off
+    // Initial menu
     show("menu");
   });
   </script>
