@@ -86,7 +86,7 @@
       <h2>Paused</h2>
       <button id="resumeBtn">Resume</button>
       <button id="backFromPauseBtn">Main Menu</button>
-      <button id="soundBtn" title="Toggle Sound">🔊</button>
+      <button id="soundBtnPause" title="Toggle Sound">🔊</button>
     </div>
 
     <!-- Game Over -->
@@ -152,6 +152,31 @@ const firebaseConfig = {
         leaderboard: document.getElementById("leaderboard"),
         pause:       document.getElementById("pause"),
         gameover:    document.getElementById("gameover")
+
+const soundBtn      = document.getElementById("soundBtn");
+  const soundBtnPause = document.getElementById("soundBtnPause");
+  let soundEnabled    = true;
+// NEW CODE BELOW ---------------
+  // Sync labels on both buttons
+  function updateSoundButtons() {
+    const label = soundEnabled ? "🔊 Sound" : "🔇 Mute";
+    soundBtn.textContent      = label;
+    soundBtnPause.textContent = label;
+  }
+
+  // Flip sound state
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    updateSoundButtons();
+  }
+
+  // Attach handlers to **both** buttons
+  soundBtn.addEventListener("click", toggleSound);
+  soundBtnPause.addEventListener("click", toggleSound);
+
+  // Initialize their label on page load
+  updateSoundButtons();
+// NEW CODE ABOVE ----------
       };
 
       let state="menu", bird, pipes, score, frame, animId;
