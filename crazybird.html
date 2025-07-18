@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – 200ms Flap Cooldown</title>
+  <title>Flappy Bird – Scrolling Background</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
   <!-- Google Font for Score Counter -->
@@ -15,56 +15,55 @@
 
   <style>
     html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      overflow: hidden; background: #000; color: #fff;
+      margin:0; padding:0;
+      width:100%; height:100%;
+      overflow:hidden; background:#000; color:#fff;
     }
     #game-container {
-      position: relative;
-      width: 100%; height: 100%;
+      position:relative; width:100%; height:100%;
     }
     canvas {
-      display: block;
-      width: 100%; height: 100%;
+      display:block; width:100%; height:100%;
     }
     #score {
-      position: absolute; top: 10px; left: 10px;
-      font-family: 'Press Start 2P', system-ui;
-      font-size: 48px; color: #fff;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-      z-index: 5;
+      position:absolute; top:10px; left:10px;
+      font-family:'Press Start 2P', system-ui;
+      font-size:48px; color:#fff;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.7);
+      z-index:5;
     }
     #pauseBtn {
-      position: absolute; top: 10px; right: 10px;
-      display: none;
-      background: #FF0000; color: #fff;
-      border: none; padding: 8px 16px;
-      font-size: 16px; cursor: pointer; user-select: none;
+      position:absolute; top:10px; right:10px;
+      display:none;
+      background:#FF0000; color:#fff;
+      border:none; padding:8px 16px;
+      font-size:16px; cursor:pointer;
+      user-select:none;
     }
     .overlay {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; font-family: Arial, sans-serif;
-      z-index: 10;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.8);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      text-align:center; font-family:Arial,sans-serif;
+      z-index:10;
     }
-    .hidden { display: none; }
+    .hidden { display:none; }
     .overlay button {
-      background: #FF0000; border: none;
-      color: #fff; padding: 12px 24px;
-      margin: 8px; font-size: 16px;
-      cursor: pointer; user-select: none;
+      background:#FF0000; border:none;
+      color:#fff; padding:12px 24px;
+      margin:8px; font-size:16px;
+      cursor:pointer; user-select:none;
     }
-    #settings button { width: 180px; }
+    #settings button { width:180px; }
     #lb-list, #lb-list-go {
-      text-align: left; width: 80%;
-      max-height: 150px; overflow-y: auto;
-      margin: 12px 0;
+      text-align:left; width:80%;
+      max-height:150px; overflow-y:auto;
+      margin:12px 0;
     }
     #lb-list div, #lb-list-go div {
-      border-bottom: 1px solid #444; padding: 4px 0;
+      border-bottom:1px solid #444; padding:4px 0;
     }
   </style>
 
@@ -80,11 +79,9 @@
 
     <!-- Main Menu -->
     <div id="menu" class="overlay">
-      <img
-        src="https://app.masonnet.org/fbrc.png"
-        alt="Flappy Bird Logo"
-        style="width:240px; margin-bottom:24px; user-select:none;"
-      >
+      <img src="https://app.masonnet.org/fbrc.png"
+           alt="Flappy Bird Logo"
+           style="width:240px; margin-bottom:24px; user-select:none;">
       <button id="startBtn">Start</button>
       <button id="leaderboardBtn">Leaderboard</button>
       <button id="linkBtn">Flappy Bird Hub</button>
@@ -126,7 +123,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Firebase config
+    // FIREBASE CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -140,32 +137,32 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref("leaderboard");
 
-    // Asset URLs
-    const LIGHT_BG_URL  = "https://app.masonnet.org/lightbg.png";
-    const DARK_BG_URL   = "https://app.masonnet.org/darkbg.png";
-    const BIRD_URL      = "https://app.masonnet.org/bird.png";
-    const PIPE_URL      = "https://app.masonnet.org/pipe-green.png";
-    const POINT_SOUND   = "https://app.masonnet.org/point.mp3";
-    const FLAP_SOUND    = "https://app.masonnet.org/flap.mp3";
-    const HIT_SOUND     = "https://app.masonnet.org/hit.mp3";
-    const DIE_SOUND     = "https://app.masonnet.org/die.mp3";
-    const HUB_LINK      = "https://app.masonnet.org/flappybirdhub";
+    // ASSET URLs
+    const LIGHT_BG_URL = "https://app.masonnet.org/lightbg.png";
+    const DARK_BG_URL  = "https://app.masonnet.org/darkbg.png";
+    const BIRD_URL     = "https://app.masonnet.org/bird.png";
+    const PIPE_URL     = "https://app.masonnet.org/pipe-green.png";
+    const POINT_SOUND  = "https://app.masonnet.org/point.mp3";
+    const FLAP_SOUND   = "https://app.masonnet.org/flap.mp3";
+    const HIT_SOUND    = "https://app.masonnet.org/hit.mp3";
+    const DIE_SOUND    = "https://app.masonnet.org/die.mp3";
+    const HUB_LINK     = "https://app.masonnet.org/flappybirdhub";
 
     // Preload images & audio
-    const lightBgImg = new Image();  lightBgImg.src = LIGHT_BG_URL;
-    const darkBgImg  = new Image();  darkBgImg.src  = DARK_BG_URL;
-    const birdImg    = new Image();  birdImg.src    = BIRD_URL;
-    const pipeImg    = new Image();  pipeImg.src    = PIPE_URL;
+    const lightBgImg = new Image();  lightBgImg.src  = LIGHT_BG_URL;
+    const darkBgImg  = new Image();  darkBgImg.src   = DARK_BG_URL;
+    const birdImg    = new Image();  birdImg.src     = BIRD_URL;
+    const pipeImg    = new Image();  pipeImg.src     = PIPE_URL;
     const scoreSound = new Audio(POINT_SOUND);
     const flapSound  = new Audio(FLAP_SOUND);
     const hitSound   = new Audio(HIT_SOUND);
     const dieSound   = new Audio(DIE_SOUND);
 
     Promise.all([
-      new Promise(r => lightBgImg.onload = r),
-      new Promise(r => darkBgImg.onload  = r),
-      new Promise(r => birdImg.onload    = r),
-      new Promise(r => pipeImg.onload    = r)
+      new Promise(r=>lightBgImg.onload=r),
+      new Promise(r=>darkBgImg.onload=r),
+      new Promise(r=>birdImg.onload=r),
+      new Promise(r=>pipeImg.onload=r)
     ]).then(init);
 
     function init() {
@@ -198,7 +195,11 @@
       let bgImg        = lightBgImg;
       let collided     = false;
 
-      // Flap-sound cooldown (200ms)
+      // Background scroll
+      let bgOffset = 0;
+      const BG_SCROLL_SPEED = 1;
+
+      // Flap cooldown
       const FLAP_COOLDOWN = 200;
       let lastFlapTime    = 0;
 
@@ -210,22 +211,16 @@
       window.addEventListener("resize", resize);
       resize();
 
-      // Bird class – 36×30 rectangle
+      // Bird class
       class Bird {
         constructor() {
-          this.w  = 36;
-          this.h  = 30;
-          this.x  = 50;
-          this.y  = (canvas.height - this.h) / 2;
-          this.vy = 0;
-          this.g  = 0.3;
+          this.w  = 36; this.h  = 30;
+          this.x  = 50; this.y  = (canvas.height - this.h)/2;
+          this.vy = 0;  this.g  = 0.3;
         }
         update() {
-          this.vy += this.g;
-          this.y  += this.vy;
-          if (this.y < 0) {
-            this.y  = 0; this.vy = 0;
-          }
+          this.vy += this.g; this.y += this.vy;
+          if (this.y < 0)        { this.y = 0; this.vy = 0; }
           if (this.y + this.h >= canvas.height) {
             this.y = canvas.height - this.h;
             this.handleDeath();
@@ -245,10 +240,10 @@
         }
         collides(p) {
           return !(
-            this.x + this.w  < p.x ||
-            this.x          > p.x + p.w ||
+            this.x + this.w < p.x ||
+            this.x         > p.x + p.w ||
             this.y + this.h < p.y ||
-            this.y          > p.y + p.h
+            this.y         > p.y + p.h
           );
         }
         handleDeath() {
@@ -266,22 +261,26 @@
       // Spawn pipes
       function spawnPipes() {
         const x   = canvas.width;
-        const h   = 20 + Math.random() * (canvas.height/2 - 20);
-        const gap = 120 + Math.random() * 80;
-        pipes = pipes.filter(p => p.x + p.w > 0);
-        if (!pipes.length || x - pipes[pipes.length - 1].x > 200) {
-          pipes.push({ x, y: 0, w: 40, h, passed: false, isTop: true });
-          pipes.push({ x, y: h+gap, w: 40, h: canvas.height - h - gap, passed: false, isTop: false });
+        const h   = 20 + Math.random()*(canvas.height/2 - 20);
+        const gap = 120 + Math.random()*80;
+        pipes = pipes.filter(p=>p.x + p.w > 0);
+        if (!pipes.length || x - pipes[pipes.length-1].x > 200) {
+          pipes.push({ x, y: 0,       w: 40, h,                 passed:false, isTop:true });
+          pipes.push({ x, y: h+gap,   w: 40, h: canvas.height-h-gap, passed:false, isTop:false });
         }
       }
 
-      // Main loop
+      // Main loop with scrolling background
       function loop() {
         if (state !== "playing") return;
         frame++;
 
-        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        // scroll background
+        bgOffset = (bgOffset + BG_SCROLL_SPEED) % canvas.width;
+        ctx.drawImage(bgImg, -bgOffset, 0, canvas.width, canvas.height);
+        ctx.drawImage(bgImg, canvas.width - bgOffset, 0, canvas.width, canvas.height);
 
+        // pipes
         if (frame === 1 || frame % 150 === 0) spawnPipes();
         pipes.forEach(p => {
           p.x -= 2;
@@ -297,13 +296,11 @@
         });
         pipes = pipes.filter(p => p.x + p.w > 0);
 
-        bird.update();
-        bird.draw();
-
+        // bird & scoring
+        bird.update(); bird.draw();
         pipes.forEach(p => {
           if (p.isTop && !p.passed && bird.x > p.x + p.w) {
-            p.passed = true;
-            score++;
+            p.passed = true; score++;
             scoreDiv.textContent = score;
             if (soundEnabled) {
               scoreSound.currentTime = 0;
@@ -317,29 +314,25 @@
 
       // Overlay helpers
       function hideAll() {
-        Object.values(overlays).forEach(o => o.classList.add("hidden"));
+        Object.values(overlays).forEach(o=>o.classList.add("hidden"));
         pauseBtn.style.display = "none";
       }
       function show(id) {
         hideAll();
-        if (id === "playing") {
-          pauseBtn.style.display = "block";
-        } else {
-          overlays[id].classList.remove("hidden");
-        }
+        if (id === "playing") pauseBtn.style.display = "block";
+        else overlays[id].classList.remove("hidden");
       }
 
-      // Leaderboard render
+      // Leaderboard
       function renderGlobalLB(sel) {
         const c = document.querySelector(sel);
         c.innerHTML = "";
-        db.orderByChild("score")
-          .limitToLast(10)
+        db.orderByChild("score").limitToLast(10)
           .once("value", snap => {
-            const data = snap.val() || {};
+            const data = snap.val()||{};
             Object.values(data)
-              .sort((a, b) => b.score - a.score)
-              .forEach((e, i) => {
+              .sort((a,b)=>b.score-a.score)
+              .forEach((e,i)=>{
                 const d = document.createElement("div");
                 d.textContent = `${i+1}. ${e.name}: ${e.score}`;
                 c.appendChild(d);
@@ -349,10 +342,10 @@
 
       // Toggle labels
       function updateSoundToggle() {
-        soundToggle.textContent = soundEnabled ? "🔊 Sound" : "🔇 Mute";
+        soundToggle.textContent = soundEnabled?"🔊 Sound":"🔇 Mute";
       }
       function updateThemeToggle() {
-        themeToggle.textContent = darkMode ? "☀️ Light Mode" : "🌙 Dark Mode";
+        themeToggle.textContent = darkMode?"☀️ Light Mode":"🌙 Dark Mode";
       }
 
       // Game actions
@@ -363,31 +356,32 @@
         score    = 0;
         frame    = 0;
         collided = false;
+        bgOffset = 0;
         scoreDiv.textContent = score;
         show("playing");
         cancelAnimationFrame(animId);
         loop();
       }
       function showLeaderboard() {
-        state = "leaderboard";
+        state="leaderboard";
         renderGlobalLB("#lb-list");
         show("leaderboard");
       }
       function pauseGame() {
-        if (state !== "playing") return;
-        state = "paused";
+        if (state!=="playing") return;
+        state="paused";
         cancelAnimationFrame(animId);
         show("pause");
       }
       function resumeGame() {
-        if (state !== "paused") return;
-        state = "playing";
+        if (state!=="paused") return;
+        state="playing";
         show("playing");
         cancelAnimationFrame(animId);
         loop();
       }
       function backToMenu() {
-        state = "menu";
+        state="menu";
         show("menu");
       }
       function openSettings() {
@@ -396,21 +390,20 @@
       }
       function closeSettings() {
         hideAll();
-        state === "pause" ? show("pause") : show("menu");
+        state==="pause"? show("pause"): show("menu");
       }
       function endGame() {
         cancelAnimationFrame(animId);
-        state = "gameover";
+        state="gameover";
         finalScoreEl.textContent = score;
-        db.orderByChild("score")
-          .limitToLast(10)
+        db.orderByChild("score").limitToLast(10)
           .once("value", snap => {
-            const data = snap.val() || {};
-            const entries = Object.values(data).sort((a,b) => b.score - a.score);
-            const threshold = entries.length < 10 ? 0 : entries[entries.length - 1].score;
-            if (score > threshold) {
-              const name = prompt("🎉 New High Score! Enter your name:", "Anon") || "Anon";
-              db.push({ name, score }).then(() => {
+            const data = snap.val()||{};
+            const entries = Object.values(data).sort((a,b)=>b.score-a.score);
+            const threshold = entries.length<10?0: entries[entries.length-1].score;
+            if (score>threshold) {
+              const name = prompt("🎉 New High Score! Enter your name:","Anon")||"Anon";
+              db.push({name,score}).then(()=>{
                 renderGlobalLB("#lb-list-go");
                 show("gameover");
               });
@@ -420,19 +413,17 @@
             }
           });
       }
-      function restartGame() {
-        startGame();
-      }
+      function restartGame(){ startGame(); }
 
       // Bind helpers
       function bind(id, fn) {
         const el = document.getElementById(id);
         el.addEventListener("click", fn);
-        el.addEventListener("touchend", e => { e.preventDefault(); fn(); });
+        el.addEventListener("touchend", e=>{e.preventDefault();fn();});
       }
       bind("startBtn", startGame);
       bind("leaderboardBtn", showLeaderboard);
-      bind("linkBtn", () => location.href = HUB_LINK);
+      bind("linkBtn", ()=>location.href=HUB_LINK);
       bind("settingsBtn", openSettings);
       bind("settingsBtnPause", openSettings);
       bind("closeSettingsBtn", closeSettings);
@@ -444,33 +435,29 @@
       bind("backFromGameOverBtn", backToMenu);
 
       // Settings events
-      soundToggle.addEventListener("click", () => {
+      soundToggle.addEventListener("click", ()=>{
         soundEnabled = !soundEnabled;
         updateSoundToggle();
       });
-      themeToggle.addEventListener("click", () => {
+      themeToggle.addEventListener("click", ()=>{
         darkMode = !darkMode;
         bgImg    = darkMode ? darkBgImg : lightBgImg;
         updateThemeToggle();
       });
 
       // Controls
-      window.addEventListener("keydown", e => {
-        if (e.code === "Space" && state === "playing") {
-          bird.flap(); e.preventDefault();
-        }
-        if (e.key === "k" && state === "playing") {
-          pauseGame();
-        }
+      window.addEventListener("keydown", e=>{
+        if (e.code==="Space" && state==="playing") { bird.flap(); e.preventDefault(); }
+        if (e.key==="k"     && state==="playing") pauseGame();
       });
-      window.addEventListener("touchstart", e => {
-        if (state === "playing") { bird.flap(); e.preventDefault(); }
+      window.addEventListener("touchstart", e=>{
+        if (state==="playing") { bird.flap(); e.preventDefault(); }
       });
-      canvas.addEventListener("click", e => {
-        if (state === "playing") { bird.flap(); e.preventDefault(); }
+      canvas.addEventListener("click", e=>{
+        if (state==="playing") { bird.flap(); e.preventDefault(); }
       });
-      canvas.addEventListener("mousedown", e => {
-        if (state === "playing") { bird.flap(); e.preventDefault(); }
+      canvas.addEventListener("mousedown", e=>{
+        if (state==="playing") { bird.flap(); e.preventDefault(); }
       });
 
       // Initialize UI
