@@ -157,25 +157,6 @@ const soundBtn      = document.getElementById("soundBtn");
   const soundBtnPause = document.getElementById("soundBtnPause");
   let soundEnabled    = true;
 // NEW CODE BELOW ---------------
-  // Sync labels on both buttons
-  function updateSoundButtons() {
-    const label = soundEnabled ? "🔊 Sound" : "🔇 Mute";
-    soundBtn.textContent      = label;
-    soundBtnPause.textContent = label;
-  }
-
-  // Flip sound state
-  function toggleSound() {
-    soundEnabled = !soundEnabled;
-    updateSoundButtons();
-  }
-
-  // Attach handlers to **both** buttons
-  soundBtn.addEventListener("click", toggleSound);
-  soundBtnPause.addEventListener("click", toggleSound);
-
-  // Initialize their label on page load
-  updateSoundButtons();
 // NEW CODE ABOVE ----------
       };
 
