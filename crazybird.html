@@ -139,6 +139,49 @@ const firebaseConfig = {
     ]).then(init);
 
     function init() {
+      // NC BELOW
+
+  // … preload assets, grab canvas, overlays, etc. …
+
+  // grab all sound buttons
+  const soundButtons = document.querySelectorAll('.soundBtn');
+  let soundEnabled = true;
+
+  // helper to sync both buttons’ text
+  function updateSoundButtons() {
+    const label = soundEnabled ? '🔊 Sound' : '🔇 Mute';
+    soundButtons.forEach(btn => btn.textContent = label);
+  }
+
+  // toggle handler
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    updateSoundButtons();
+  }
+
+  // wire them all up
+  soundButtons.forEach(btn => btn.addEventListener('click', toggleSound));
+
+  // initialize labels
+  updateSoundButtons();
+
+  // … the rest of your game init (binding startBtn, pauseBtn, loop(), etc.) …
+
+      // NC ABOVE
+  // toggle handler
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    updateSoundButtons();
+  }
+
+  // wire them all up
+  soundButtons.forEach(btn => btn.addEventListener('click', toggleSound));
+
+  // initialize labels
+  updateSoundButtons();
+
+
+      
       // UI refs
       const canvas      = document.getElementById("canvas");
       const ctx         = canvas.getContext("2d");
