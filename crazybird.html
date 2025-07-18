@@ -1,11 +1,11 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird – Auth & Admin Console</title>
+  <title>Flappy Bird – Full Integration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <!-- Retro font for score -->
+  <!-- Retro Font -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
         rel="stylesheet" />
 
@@ -21,7 +21,8 @@
       width: 100%; height: 100%;
     }
     canvas {
-      display: block; width: 100%; height: 100%;
+      display: block;
+      width: 100%; height: 100%;
     }
     #score {
       position: absolute;
@@ -36,7 +37,8 @@
       top: 10px; right: 10px;
       display: none;
       background: #f00; border: none; color: #fff;
-      padding: 8px 16px; cursor: pointer; z-index: 6;
+      padding: 8px 16px; cursor: pointer;
+      z-index: 6;
     }
     .overlay {
       position: absolute; top: 0; left: 0;
@@ -44,14 +46,14 @@
       background: rgba(0,0,0,0.85);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      text-align: center; z-index: 10;
-      font-family: Arial, sans-serif;
+      text-align: center; font-family: Arial, sans-serif;
+      z-index: 10;
     }
     .hidden { display: none; }
     .overlay button {
       background: #f00; border: none; color: #fff;
-      padding:12px 24px; margin: 8px;
-      font-size: 16px; cursor: pointer;
+      padding: 12px 24px; margin: 8px; font-size: 16px;
+      cursor: pointer;
     }
     .scroll-list {
       width: 80%; max-height: 200px;
@@ -59,17 +61,16 @@
       margin: 12px 0; color: #fff;
     }
     .scroll-list div {
-      border-bottom:1px solid #444;
+      border-bottom: 1px solid #444;
       padding: 6px 0;
     }
     #loginOverlay input {
       display: block; width: 200px;
-      padding: 6px; margin: 8px 0;
-      font-size: 14px;
+      padding: 6px; margin: 8px 0; font-size: 14px;
     }
     #loginOverlay label {
-      display: flex; align-items: center;
       color: #fff; margin: 8px 0;
+      display: flex; align-items: center;
     }
     #loginOverlay label input {
       margin-right: 6px;
@@ -82,7 +83,7 @@
     <div id="score">0</div>
     <button id="pauseBtn">Pause</button>
 
-    <!-- LOGIN -->
+    <!-- LOGIN OVERLAY -->
     <div id="loginOverlay" class="overlay hidden">
       <h2>Sign In</h2>
       <input id="loginEmail" placeholder="Email" />
@@ -95,7 +96,7 @@
       <button id="loginCancel">Cancel</button>
     </div>
 
-    <!-- MAIN MENU -->
+    <!-- MAIN MENU OVERLAY -->
     <div id="menuOverlay" class="overlay">
       <img src="https://app.masonnet.org/fbrc.png"
            style="width:240px;margin-bottom:24px;" alt="Logo" />
@@ -106,55 +107,50 @@
       <button id="signOutBtn" class="hidden">Sign Out</button>
     </div>
 
-    <!-- LEADERBOARD -->
+    <!-- LEADERBOARD OVERLAY -->
     <div id="leaderboardOverlay" class="overlay hidden">
       <h2>Global Top 10</h2>
       <div id="leaderboardList" class="scroll-list"></div>
       <button id="backFromLbBtn">Back</button>
     </div>
 
-    <!-- SETTINGS -->
+    <!-- SETTINGS OVERLAY -->
     <div id="settingsOverlay" class="overlay hidden">
       <h2>Settings</h2>
-
       <div>
         <button id="soundToggle">🔊 Sound</button>
-        <p>Toggle sound effects on/off</p>
+        <p>Toggle sound effects on/off.</p>
       </div>
-
       <div>
         <button id="themeToggle">🌙 Dark Mode</button>
-        <p>Switch light/dark background</p>
+        <p>Switch background theme.</p>
       </div>
-
       <div>
-        <button id="skipToggle">🚀 Skip to GO: Off</button>
-        <p>Immediate game over. No SFX if enabled.</p>
+        <button id="skipToggle">🚀 Skip to Game Over: Off</button>
+        <p>Immediate game over when enabled (no SFX).</p>
       </div>
-
       <div>
         <button id="authBtn">Sign In</button>
-        <p id="authDesc">Sign in to access admin console</p>
+        <p id="authDesc">Sign in to access admin console.</p>
       </div>
-
       <button id="closeSettingsBtn">Close</button>
     </div>
 
-    <!-- ADMIN CONSOLE -->
+    <!-- ADMIN CONSOLE OVERLAY -->
     <div id="adminOverlay" class="overlay hidden">
       <h2>Feedback Submissions</h2>
       <div id="adminList" class="scroll-list"></div>
       <button id="closeAdminBtn">Back</button>
     </div>
 
-    <!-- PAUSE -->
+    <!-- PAUSE OVERLAY -->
     <div id="pauseOverlay" class="overlay hidden">
       <h2>Paused</h2>
       <button id="resumeBtn">Resume</button>
       <button id="backFromPauseBtn">Main Menu</button>
     </div>
 
-    <!-- GAME OVER -->
+    <!-- GAME OVER OVERLAY -->
     <div id="gameoverOverlay" class="overlay hidden">
       <h2>Game Over</h2>
       <p>Your Score: <span id="finalScore">0</span></p>
@@ -162,7 +158,7 @@
       <button id="backFromGOBtn">Main Menu</button>
     </div>
 
-    <!-- EFFECT -->
+    <!-- EFFECT OVERLAY -->
     <div id="effectOverlay" class="overlay hidden">
       <h2>Playing sound effects...</h2>
     </div>
@@ -175,304 +171,315 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Config
+    // Constants
     const OBSTACLE_WIDTH   = 60;
     const PIPE_GAP_MIN     = 120;
     const PIPE_GAP_MAX     = 200;
     const FLAP_COOLDOWN_MS = 200;
     const PARALLAX_SPEEDS  = [0.3, 0.8, 2];
 
-    // Firebase init
+    // Firebase Initialization
     firebase.initializeApp({
       apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain:"masonnet-app-official.firebaseapp.com",
       databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
       projectId: "masonnet-app-official"
     });
-    const auth  = firebase.auth(),
-          db    = firebase.database(),
-          lbRef = db.ref("leaderboard"),
-          fbRef = db.ref("feedback"),
-          roles = db.ref("roles");
+    const auth  = firebase.auth();
+    const db    = firebase.database();
+    const lbRef = db.ref("leaderboard");
+    const fbRef = db.ref("feedback");
+    const roles = db.ref("roles");
 
-    // Overlay map
+    // Overlay Map & Helper
     const overlays = {
-      login:    document.getElementById("loginOverlay"),
-      menu:     document.getElementById("menuOverlay"),
+      login: document.getElementById("loginOverlay"),
+      menu: document.getElementById("menuOverlay"),
       leaderboard: document.getElementById("leaderboardOverlay"),
       settings: document.getElementById("settingsOverlay"),
-      admin:    document.getElementById("adminOverlay"),
-      pause:    document.getElementById("pauseOverlay"),
+      admin: document.getElementById("adminOverlay"),
+      pause: document.getElementById("pauseOverlay"),
       gameover: document.getElementById("gameoverOverlay"),
-      effect:   document.getElementById("effectOverlay")
+      effect: document.getElementById("effectOverlay")
     };
     function showOverlay(name) {
-      Object.values(overlays).forEach(o=>o.classList.add("hidden"));
+      Object.values(overlays).forEach(o => o.classList.add("hidden"));
       overlays[name].classList.remove("hidden");
     }
 
-    // UI refs
-    const canvas       = document.getElementById("canvas");
-    const ctx          = canvas.getContext("2d");
-    const scoreDiv     = document.getElementById("score");
-    const pauseBtn     = document.getElementById("pauseBtn");
+    // UI References
+    const canvas         = document.getElementById("canvas");
+    const ctx            = canvas.getContext("2d");
+    const scoreDiv       = document.getElementById("score");
+    const pauseBtn       = document.getElementById("pauseBtn");
+    const loginEmail     = document.getElementById("loginEmail");
+    const loginPass      = document.getElementById("loginPass");
+    const loginRem       = document.getElementById("loginRemember");
+    const loginSubmit    = document.getElementById("loginSubmit");
+    const loginCancel    = document.getElementById("loginCancel");
+    const authBtn        = document.getElementById("authBtn");
+    const signOutBtn     = document.getElementById("signOutBtn");
+    const adminBtn       = document.getElementById("adminBtn");
+    const authDesc       = document.getElementById("authDesc");
+    const startBtn       = document.getElementById("startBtn");
+    const leaderboardBtn = document.getElementById("leaderboardBtn");
+    const settingsBtn    = document.getElementById("settingsBtn");
+    const closeSettings  = document.getElementById("closeSettingsBtn");
+    const closeAdmin     = document.getElementById("closeAdminBtn");
+    const backFromLb     = document.getElementById("backFromLbBtn");
+    const resumeBtn      = document.getElementById("resumeBtn");
+    const backFromPause  = document.getElementById("backFromPauseBtn");
+    const restartBtn     = document.getElementById("restartBtn");
+    const backFromGO     = document.getElementById("backFromGOBtn");
+    const leaderboardList= document.getElementById("leaderboardList");
+    const adminList      = document.getElementById("adminList");
+    const finalScore     = document.getElementById("finalScore");
 
-    const loginEmail   = document.getElementById("loginEmail");
-    const loginPass    = document.getElementById("loginPass");
-    const loginRem     = document.getElementById("loginRemember");
-    const loginSubmit  = document.getElementById("loginSubmit");
-    const loginCancel  = document.getElementById("loginCancel");
-
-    const authBtn      = document.getElementById("authBtn");
-    const signOutBtn   = document.getElementById("signOutBtn");
-    const adminBtn     = document.getElementById("adminBtn");
-    const authDesc     = document.getElementById("authDesc");
-
-    const startBtn     = document.getElementById("startBtn");
-    const lbBtn        = document.getElementById("leaderboardBtn");
-    const settingsBtn  = document.getElementById("settingsBtn");
-    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
-    const closeAdminBtn    = document.getElementById("closeAdminBtn");
-    const backFromLbBtn    = document.getElementById("backFromLbBtn");
-    const resumeBtn        = document.getElementById("resumeBtn");
-    const backFromPauseBtn = document.getElementById("backFromPauseBtn");
-    const restartBtn       = document.getElementById("restartBtn");
-    const backFromGOBtn    = document.getElementById("backFromGOBtn");
-
-    const leaderboardList = document.getElementById("leaderboardList");
-    const adminList       = document.getElementById("adminList");
-    const finalScore      = document.getElementById("finalScore");
-
-    // Assets & SFX
-    const lightBg = new Image(), darkBg = new Image();
-    const birdImg = new Image(), pipeImg = new Image();
+    // Assets & Sounds
+    const lightBg = new Image(), darkBg = new Image(),
+          birdImg = new Image(), pipeImg = new Image();
     lightBg.src  = "https://app.masonnet.org/lightbg.png";
     darkBg.src   = "https://app.masonnet.org/darkbg.png";
     birdImg.src  = "https://app.masonnet.org/bird.png";
     pipeImg.src  = "https://app.masonnet.org/pipe-green.png";
-    const pointS = new Audio("https://app.masonnet.org/point.mp3");
-    const flapS  = new Audio("https://app.masonnet.org/flap.mp3");
-    const hitS   = new Audio("https://app.masonnet.org/hit.mp3");
-    const dieS   = new Audio("https://app.masonnet.org/die.mp3");
+
+    const pointS = new Audio("https://app.masonnet.org/point.mp3"),
+          flapS  = new Audio("https://app.masonnet.org/flap.mp3"),
+          hitS   = new Audio("https://app.masonnet.org/hit.mp3"),
+          dieS   = new Audio("https://app.masonnet.org/die.mp3");
 
     // Helpers
-    function resize() {
+    function resizeCanvas() {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
     }
-    window.addEventListener("resize", resize);
-    resize();
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
 
-    function $(id){ return document.getElementById(id); }
+    function $(id) { return document.getElementById(id); }
 
-    // Game state
-    let state="menu", bird, pipes, score, frame, animId;
-    let soundOn=true, darkMode=false, skipOn=false;
-    let bgImage=lightBg, collided=false, lastFlap=0;
-    let parallaxOff=[0,0,0], isAdmin=false;
+    // Game State
+    let state       = "menu";  // menu | playing | dying | paused
+    let bird, pipes, score, frame, animId;
+    let soundOn     = true;
+    let darkMode    = false;
+    let skipOn      = false;
+    let bgImage     = lightBg;
+    let collided    = false;
+    let lastFlap    = 0;
+    let parallaxOff = [0,0,0];
+    let isAdmin     = false;
 
-    // Toggle labels
+    // Toggle Labels
     function updateSound() {
-      $("soundToggle").textContent = soundOn? "🔊 Sound":"🔇 Mute";
+      $("soundToggle").textContent = soundOn ? "🔊 Sound" : "🔇 Mute";
     }
     function updateTheme() {
-      $("themeToggle").textContent = darkMode? "☀️ Light":"🌙 Dark";
+      $("themeToggle").textContent = darkMode ? "☀️ Light" : "🌙 Dark";
     }
     function updateSkip() {
-      $("skipToggle").textContent = skipOn? "🚀 Skip: On":"🚀 Skip: Off";
+      $("skipToggle").textContent = skipOn ? "🚀 Skip: On" : "🚀 Skip: Off";
     }
 
-    // Firebase Auth listener
-    auth.onAuthStateChanged(user=>{
-      if(!user){
-        isAdmin=false;
+    // Firebase Auth Listener
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        isAdmin    = false;
         adminBtn.classList.add("hidden");
         signOutBtn.classList.add("hidden");
-        authBtn.textContent="Sign In";
-        authDesc.textContent="Sign in to access admin console.";
+        authBtn.textContent = "Sign In";
+        authDesc.textContent = "Sign in to access admin console.";
         showOverlay("menu");
         return;
       }
-      // Check roles/uid => admin
-      roles.child(user.uid).once("value",snap=>{
-        isAdmin = snap.val()==="admin";
-        adminBtn.classList.toggle("hidden",!isAdmin);
+      roles.child(user.uid).once("value", snap => {
+        isAdmin = snap.val() === "admin";
+        adminBtn.classList.toggle("hidden", !isAdmin);
       });
-      authBtn.textContent="Sign Out";
-      authDesc.textContent="Signed in as "+user.email;
+      authBtn.textContent = "Sign Out";
+      authDesc.textContent = `Signed in as ${user.email}`;
       signOutBtn.classList.remove("hidden");
       showOverlay("menu");
     });
 
-    // Login handlers
-    loginSubmit.onclick = ()=>{
+    // Login Handlers
+    loginSubmit.onclick = () => {
       const persistence = loginRem.checked
         ? firebase.auth.Auth.Persistence.LOCAL
         : firebase.auth.Auth.Persistence.SESSION;
       auth.setPersistence(persistence)
-        .then(()=> auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value))
-        .catch(e=>alert(e.message));
+        .then(() => auth.signInWithEmailAndPassword(loginEmail.value, loginPass.value))
+        .catch(e => alert(e.message));
     };
-    loginCancel.onclick = ()=> showOverlay("settings");
+    loginCancel.onclick = () => showOverlay("settings");
 
-    // Auth button in settings
-    authBtn.onclick = ()=>{
-      if(auth.currentUser) auth.signOut(); else showOverlay("login");
-    };
-    signOutBtn.onclick = ()=> auth.signOut();
+    authBtn.onclick    = () => auth.currentUser ? auth.signOut() : showOverlay("login");
+    signOutBtn.onclick = () => auth.signOut();
 
-    // Bird class
+    // Bird Class
     class Bird {
-      constructor(){
-        this.w=36; this.h=30; this.x=50;
-        this.y=(canvas.height-this.h)/2;
-        this.vy=0; this.g=0.25;
+      constructor() {
+        this.w  = 36; this.h  = 30;
+        this.x  = 50; this.y  = (canvas.height - this.h) / 2;
+        this.vy = 0;  this.g  = 0.25;
       }
-      update(){
+      update() {
         this.vy += this.g; this.y += this.vy;
-        if(this.y<0){ this.y=0; this.vy=0; }
-        if(this.y+this.h>=canvas.height){
-          this.y=canvas.height-this.h; this.die();
+        if (this.y < 0)                   { this.y = 0; this.vy = 0; }
+        if (this.y + this.h >= canvas.height) {
+          this.y = canvas.height - this.h;
+          this.die();
         }
       }
       draw() {
-        ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
+        ctx.drawImage(birdImg, this.x, this.y, this.w, this.h);
       }
-      flap(){
-        const now=Date.now();
-        if(soundOn && now-lastFlap>=FLAP_COOLDOWN_MS){
-          flapS.currentTime=0; flapS.play();
-          lastFlap=now;
+      flap() {
+        const now = Date.now();
+        if (soundOn && now - lastFlap >= FLAP_COOLDOWN_MS) {
+          flapS.currentTime = 0;
+          flapS.play();
+          lastFlap = now;
         }
         this.vy = -6;
       }
-      collides(p){
+      collides(p) {
         return !(
-          this.x+this.w < p.x ||
-          this.x     > p.x+p.w ||
-          this.y+this.h < p.y ||
-          this.y     > p.y+p.h
+          this.x + this.w < p.x ||
+          this.x > p.x + p.w ||
+          this.y + this.h < p.y ||
+          this.y > p.y + p.h
         );
       }
-      die(){
-        if(collided) return;
-        state="dying"; collided=true;
+      die() {
+        if (collided) return;
+        state     = "dying";
+        collided  = true;
         cancelAnimationFrame(animId);
-        pauseBtn.style.display="none";
+        pauseBtn.style.display = "none";
         showOverlay("effect");
-        if(skipOn||!soundOn){
-          endGame(); return;
+        if (skipOn || !soundOn) {
+          return endGame();
         }
-        hitS.currentTime=0; hitS.play();
-        hitS.onended = ()=>{
-          dieS.currentTime=0; dieS.play();
+        hitS.currentTime = 0; hitS.play();
+        hitS.onended = () => {
+          dieS.currentTime = 0; dieS.play();
           dieS.onended = endGame;
         };
       }
     }
 
-    function spawnPipes(){
-      const x=canvas.width;
-      const h=20+Math.random()*(canvas.height/2-20);
-      const gap = PIPE_GAP_MIN + Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
-      pipes = pipes.filter(p=>p.x+p.w>0);
-      if(!pipes.length || x - pipes[pipes.length-1].x > OBSTACLE_WIDTH*3){
-        pipes.push({x,y:0,       w:OBSTACLE_WIDTH,h,          passed:false, top:true});
-        pipes.push({x,y:h+gap,   w:OBSTACLE_WIDTH,h:canvas.height-h-gap,passed:false, top:false});
+    // Pipe Spawning
+    function spawnPipes() {
+      const x   = canvas.width;
+      const h   = 20 + Math.random() * (canvas.height / 2 - 20);
+      const gap = PIPE_GAP_MIN + Math.random() * (PIPE_GAP_MAX - PIPE_GAP_MIN);
+      pipes = pipes.filter(p => p.x + p.w > 0);
+
+      if (!pipes.length || x - pipes[pipes.length - 1].x > OBSTACLE_WIDTH * 3) {
+        pipes.push({ x, y: 0, w: OBSTACLE_WIDTH, h, passed: false, top: true });
+        pipes.push({
+          x,
+          y: h + gap,
+          w: OBSTACLE_WIDTH,
+          h: canvas.height - h - gap,
+          passed: false,
+          top:   false
+        });
       }
     }
 
-    function endGame(){
+    // End Game
+    function endGame() {
       showOverlay("gameover");
-      $("finalScore").textContent = score;
+      finalScore.textContent = score;
     }
 
-    function loop(){
-      if(state!=="playing") return;
+    // Rendering Loop
+    function loop() {
+      if (state !== "playing") return;
       animId = requestAnimationFrame(loop);
 
       frame++;
-      PARALLAX_SPEEDS.forEach((spd,i)=>{
+      PARALLAX_SPEEDS.forEach((spd, i) => {
         parallaxOff[i] = (parallaxOff[i] + spd) % canvas.width;
-        ctx.drawImage(bgImage, -parallaxOff[i],0,canvas.width,canvas.height);
-        ctx.drawImage(bgImage, canvas.width-parallaxOff[i],0,canvas.width,canvas.height);
+        ctx.drawImage(bgImage, -parallaxOff[i], 0, canvas.width, canvas.height);
+        ctx.drawImage(bgImage, canvas.width - parallaxOff[i], 0, canvas.width, canvas.height);
       });
 
-      if(frame===1 || frame%150===0) spawnPipes();
-      pipes.forEach(p=>{
+      if (frame === 1 || frame % 150 === 0) spawnPipes();
+      pipes.forEach(p => {
         p.x -= 1.8;
-        ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
+        ctx.drawImage(pipeImg, p.x, p.y, p.w, p.h);
 
-        if(!collided && bird.collides(p)) bird.die();
-
-        if(p.top && !p.passed && bird.x > p.x + p.w){
+        if (!collided && bird.collides(p)) bird.die();
+        if (p.top && !p.passed && bird.x > p.x + p.w) {
           p.passed = true;
           score++;
           scoreDiv.textContent = score;
-          if(soundOn){
-            pointS.currentTime=0;
-            pointS.play();
-          }
+          if (soundOn) { pointS.currentTime = 0; pointS.play(); }
         }
       });
-      pipes = pipes.filter(p=>p.x+p.w>0);
+      pipes = pipes.filter(p => p.x + p.w > 0);
 
       bird.update();
       bird.draw();
     }
 
-    function startGame(){
-      state="playing";
-      bird   = new Bird();
-      pipes  = [];
-      score  = 0;
-      frame  = 0;
-      collided = false;
-      parallaxOff = [0,0,0];
-      bgImage = darkMode ? darkBg : lightBg;
+    // Start Game
+    function startGame() {
+      state       = "playing";
+      bird        = new Bird();
+      pipes       = [];
+      score       = 0;
+      frame       = 0;
+      collided    = false;
+      parallaxOff = [0, 0, 0];
+      bgImage     = darkMode ? darkBg : lightBg;
       scoreDiv.textContent = score;
-      hideAll();
-      pauseBtn.style.display="block";
+      showOverlay(null); // hide all overlays
+      pauseBtn.style.display = "block";
       loop();
     }
 
-    function pauseGame(){
-      if(state!=="playing") return;
-      state="paused";
+    // Pause
+    function pauseGame() {
+      if (state !== "playing") return;
+      state = "paused";
       cancelAnimationFrame(animId);
       showOverlay("pause");
     }
 
-    // Render Leaderboard
-    function renderLB(){
+    // Leaderboard
+    function renderLeaderboard() {
       leaderboardList.innerHTML = "";
       lbRef.orderByChild("score").limitToLast(10)
-        .once("value", snap=>{
-          Object.values(snap.val()||{})
-            .sort((a,b)=>b.score - a.score)
-            .forEach((e,i)=>{
-              const div = document.createElement("div");
-              div.textContent = `${i+1}. ${e.name}: ${e.score}`;
-              leaderboardList.appendChild(div);
+        .once("value", snap => {
+          Object.values(snap.val() || {})
+            .sort((a,b) => b.score - a.score)
+            .forEach((e,i) => {
+              const d = document.createElement("div");
+              d.textContent = `${i+1}. ${e.name}: ${e.score}`;
+              leaderboardList.appendChild(d);
             });
           showOverlay("leaderboard");
         });
     }
 
-    // Render Admin Console
-    function renderAdmin(){
+    // Admin Console
+    function renderAdmin() {
       adminList.innerHTML = "";
       fbRef.orderByChild("timestamp")
-        .once("value", snap=>{
-          Object.entries(snap.val()||{}).reverse()
-            .forEach(([_,v])=>{
-              const div = document.createElement("div");
-              div.innerHTML = `
+        .once("value", snap => {
+          Object.entries(snap.val() || {}).reverse()
+            .forEach(([_,v]) => {
+              const d = document.createElement("div");
+              d.innerHTML = `
                 <strong>${v.type}</strong> – ${v.subject}<br>
                 ${v.message}<br>
                 <em>${new Date(v.timestamp).toLocaleString()}</em>
               `;
-              adminList.appendChild(div);
+              adminList.appendChild(d);
             });
           showOverlay("admin");
         });
@@ -480,36 +487,34 @@
 
     // Bind UI
     startBtn.onclick         = startGame;
-    lbBtn.onclick            = renderLB;
-    settingsBtn.onclick      = ()=>showOverlay("settings");
-    closeSettingsBtn.onclick = ()=>showOverlay("menu");
+    leaderboardBtn.onclick   = renderLeaderboard;
+    settingsBtn.onclick      = () => showOverlay("settings");
+    closeSettings.onclick    = () => showOverlay("menu");
     adminBtn.onclick         = renderAdmin;
-    closeAdminBtn.onclick    = ()=>showOverlay("menu");
-    backFromLbBtn.onclick    = ()=>showOverlay("menu");
-    resumeBtn.onclick        = ()=>{ state="playing"; loop(); };
-    backFromPauseBtn.onclick = ()=>showOverlay("menu");
+    closeAdmin.onclick       = () => showOverlay("menu");
+    backFromLb.onclick       = () => showOverlay("menu");
+    resumeBtn.onclick        = () => { state="playing"; loop(); };
+    backFromPause.onclick    = () => showOverlay("menu");
     restartBtn.onclick       = startGame;
-    backFromGOBtn.onclick    = ()=>showOverlay("menu");
+    backFromGO.onclick       = () => showOverlay("menu");
     pauseBtn.onclick         = pauseGame;
 
-    $("soundToggle").onclick = ()=>{ soundOn=!soundOn; updateSound(); };
-    $("themeToggle").onclick = ()=>{ darkMode=!darkMode; updateTheme(); };
-    $("skipToggle").onclick  = ()=>{ skipOn=!skipOn; updateSkip(); };
+    $("soundToggle").onclick = () => { soundOn=!soundOn; updateSound(); };
+    $("themeToggle").onclick = () => { darkMode=!darkMode; updateTheme(); };
+    $("skipToggle").onclick  = () => { skipOn=!skipOn; updateSkip(); };
 
-    // Controls
-    window.addEventListener("keydown", e=>{
-      if(e.code==="Space" && state==="playing"){
+    window.addEventListener("keydown", e => {
+      if (e.code==="Space" && state==="playing") {
         bird.flap(); e.preventDefault();
       }
-      if(e.key==="k" && state==="playing"){
+      if (e.key==="k" && state==="playing") {
         pauseGame();
       }
     });
-    ['click','mousedown','touchstart'].forEach(evt=>{
-      canvas.addEventListener(evt, e=>{
-        if(state==="playing"){
-          bird.flap();
-          e.preventDefault();
+    ["click","mousedown","touchstart"].forEach(ev=>{
+      canvas.addEventListener(ev, e=>{
+        if (state==="playing") {
+          bird.flap(); e.preventDefault();
         }
       });
     });
