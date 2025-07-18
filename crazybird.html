@@ -5,7 +5,7 @@
   <title>Flappy Bird – Auth & Admin Console</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff }
+    html,body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff }
     #game-container { position:relative; width:100%; height:100% }
     canvas { display:block; width:100%; height:100% }
     #score {
@@ -15,45 +15,49 @@
     }
     #pauseBtn {
       position:absolute; top:10px; right:10px; display:none;
-      background:#F00; border:none; color:#fff;
-      padding:8px 16px; cursor:pointer; z-index:6
+      background:#FF0000; border:none; color:#fff;
+      padding:8px 16px; font-size:16px; cursor:pointer; z-index:6
     }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.85); display:flex;
-      flex-direction:column; align-items:center;
-      justify-content:center; text-align:center;
-      font-family:Arial,sans-serif; z-index:10
+      flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; font-family:Arial,sans-serif; z-index:10
     }
     .hidden { display:none }
     .overlay button {
-      background:#F00; border:none; color:#fff;
+      background:#FF0000; border:none; color:#fff;
       padding:12px 24px; margin:8px; font-size:16px;
       cursor:pointer
     }
     #settingsOverlay .setting-item {
-      margin:16px 0; display:flex;
-      flex-direction:column; align-items:center
+      margin:16px 0; display:flex; flex-direction:column;
+      align-items:center
     }
     .setting-desc {
       margin-top:6px; font-size:14px;
       max-width:200px; color:#ddd
     }
     .scroll-list {
-      width:80%; max-height:200px;
-      overflow-y:auto; text-align:left;
-      margin:12px 0; color:#fff
+      width:80%; max-height:200px; overflow-y:auto;
+      text-align:left; margin:12px 0; color:#fff
     }
     .scroll-list div {
-      border-bottom:1px solid #444;
-      padding:6px 0
+      border-bottom:1px solid #444; padding:6px 0
     }
-    /* Login form */
     #loginOverlay input {
       display:block; width:200px; padding:6px;
       margin:8px 0; font-size:14px
     }
+    #loginOverlay label {
+      color:#fff; font-size:14px; margin:8px 0;
+      display:flex; align-items:center;
+    }
+    #loginOverlay label input { margin-right:6px }
   </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="game-container">
@@ -66,14 +70,15 @@
       <h2>Sign In</h2>
       <input id="loginEmail" type="text" placeholder="Email">
       <input id="loginPass"  type="password" placeholder="Password">
+      <label><input id="loginRemember" type="checkbox">Remember me</label>
       <button id="loginSubmit">Sign In</button>
       <button id="loginCancel">Cancel</button>
     </div>
 
     <!-- Main Menu -->
-    <div id="menuOverlay" class="overlay hidden">
-      <img src="https://app.masonnet.org/fbrc.png" alt="Logo"
-           style="width:240px;margin-bottom:24px">
+    <div id="menuOverlay" class="overlay">
+      <img src="https://app.masonnet.org/fbrc.png"
+           alt="Logo" style="width:240px;margin-bottom:24px">
       <button id="startBtn">Start</button>
       <button id="leaderboardBtn">Leaderboard</button>
       <button id="settingsBtn">Settings</button>
@@ -91,29 +96,24 @@
     <!-- Settings -->
     <div id="settingsOverlay" class="overlay hidden">
       <h2>Settings</h2>
-
       <div class="setting-item">
         <button id="soundToggle">🔊 Sound</button>
         <p class="setting-desc">Toggle sound effects on or off.</p>
       </div>
-
       <div class="setting-item">
         <button id="themeToggle">🌙 Dark Mode</button>
         <p class="setting-desc">Switch between light and dark backgrounds.</p>
       </div>
-
       <div class="setting-item">
         <button id="skipToggle">🚀 Skip to Game Over: Off</button>
         <p class="setting-desc">
           Immediately triggers game over when enabled. This has no effect if sound is turned off. Game over SFX will not play if this is enabled.
         </p>
       </div>
-
       <div class="setting-item">
         <button id="authBtn">Sign In</button>
         <p class="setting-desc" id="authDesc">Sign in to access the admin console.</p>
       </div>
-
       <button id="closeSettingsBtn">Close</button>
     </div>
 
@@ -139,7 +139,7 @@
       <button id="backFromGOBtn">Main Menu</button>
     </div>
 
-    <!-- Sound-Effect Overlay -->
+    <!-- Effect Overlay -->
     <div id="effectOverlay" class="overlay hidden">
       <h2>Playing sound effects...</h2>
     </div>
@@ -152,14 +152,14 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // CONFIG
+    // ---- CONFIG ----
     const OBSTACLE_WIDTH   = 60;
     const PIPE_GAP_MIN     = 120;
     const PIPE_GAP_MAX     = 200;
     const FLAP_COOLDOWN_MS = 200;
     const PARALLAX_SPEEDS  = [0.3, 0.8, 2];
 
-    // Initialize Firebase
+    // Firebase init
     firebase.initializeApp({
       apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain:"masonnet-app-official.firebaseapp.com",
@@ -173,56 +173,57 @@
     const roles = db.ref("roles");
 
     // UI refs
-    const loginOL         = document.getElementById("loginOverlay");
-    const menuOL          = document.getElementById("menuOverlay");
-    const lbOL            = document.getElementById("leaderboardOverlay");
-    const settingsOL      = document.getElementById("settingsOverlay");
-    const adminOL         = document.getElementById("adminOverlay");
-    const pauseOL         = document.getElementById("pauseOverlay");
-    const goOL            = document.getElementById("gameoverOverlay");
-    const effectOL        = document.getElementById("effectOverlay");
+    const loginOL      = document.getElementById("loginOverlay");
+    const menuOL       = document.getElementById("menuOverlay");
+    const lbOL         = document.getElementById("leaderboardOverlay");
+    const settingsOL   = document.getElementById("settingsOverlay");
+    const adminOL      = document.getElementById("adminOverlay");
+    const pauseOL      = document.getElementById("pauseOverlay");
+    const goOL         = document.getElementById("gameoverOverlay");
+    const effectOL     = document.getElementById("effectOverlay");
 
-    const canvas          = document.getElementById("canvas");
-    const ctx             = canvas.getContext("2d");
-    const scoreDiv        = document.getElementById("score");
-    const pauseBtn        = document.getElementById("pauseBtn");
+    const canvas       = document.getElementById("canvas");
+    const ctx          = canvas.getContext("2d");
+    const scoreDiv     = document.getElementById("score");
+    const pauseBtn     = document.getElementById("pauseBtn");
 
-    const loginEmail      = document.getElementById("loginEmail");
-    const loginPass       = document.getElementById("loginPass");
-    const loginSubmit     = document.getElementById("loginSubmit");
-    const loginCancel     = document.getElementById("loginCancel");
+    const loginEmail   = document.getElementById("loginEmail");
+    const loginPass    = document.getElementById("loginPass");
+    const loginRem     = document.getElementById("loginRemember");
+    const loginSubmit  = document.getElementById("loginSubmit");
+    const loginCancel  = document.getElementById("loginCancel");
 
-    const startBtn        = document.getElementById("startBtn");
-    const lbBtn           = document.getElementById("leaderboardBtn");
-    const settingsBtn     = document.getElementById("settingsBtn");
-    const adminBtn        = document.getElementById("adminBtn");
-    const authBtn         = document.getElementById("authBtn");
-    const signOutBtn      = document.getElementById("signOutBtn");
-    const restartBtn      = document.getElementById("restartBtn");
+    const startBtn     = document.getElementById("startBtn");
+    const lbBtn        = document.getElementById("leaderboardBtn");
+    const settingsBtn  = document.getElementById("settingsBtn");
+    const adminBtn     = document.getElementById("adminBtn");
+    const authBtn      = document.getElementById("authBtn");
+    const signOutBtn   = document.getElementById("signOutBtn");
+    const restartBtn   = document.getElementById("restartBtn");
 
-    const closeSettingsBtn= document.getElementById("closeSettingsBtn");
-    const closeAdminBtn   = document.getElementById("closeAdminBtn");
-    const backFromLbBtn   = document.getElementById("backFromLbBtn");
-    const backFromPauseBtn= document.getElementById("backFromPauseBtn");
-    const backFromGOBtn   = document.getElementById("backFromGOBtn");
-    const resumeBtn       = document.getElementById("resumeBtn");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    const closeAdminBtn    = document.getElementById("closeAdminBtn");
+    const backFromLbBtn    = document.getElementById("backFromLbBtn");
+    const backFromPauseBtn = document.getElementById("backFromPauseBtn");
+    const backFromGOBtn    = document.getElementById("backFromGOBtn");
+    const resumeBtn        = document.getElementById("resumeBtn");
 
-    const leaderboardList  = document.getElementById("leaderboardList");
-    const adminList        = document.getElementById("adminList");
-    const authDesc         = document.getElementById("authDesc");
+    const leaderboardList = document.getElementById("leaderboardList");
+    const adminList       = document.getElementById("adminList");
+    const authDesc        = document.getElementById("authDesc");
 
     // Preload assets
-    const lightBg  = new Image(), darkBg  = new Image();
-    const birdImg  = new Image(), pipeImg  = new Image();
-    lightBg.src    = "https://app.masonnet.org/lightbg.png";
-    darkBg.src     = "https://app.masonnet.org/darkbg.png";
-    birdImg.src    = "https://app.masonnet.org/bird.png";
-    pipeImg.src    = "https://app.masonnet.org/pipe-green.png";
+    const lightBg = new Image(), darkBg = new Image();
+    const birdImg = new Image(), pipeImg = new Image();
+    lightBg.src = "https://app.masonnet.org/lightbg.png";
+    darkBg.src  = "https://app.masonnet.org/darkbg.png";
+    birdImg.src = "https://app.masonnet.org/bird.png";
+    pipeImg.src = "https://app.masonnet.org/pipe-green.png";
 
-    const pointS   = new Audio("https://app.masonnet.org/point.mp3");
-    const flapS    = new Audio("https://app.masonnet.org/flap.mp3");
-    const hitS     = new Audio("https://app.masonnet.org/hit.mp3");
-    const dieS     = new Audio("https://app.masonnet.org/die.mp3");
+    const pointS = new Audio("https://app.masonnet.org/point.mp3");
+    const flapS  = new Audio("https://app.masonnet.org/flap.mp3");
+    const hitS   = new Audio("https://app.masonnet.org/hit.mp3");
+    const dieS   = new Audio("https://app.masonnet.org/die.mp3");
 
     Promise.all([
       new Promise(r=>lightBg.onload=r),
@@ -232,7 +233,7 @@
     ]).then(init);
 
     function init(){
-      // Game state
+      // game state
       let state        = "menu";
       let bird, pipes, score, frame, animId;
       let soundOn      = true;
@@ -244,15 +245,15 @@
       let parallaxOffs = [0,0,0];
       let isAdmin      = false;
 
-      // Resize canvas
+      // resize
       function resize(){
-        canvas.width  = innerWidth;
-        canvas.height = innerHeight;
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
       }
-      window.addEventListener("resize", resize);
+      window.addEventListener("resize",resize);
       resize();
 
-      // Overlay helpers
+      // show/hide overlays
       function hideAll(){
         [loginOL,menuOL,lbOL,settingsOL,adminOL,pauseOL,goOL,effectOL]
           .forEach(o=>o.classList.add("hidden"));
@@ -270,61 +271,59 @@
         if(id==="menu") signOutBtn.classList.remove("hidden");
       }
 
-      // Firebase Auth listener
+      // Auth state
       auth.onAuthStateChanged(user=>{
         if(!user){
           isAdmin=false;
+          adminBtn.classList.add("hidden");
+          signOutBtn.classList.add("hidden");
           authBtn.textContent="Sign In";
           authDesc.textContent="Sign in to access the admin console.";
           show("menu");
           return;
         }
-        // load role
+        // fetch role
         roles.child(user.uid).once("value",snap=>{
           isAdmin = snap.val()==="admin";
           adminBtn.classList.toggle("hidden",!isAdmin);
         });
         authBtn.textContent="Sign Out";
         authDesc.textContent="Signed in as "+user.email;
+        signOutBtn.classList.remove("hidden");
         show("menu");
       });
 
-      // Login / cancel
-      loginSubmit.onclick = ()=> {
-        auth.signInWithEmailAndPassword(loginEmail.value, loginPass.value)
-            .catch(e=>alert(e.message));
+      // Login/cancel handlers
+      loginSubmit.onclick = ()=>{
+        const persistence = loginRem.checked
+          ? firebase.auth.Auth.Persistence.LOCAL
+          : firebase.auth.Auth.Persistence.SESSION;
+        auth.setPersistence(persistence).then(()=>{
+          return auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value);
+        }).catch(e=>alert(e.message));
       };
       loginCancel.onclick = ()=> show("settings");
 
-      // Sign In/Out in settings
-      authBtn.onclick = ()=> {
+      // Sign In/Out button in settings
+      authBtn.onclick = ()=>{
         if(auth.currentUser) auth.signOut();
         else show("login");
       };
-      signOutBtn.onclick = ()=> auth.signOut();
 
-      // Sound toggle
-      function updateSound(){
-        document.getElementById("soundToggle").textContent =
-          soundOn ? "🔊 Sound" : "🔇 Mute";
-      }
-      // Theme toggle
-      function updateTheme(){
-        document.getElementById("themeToggle").textContent =
-          darkMode ? "☀️ Light Mode" : "🌙 Dark Mode";
-      }
-      // Skip toggle
-      function updateSkip(){
-        document.getElementById("skipToggle").textContent =
-          skipOn ? "🚀 Skip to Game Over: On" : "🚀 Skip to Game Over: Off";
-      }
+      // Sound/Theme/Skip toggles
+      function updateSound(){ document.getElementById("soundToggle")
+        .textContent = soundOn ? "🔊 Sound" : "🔇 Mute"; }
+      function updateTheme(){ document.getElementById("themeToggle")
+        .textContent = darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"; }
+      function updateSkip(){ document.getElementById("skipToggle")
+        .textContent = skipOn ? "🚀 Skip to GO: On" : "🚀 Skip to GO: Off"; }
 
       // Bird class
       class Bird {
         constructor(){
           this.w=36; this.h=30;
           this.x=50; this.y=(canvas.height-this.h)/2;
-          this.vy=0; this.g=0.3;
+          this.vy=0; this.g=0.25; // slightly less gravity
         }
         update(){
           this.vy+=this.g; this.y+=this.vy;
@@ -333,24 +332,18 @@
             this.y=canvas.height-this.h; this.die();
           }
         }
-        draw(){
-          ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
-        }
+        draw(){ ctx.drawImage(birdImg,this.x,this.y,this.w,this.h); }
         flap(){
           const now=Date.now();
-          if(soundOn && now-lastFlapTime>=FLAP_COOLDOWN_MS){
+          if(soundOn&&now-lastFlapTime>=FLAP_COOLDOWN_MS){
             flapS.currentTime=0; flapS.play();
             lastFlapTime=now;
           }
-          this.vy=-6;
+          this.vy=-6; // upward impulse
         }
         collides(p){
-          return !(
-            this.x+this.w < p.x ||
-            this.x > p.x+p.w ||
-            this.y+this.h < p.y ||
-            this.y > p.y+p.h
-          );
+          return !(this.x+this.w<p.x||this.x>p.x+p.w||
+                   this.y+this.h<p.y||this.y>p.y+p.h);
         }
         die(){
           if(collided) return;
@@ -359,33 +352,33 @@
           hideAll(); show("effect");
           if(skipOn||!soundOn){ endGame(); return; }
           hitS.currentTime=0; hitS.play();
-          hitS.onended = ()=>{
+          hitS.onended=()=>{
             dieS.currentTime=0; dieS.play();
-            dieS.onended = endGame;
+            dieS.onended=endGame;
           };
         }
       }
 
-      // Pipes
+      // Spawn pipes
       function spawnPipes(){
         const x=canvas.width;
         const h=20+Math.random()*(canvas.height/2-20);
         const gap=PIPE_GAP_MIN+Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
         pipes=pipes.filter(p=>p.x+p.w>0);
-        if(!pipes.length || x-pipes[pipes.length-1].x>OBSTACLE_WIDTH*3){
-          pipes.push({x,y:0,       w:OBSTACLE_WIDTH,h,         passed:false,top:true});
-          pipes.push({x,y:h+gap,   w:OBSTACLE_WIDTH,h:canvas.height-h-gap,passed:false,top:false});
+        if(!pipes.length||x-pipes[pipes.length-1].x>OBSTACLE_WIDTH*3){
+          pipes.push({x,y:0,w:OBSTACLE_WIDTH,h,passed:false,top:true});
+          pipes.push({x,y:h+gap,w:OBSTACLE_WIDTH,
+                      h:canvas.height-h-gap,passed:false,top:false});
         }
       }
 
       // End game
       function endGame(){
-        hideAll();
-        show("gameover");
+        hideAll(); show("gameover");
         document.getElementById("finalScore").textContent=score;
       }
 
-      // Leaderboard
+      // Render leaderboard
       function renderLB(){
         leaderboardList.innerHTML="";
         lbRef.orderByChild("score").limitToLast(10)
@@ -401,7 +394,7 @@
         });
       }
 
-      // Admin console
+      // Render admin console
       function renderAdmin(){
         adminList.innerHTML="";
         fbRef.orderByChild("timestamp")
@@ -430,7 +423,8 @@
         // pipes
         if(frame===1||frame%150===0) spawnPipes();
         pipes.forEach(p=>{
-          p.x-=2; ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
+          p.x-=1.8; // slightly slower
+          ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
           if(!collided && bird.collides(p)) bird.die();
           if(p.top && !p.passed && bird.x>p.x+p.w){
             p.passed=true; score++; scoreDiv.textContent=score;
@@ -458,7 +452,7 @@
         hideAll(); show("pause");
       }
 
-      // UI bindings
+      // Bind UI
       startBtn.onclick        = startGame;
       lbBtn.onclick           = renderLB;
       settingsBtn.onclick     = ()=>show("settings");
@@ -470,13 +464,11 @@
       backFromPauseBtn.onclick= ()=>show("menu");
       restartBtn.onclick      = startGame;
       backFromGOBtn.onclick   = ()=>show("menu");
-
       pauseBtn.onclick        = pauseGame;
 
-      loginSubmit.onclick     = ()=>auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value).catch(e=>alert(e.message));
-      loginCancel.onclick     = ()=>show("settings");
-
-      authBtn.onclick         = ()=>auth.currentUser? auth.signOut(): show("login");
+      loginSubmit.onclick     = ()=>{/* handled above */};
+      loginCancel.onclick     = ()=>{/* handled above */};
+      authBtn.onclick         = ()=>{/* handled above */};
       signOutBtn.onclick      = ()=>auth.signOut();
 
       document.getElementById("soundToggle").onclick = ()=>{ soundOn=!soundOn; updateSound(); };
@@ -484,8 +476,8 @@
       document.getElementById("skipToggle").onclick  = ()=>{ skipOn=!skipOn; updateSkip(); };
 
       window.addEventListener("keydown",e=>{
-        if(e.code==="Space"&&state==="playing"){ bird.flap(); e.preventDefault(); }
-        if(e.key==="k"     &&state==="playing") pauseGame();
+        if(e.code==="Space" && state==="playing"){ bird.flap(); e.preventDefault(); }
+        if(e.key==="k"     && state==="playing") pauseGame();
       });
       ['click','mousedown','touchstart'].forEach(evt=>{
         canvas.addEventListener(evt,e=>{
@@ -493,7 +485,7 @@
         });
       });
 
-      // Init UI
+      // Init
       updateSound(); updateTheme(); updateSkip();
       show("menu");
     }
