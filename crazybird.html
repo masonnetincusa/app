@@ -2,73 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – Parallax Background</title>
+  <title>Flappy Bird – Delay Game Over Until Sounds End</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
   <!-- Google Font for Score Counter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
   <style>
     html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: #000; color: #fff;
+      margin:0; padding:0;
+      width:100%; height:100%;
+      overflow:hidden; background:#000; color:#fff;
     }
-    #game-container {
-      position: relative;
-      width: 100%; height: 100%;
-    }
-    canvas {
-      display: block;
-      width: 100%; height: 100%;
-    }
+    #game-container { position:relative; width:100%; height:100%; }
+    canvas { display:block; width:100%; height:100%; }
+
+    /* Score */
     #score {
-      position: absolute;
-      top: 10px; left: 10px;
-      font-family: 'Press Start 2P', system-ui;
-      font-size: 48px; color: #fff;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-      z-index: 5;
+      position:absolute; top:10px; left:10px;
+      font-family:'Press Start 2P', system-ui;
+      font-size:48px; color:#fff;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.7);
+      z-index:5;
     }
+
+    /* Pause */
     #pauseBtn {
-      position: absolute;
-      top: 10px; right: 10px;
-      display: none;
-      background: #FF0000; color: #fff;
-      border: none; padding: 8px 16px;
-      font-size: 16px; cursor: pointer;
-      user-select: none;
+      position:absolute; top:10px; right:10px;
+      display:none;
+      background:#FF0000; color:#fff;
+      border:none; padding:8px 16px;
+      font-size:16px; cursor:pointer; user-select:none;
     }
+
+    /* Overlays */
     .overlay {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; font-family: Arial, sans-serif;
-      z-index: 10;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.8);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      text-align:center; font-family:Arial,sans-serif;
+      z-index:10;
     }
-    .hidden { display: none; }
+    .hidden { display:none; }
     .overlay button {
-      background: #FF0000; border: none;
-      color: #fff; padding: 12px 24px;
-      margin: 8px; font-size: 16px;
-      cursor: pointer; user-select: none;
+      background:#FF0000; border:none;
+      color:#fff; padding:12px 24px;
+      margin:8px; font-size:16px;
+      cursor:pointer; user-select:none;
     }
-    #settings button { width: 180px; }
+    #settings button { width:180px; }
     #lb-list, #lb-list-go {
-      text-align: left; width: 80%;
-      max-height: 150px; overflow-y: auto;
-      margin: 12px 0;
+      text-align:left; width:80%;
+      max-height:150px; overflow-y:auto;
+      margin:12px 0;
     }
     #lb-list div, #lb-list-go div {
-      border-bottom: 1px solid #444; padding: 4px 0;
+      border-bottom:1px solid #444; padding:4px 0;
     }
   </style>
 
@@ -82,41 +75,31 @@
     <div id="score">0</div>
     <button id="pauseBtn">Pause</button>
 
-    <!-- Main Menu -->
+    <!-- Menus & Overlays -->
     <div id="menu" class="overlay">
-      <img src="https://app.masonnet.org/fbrc.png"
-           alt="Flappy Bird Logo"
-           style="width:240px; margin-bottom:24px; user-select:none;">
+      <img src="https://app.masonnet.org/fbrc.png" alt="Logo"
+           style="width:240px;margin-bottom:24px;user-select:none;">
       <button id="startBtn">Start</button>
       <button id="leaderboardBtn">Leaderboard</button>
       <button id="linkBtn">Flappy Bird Hub</button>
       <button id="settingsBtn">Settings</button>
     </div>
-
-    <!-- Leaderboard -->
     <div id="leaderboard" class="overlay hidden">
-      <h2>Global Top 10</h2>
-      <div id="lb-list"></div>
+      <h2>Global Top 10</h2><div id="lb-list"></div>
       <button id="backFromLbBtn">Back</button>
     </div>
-
-    <!-- Settings -->
     <div id="settings" class="overlay hidden">
       <h2>Settings</h2>
       <button id="soundToggle">🔊 Sound</button>
       <button id="themeToggle">🌙 Dark Mode</button>
       <button id="closeSettingsBtn">Close</button>
     </div>
-
-    <!-- Pause Menu -->
     <div id="pause" class="overlay hidden">
       <h2>Paused</h2>
       <button id="resumeBtn">Resume</button>
       <button id="backFromPauseBtn">Main Menu</button>
       <button id="settingsBtnPause">Settings</button>
     </div>
-
-    <!-- Game Over -->
     <div id="gameover" class="overlay hidden">
       <h2>Game Over</h2>
       <p>Your Score: <span id="finalScore">0</span></p>
@@ -128,7 +111,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Firebase config
+    // Firebase setup
     const firebaseConfig = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -153,7 +136,7 @@
     const DIE_SOUND    = "https://app.masonnet.org/die.mp3";
     const HUB_LINK     = "https://app.masonnet.org/flappybirdhub";
 
-    // Preload images & audio
+    // Preload
     const lightBgImg = new Image(); lightBgImg.src = LIGHT_BG_URL;
     const darkBgImg  = new Image(); darkBgImg.src  = DARK_BG_URL;
     const birdImg    = new Image(); birdImg.src    = BIRD_URL;
@@ -164,10 +147,10 @@
     const dieSound   = new Audio(DIE_SOUND);
 
     Promise.all([
-      new Promise(r => lightBgImg.onload = r),
-      new Promise(r => darkBgImg.onload  = r),
-      new Promise(r => birdImg.onload    = r),
-      new Promise(r => pipeImg.onload    = r)
+      new Promise(r=>lightBgImg.onload=r),
+      new Promise(r=>darkBgImg.onload=r),
+      new Promise(r=>birdImg.onload=r),
+      new Promise(r=>pipeImg.onload=r)
     ]).then(init);
 
     function init() {
@@ -176,14 +159,6 @@
       const ctx              = canvas.getContext("2d");
       const scoreDiv         = document.getElementById("score");
       const pauseBtn         = document.getElementById("pauseBtn");
-      const startBtn         = document.getElementById("startBtn");
-      const leaderboardBtn   = document.getElementById("leaderboardBtn");
-      const linkBtn          = document.getElementById("linkBtn");
-      const settingsBtn      = document.getElementById("settingsBtn");
-      const settingsBtnPause = document.getElementById("settingsBtnPause");
-      const closeSettingsBtn = document.getElementById("closeSettingsBtn");
-      const soundToggle      = document.getElementById("soundToggle");
-      const themeToggle      = document.getElementById("themeToggle");
       const overlays         = {
         menu:        document.getElementById("menu"),
         leaderboard: document.getElementById("leaderboard"),
@@ -192,7 +167,21 @@
         gameover:    document.getElementById("gameover")
       };
       const finalScoreEl     = document.getElementById("finalScore");
+      const startBtn         = document.getElementById("startBtn");
+      const leaderboardBtn   = document.getElementById("leaderboardBtn");
+      const linkBtn          = document.getElementById("linkBtn");
+      const settingsBtn      = document.getElementById("settingsBtn");
+      const settingsBtnPause = document.getElementById("settingsBtnPause");
+      const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+      const soundToggle      = document.getElementById("soundToggle");
+      const themeToggle      = document.getElementById("themeToggle");
+      const backFromLbBtn    = document.getElementById("backFromLbBtn");
+      const resumeBtn        = document.getElementById("resumeBtn");
+      const backFromPauseBtn = document.getElementById("backFromPauseBtn");
+      const restartBtn       = document.getElementById("restartBtn");
+      const backFromGameOverBtn = document.getElementById("backFromGameOverBtn");
 
+      // State & game vars
       let state        = "menu";
       let bird, pipes, score, frame, animId;
       let soundEnabled = true;
@@ -200,159 +189,200 @@
       let bgImg        = lightBgImg;
       let collided     = false;
 
-      // Parallax layers: far, mid, fore
-      let offsets = [0, 0, 0];
-      const speeds = [0.3, 0.8, 2];
-      // Flap cooldown (200ms)
-      const FLAP_COOLDOWN = 200;
-      let lastFlapTime    = 0;
+      // Parallax
+      let offsets = [0,0,0], speeds = [0.3,0.8,2];
 
-      // Resize canvas
+      // Flap cooldown
+      const FLAP_COOLDOWN = 200, pointCooldown=150;
+      let lastFlapTime    = 0, lastPointTime=0;
+
+      // Resize
       function resize() {
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width  = innerWidth;
+        canvas.height = innerHeight;
       }
       window.addEventListener("resize", resize);
       resize();
 
-      // Bird class
+      // Bird
       class Bird {
         constructor() {
-          this.w  = 36; this.h  = 30;
-          this.x  = 50; this.y  = (canvas.height - this.h)/2;
-          this.vy = 0;  this.g  = 0.3;
+          this.w=36; this.h=30;
+          this.x=50; this.y=(canvas.height-this.h)/2;
+          this.vy=0; this.g=0.3;
         }
         update() {
-          this.vy += this.g; this.y += this.vy;
-          if (this.y < 0)        { this.y = 0; this.vy = 0; }
-          if (this.y + this.h >= canvas.height) {
-            this.y = canvas.height - this.h;
-            this.handleDeath();
+          this.vy+=this.g; this.y+=this.vy;
+          if (this.y<0) { this.y=0; this.vy=0; }
+          if (this.y+this.h>=canvas.height) {
+            this.y=canvas.height-this.h;
+            scheduleGameOver();
           }
         }
         draw() {
-          ctx.drawImage(birdImg, this.x, this.y, this.w, this.h);
+          ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
         }
         flap() {
-          const now = Date.now();
-          if (soundEnabled && now - lastFlapTime >= FLAP_COOLDOWN) {
-            flapSound.currentTime = 0;
-            flapSound.play();
-            lastFlapTime = now;
+          const now=Date.now();
+          if (soundEnabled && now-lastFlapTime>=FLAP_COOLDOWN) {
+            flapSound.currentTime=0; flapSound.play();
+            lastFlapTime=now;
           }
-          this.vy = -6;
-        }
-        collides(p) {
-          return !(
-            this.x + this.w < p.x ||
-            this.x         > p.x + p.w ||
-            this.y + this.h < p.y ||
-            this.y         > p.y + p.h
-          );
-        }
-        handleDeath() {
-          if (!collided) {
-            collided = true;
-            if (soundEnabled) {
-              hitSound.play();
-              setTimeout(() => dieSound.play(), 200);
-            }
-            endGame();
-          }
+          this.vy=-6;
         }
       }
 
       // Spawn pipes
       function spawnPipes() {
-        const x   = canvas.width;
-        const h   = 20 + Math.random()*(canvas.height/2 - 20);
-        const gap = 120 + Math.random()*80;
-        pipes = pipes.filter(p => p.x + p.w > 0);
-        if (!pipes.length || x - pipes[pipes.length-1].x > 200) {
-          pipes.push({ x, y: 0,       w:40, h,                passed:false, isTop:true });
-          pipes.push({ x, y: h+gap,   w:40, h:canvas.height-h-gap, passed:false, isTop:false });
+        const x=canvas.width;
+        const h=20+Math.random()*(canvas.height/2-20);
+        const gap=120+Math.random()*80;
+        pipes=pipes.filter(p=>p.x+p.w>0);
+        if (!pipes.length||x-pipes[pipes.length-1].x>200) {
+          pipes.push({x,y:0,w:40,h,passed:false,isTop:true});
+          pipes.push({x,y:h+gap,w:40,h:canvas.height-h-gap,passed:false,isTop:false});
         }
       }
 
-      // Main loop with parallax background
-      function loop() {
-        if (state !== "playing") return;
-        frame++;
+      // Schedule gameOver after sounds
+      function scheduleGameOver() {
+        if (collided) return;    // only once
+        collided = true;
+        cancelAnimationFrame(animId);
 
-        // draw 3 parallax layers
-        for (let i = 0; i < 3; i++) {
-          offsets[i] = (offsets[i] + speeds[i]) % canvas.width;
-          ctx.drawImage(bgImg, -offsets[i], 0, canvas.width, canvas.height);
-          ctx.drawImage(bgImg, canvas.width - offsets[i], 0, canvas.width, canvas.height);
+        if (!soundEnabled) {
+          performGameOver();
+          return;
         }
 
-        // pipes
-        if (frame === 1 || frame % 150 === 0) spawnPipes();
-        pipes.forEach(p => {
-          p.x -= 2;
-          ctx.drawImage(pipeImg, p.x, p.y, p.w, p.h);
-          if (!collided && bird.collides(p)) {
-            collided = true;
-            if (soundEnabled) {
-              hitSound.play();
-              setTimeout(() => dieSound.play(), 200);
-            }
-            endGame();
-          }
-        });
-        pipes = pipes.filter(p => p.x + p.w > 0);
+        // 1) play hit, then die, then finalize
+        hitSound.currentTime = 0;
+        hitSound.play();
+        hitSound.addEventListener('ended', () => {
+          dieSound.currentTime = 0;
+          dieSound.play();
+          dieSound.addEventListener('ended', performGameOver, { once: true });
+        }, { once: true });
+      }
 
-        // bird & scoring
-        bird.update(); bird.draw();
-        pipes.forEach(p => {
-          if (p.isTop && !p.passed && bird.x > p.x + p.w) {
+      // Finalize game over UI + leaderboard
+      function performGameOver() {
+        state = "gameover";
+        finalScoreEl.textContent = score;
+
+        db.orderByChild("score")
+          .limitToLast(10)
+          .once("value", snap => {
+            const data = snap.val()||{};
+            const list = Object.values(data)
+              .sort((a,b)=>b.score-a.score);
+
+            const threshold = list.length<10 ? 0 : list[list.length-1].score;
+            if (score>threshold) {
+              const name = prompt("🎉 New High Score! Enter name:","Anon")||"Anon";
+              db.push({ name, score }).then(renderGameOverList);
+            } else {
+              renderGameOverList();
+            }
+          });
+      }
+
+      function renderGameOverList() {
+        const container = document.getElementById("lb-list-go");
+        container.innerHTML = "";
+        db.orderByChild("score")
+          .limitToLast(10)
+          .once("value", snap => {
+            const items = Object.values(snap.val()||{})
+              .sort((a,b)=>b.score-a.score);
+            items.forEach((e,i) => {
+              const div = document.createElement("div");
+              div.textContent = `${i+1}. ${e.name}: ${e.score}`;
+              container.appendChild(div);
+            });
+            show("gameover");
+          });
+      }
+
+      // Main loop
+      function loop() {
+        if (state!=="playing") return;
+        frame++;
+
+        // parallax bg
+        for (let i=0;i<3;i++){
+          offsets[i] = (offsets[i] + speeds[i]) % canvas.width;
+          ctx.drawImage(bgImg, -offsets[i], 0, canvas.width, canvas.height);
+          ctx.drawImage(bgImg, canvas.width-offsets[i],0, canvas.width, canvas.height);
+        }
+
+        // pipes + collision + score
+        if (frame===1||frame%150===0) spawnPipes();
+        pipes.forEach(p=>{
+          p.x-=2;
+          ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
+          if (!collided && bird.collides && (
+               bird.x< p.x + p.w &&
+               bird.x + bird.w > p.x &&
+               bird.y < p.y + p.h &&
+               bird.y + bird.h > p.y
+             )) {
+            scheduleGameOver();
+          }
+          if (p.isTop && !p.passed && bird.x>p.x+p.w) {
             p.passed = true;
             score++;
-            scoreDiv.textContent = score;
-            if (soundEnabled) {
-              scoreSound.currentTime = 0;
-              scoreSound.play();
+            scoreDiv.textContent=score;
+            if (soundEnabled && Date.now()-lastPointTime>=pointCooldown) {
+              scoreSound.currentTime=0; scoreSound.play();
+              lastPointTime = Date.now();
             }
           }
         });
+        pipes = pipes.filter(p=>p.x+p.w>0);
+
+        // bird
+        bird.update();
+        bird.draw();
 
         animId = requestAnimationFrame(loop);
       }
 
-      // Overlay helpers
+      // Helpers: show/hide overlays
       function hideAll() {
         Object.values(overlays).forEach(o=>o.classList.add("hidden"));
         pauseBtn.style.display = "none";
       }
       function show(id) {
         hideAll();
-        if (id === "playing") pauseBtn.style.display="block";
+        if (id==="playing") pauseBtn.style.display="block";
         else overlays[id].classList.remove("hidden");
       }
 
-      // Leaderboard render
-      function renderGlobalLB(sel) {
-        const c = document.querySelector(sel);
-        c.innerHTML = "";
-        db.orderByChild("score").limitToLast(10)
+      // Leaderboard (menu) render
+      function renderGlobalLB() {
+        const container = document.getElementById("lb-list");
+        container.innerHTML = "";
+        db.orderByChild("score")
+          .limitToLast(10)
           .once("value", snap => {
-            const data = snap.val()||{};
-            Object.values(data)
+            Object.values(snap.val()||{})
               .sort((a,b)=>b.score-a.score)
               .forEach((e,i)=>{
-                const d = document.createElement("div");
-                d.textContent = `${i+1}. ${e.name}: ${e.score}`;
-                c.appendChild(d);
+                const div = document.createElement("div");
+                div.textContent = `${i+1}. ${e.name}: ${e.score}`;
+                container.appendChild(div);
               });
+            show("leaderboard");
           });
       }
 
-      // Toggle labels
+      // Toggle UI labels
       function updateSoundToggle() {
-        soundToggle.textContent = soundEnabled?"🔊 Sound":"🔇 Mute";
+        soundToggle.textContent = soundEnabled ? "🔊 Sound" : "🔇 Mute";
       }
       function updateThemeToggle() {
-        themeToggle.textContent = darkMode?"☀️ Light Mode":"🌙 Dark Mode";
+        themeToggle.textContent = darkMode ? "☀️ Light Mode" : "🌙 Dark Mode";
       }
 
       // Game actions
@@ -370,89 +400,69 @@
         cancelAnimationFrame(animId);
         loop();
       }
-      function showLeaderboard() {
-        state="leaderboard";
-        renderGlobalLB("#lb-list");
-        show("leaderboard");
+      function showLeaderboardMenu() {
+        renderGlobalLB();
       }
       function pauseGame() {
         if (state!=="playing") return;
-        state="paused"; cancelAnimationFrame(animId); show("pause");
+        state="paused";
+        cancelAnimationFrame(animId);
+        show("pause");
       }
       function resumeGame() {
         if (state!=="paused") return;
-        state="playing"; show("playing"); cancelAnimationFrame(animId); loop();
+        state="playing";
+        show("playing");
+        loop();
       }
-      function backToMenu() {
-        state="menu"; show("menu");
-      }
-      function openSettings() {
-        hideAll(); overlays.settings.classList.remove("hidden");
-      }
+      function backToMenu() { state="menu"; show("menu"); }
+      function openSettings() { hideAll(); show("settings"); }
       function closeSettings() {
-        hideAll(); state==="pause"? show("pause"): show("menu");
-      }
-      function endGame() {
-        cancelAnimationFrame(animId);
-        state="gameover";
-        finalScoreEl.textContent = score;
-        db.orderByChild("score").limitToLast(10)
-          .once("value", snap => {
-            const data = snap.val()||{};
-            const entries = Object.values(data).sort((a,b)=>b.score-a.score);
-            const threshold = entries.length<10?0: entries[entries.length-1].score;
-            if (score>threshold) {
-              const name=prompt("🎉 New High Score! Enter your name:","Anon")||"Anon";
-              db.push({name,score}).then(()=>{
-                renderGlobalLB("#lb-list-go"); show("gameover");
-              });
-            } else {
-              renderGlobalLB("#lb-list-go"); show("gameover");
-            }
-          });
+        hideAll();
+        state==="pause" ? show("pause") : show("menu");
       }
       function restartGame() { startGame(); }
 
-      // Bind helpers
+      // Bind buttons
       function bind(id, fn) {
         const el = document.getElementById(id);
         el.addEventListener("click", fn);
-        el.addEventListener("touchend", e=>{e.preventDefault();fn();});
+        el.addEventListener("touchend", e=>{e.preventDefault(); fn();});
       }
-      bind("startBtn", startGame);
-      bind("leaderboardBtn", showLeaderboard);
-      bind("linkBtn", ()=>location.href=HUB_LINK);
+      bind("startBtn",    startGame);
+      bind("leaderboardBtn", showLeaderboardMenu);
+      bind("linkBtn",     ()=>location.href=HUB_LINK);
       bind("settingsBtn", openSettings);
       bind("settingsBtnPause", openSettings);
       bind("closeSettingsBtn", closeSettings);
-      bind("pauseBtn", pauseGame);
-      bind("resumeBtn", resumeGame);
+      bind("pauseBtn",    pauseGame);
+      bind("resumeBtn",   resumeGame);
       bind("backFromPauseBtn", backToMenu);
       bind("backFromLbBtn", backToMenu);
-      bind("restartBtn", restartGame);
+      bind("restartBtn",  restartGame);
       bind("backFromGameOverBtn", backToMenu);
 
-      // Settings events
+      // Settings toggles
       soundToggle.addEventListener("click", ()=>{
         soundEnabled = !soundEnabled; updateSoundToggle();
       });
       themeToggle.addEventListener("click", ()=>{
         darkMode = !darkMode;
-        themeToggle.textContent = darkMode?"☀️ Light Mode":"🌙 Dark Mode";
+        updateThemeToggle();
       });
 
       // Controls
       window.addEventListener("keydown", e=>{
         if (e.code==="Space" && state==="playing") { bird.flap(); e.preventDefault(); }
-        if (e.key==="k"     && state==="playing") pauseGame();
-      });
-      window.addEventListener("touchstart", e=>{
-        if (state==="playing") { bird.flap(); e.preventDefault(); }
+        if (e.key==="k" && state==="playing") pauseGame();
       });
       canvas.addEventListener("click", e=>{
         if (state==="playing") { bird.flap(); e.preventDefault(); }
       });
       canvas.addEventListener("mousedown", e=>{
+        if (state==="playing") { bird.flap(); e.preventDefault(); }
+      });
+      window.addEventListener("touchstart", e=>{
         if (state==="playing") { bird.flap(); e.preventDefault(); }
       });
 
@@ -465,4 +475,3 @@
   </script>
 </body>
 </html>
-```[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/moeclay/pdw24jam_entry/tree/9606afcd7eba27990562194ec25565c642e33eab/application%2Fviews%2Fdashboard%2Fpersonal_point.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/C4ArtZ/c4artz.de/tree/1f75c8dab7dd2cad9eb46e810fe223721f55ec3d/resources%2Fviews%2Fcomponents%2Fhttp-error.blade.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")
