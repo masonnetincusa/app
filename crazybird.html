@@ -86,7 +86,7 @@
       <h2>Paused</h2>
       <button id="resumeBtn">Resume</button>
       <button id="backFromPauseBtn">Main Menu</button>
-      <button id="soundBtnPause" title="Toggle Sound">🔊</button>
+      <button id="soundBtn" title="Toggle Sound">🔊</button>
     </div>
 
     <!-- Game Over -->
@@ -307,29 +307,9 @@ const firebaseConfig = {
       bind("backFromGameOverBtn",backToMenu);
 
       // sound toggle
-       const soundBtn     = document.getElementById("soundBtn");
-  const soundBtnPause= document.getElementById("soundBtnPause");
-  let soundEnabled   = true;
-
-  // helper to sync both buttons’ text
-  function updateSoundButtons() {
-    const label = soundEnabled ? "🔊 Sound" : "🔇 Mute";
-    soundBtn.textContent      = label;
-    soundBtnPause.textContent = label;
-  }
-
-  // toggle handler
-  function toggleSound() {
-    soundEnabled = !soundEnabled;
-    updateSoundButtons();
-  }
-
-  // wire both buttons
-  soundBtn.addEventListener("click", toggleSound);
-  soundBtnPause.addEventListener("click", toggleSound);
-
-  // initialize labels
-  updateSoundButtons();
+      soundBtn.addEventListener("click",()=>{
+        soundEnabled = !soundEnabled;
+        soundBtn.textContent = soundEnabled?"🔊":"🔇";
       });
 
       // link button navigation
