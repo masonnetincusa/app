@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Bird – 500ms Flap Cooldown</title>
+  <title>Flappy Bird – 200ms Flap Cooldown</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
   <!-- Google Font for Score Counter -->
@@ -15,13 +15,9 @@
 
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden; background: #000; color: #fff;
     }
     #game-container {
       position: relative;
@@ -32,21 +28,18 @@
       width: 100%; height: 100%;
     }
     #score {
-      position: absolute;
-      top: 10px; left: 10px;
+      position: absolute; top: 10px; left: 10px;
       font-family: 'Press Start 2P', system-ui;
       font-size: 48px; color: #fff;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
       z-index: 5;
     }
     #pauseBtn {
-      position: absolute;
-      top: 10px; right: 10px;
+      position: absolute; top: 10px; right: 10px;
       display: none;
       background: #FF0000; color: #fff;
       border: none; padding: 8px 16px;
-      font-size: 16px; cursor: pointer;
-      user-select: none;
+      font-size: 16px; cursor: pointer; user-select: none;
     }
     .overlay {
       position: absolute; top: 0; left: 0;
@@ -87,9 +80,11 @@
 
     <!-- Main Menu -->
     <div id="menu" class="overlay">
-      <img src="https://app.masonnet.org/fbrc.png"
-           alt="Flappy Bird Logo"
-           style="width:240px; margin-bottom:24px; user-select:none;">
+      <img
+        src="https://app.masonnet.org/fbrc.png"
+        alt="Flappy Bird Logo"
+        style="width:240px; margin-bottom:24px; user-select:none;"
+      >
       <button id="startBtn">Start</button>
       <button id="leaderboardBtn">Leaderboard</button>
       <button id="linkBtn">Flappy Bird Hub</button>
@@ -146,31 +141,31 @@
     const db = firebase.database().ref("leaderboard");
 
     // Asset URLs
-    const LIGHT_BG_URL = "https://app.masonnet.org/lightbg.png";
-    const DARK_BG_URL  = "https://app.masonnet.org/darkbg.png";
-    const BIRD_URL     = "https://app.masonnet.org/bird.png";
-    const PIPE_URL     = "https://app.masonnet.org/pipe-green.png";
-    const POINT_SOUND  = "https://app.masonnet.org/point.mp3";
-    const FLAP_SOUND   = "https://app.masonnet.org/flap.mp3";
-    const HIT_SOUND    = "https://app.masonnet.org/hit.mp3";
-    const DIE_SOUND    = "https://app.masonnet.org/die.mp3";
-    const HUB_LINK     = "https://app.masonnet.org/flappybirdhub";
+    const LIGHT_BG_URL  = "https://app.masonnet.org/lightbg.png";
+    const DARK_BG_URL   = "https://app.masonnet.org/darkbg.png";
+    const BIRD_URL      = "https://app.masonnet.org/bird.png";
+    const PIPE_URL      = "https://app.masonnet.org/pipe-green.png";
+    const POINT_SOUND   = "https://app.masonnet.org/point.mp3";
+    const FLAP_SOUND    = "https://app.masonnet.org/flap.mp3";
+    const HIT_SOUND     = "https://app.masonnet.org/hit.mp3";
+    const DIE_SOUND     = "https://app.masonnet.org/die.mp3";
+    const HUB_LINK      = "https://app.masonnet.org/flappybirdhub";
 
     // Preload images & audio
-    const lightBgImg = new Image(); lightBgImg.src = LIGHT_BG_URL;
-    const darkBgImg  = new Image(); darkBgImg.src  = DARK_BG_URL;
-    const birdImg    = new Image(); birdImg.src    = BIRD_URL;
-    const pipeImg    = new Image(); pipeImg.src    = PIPE_URL;
+    const lightBgImg = new Image();  lightBgImg.src = LIGHT_BG_URL;
+    const darkBgImg  = new Image();  darkBgImg.src  = DARK_BG_URL;
+    const birdImg    = new Image();  birdImg.src    = BIRD_URL;
+    const pipeImg    = new Image();  pipeImg.src    = PIPE_URL;
     const scoreSound = new Audio(POINT_SOUND);
     const flapSound  = new Audio(FLAP_SOUND);
     const hitSound   = new Audio(HIT_SOUND);
     const dieSound   = new Audio(DIE_SOUND);
 
     Promise.all([
-      new Promise(r=>lightBgImg.onload=r),
-      new Promise(r=>darkBgImg.onload=r),
-      new Promise(r=>birdImg.onload=r),
-      new Promise(r=>pipeImg.onload=r)
+      new Promise(r => lightBgImg.onload = r),
+      new Promise(r => darkBgImg.onload  = r),
+      new Promise(r => birdImg.onload    = r),
+      new Promise(r => pipeImg.onload    = r)
     ]).then(init);
 
     function init() {
@@ -203,8 +198,8 @@
       let bgImg        = lightBgImg;
       let collided     = false;
 
-      // Flap-sound cooldown (500ms)
-      const FLAP_COOLDOWN = 500;
+      // Flap-sound cooldown (200ms)
+      const FLAP_COOLDOWN = 200;
       let lastFlapTime    = 0;
 
       // Resize canvas
@@ -276,7 +271,7 @@
         pipes = pipes.filter(p => p.x + p.w > 0);
         if (!pipes.length || x - pipes[pipes.length - 1].x > 200) {
           pipes.push({ x, y: 0, w: 40, h, passed: false, isTop: true });
-          pipes.push({ x, y: h+gap, w: 40, h: canvas.height-h-gap, passed: false, isTop: false });
+          pipes.push({ x, y: h+gap, w: 40, h: canvas.height - h - gap, passed: false, isTop: false });
         }
       }
 
@@ -411,7 +406,7 @@
           .limitToLast(10)
           .once("value", snap => {
             const data = snap.val() || {};
-            const entries = Object.values(data).sort((a, b) => b.score - a.score);
+            const entries = Object.values(data).sort((a,b) => b.score - a.score);
             const threshold = entries.length < 10 ? 0 : entries[entries.length - 1].score;
             if (score > threshold) {
               const name = prompt("🎉 New High Score! Enter your name:", "Anon") || "Anon";
