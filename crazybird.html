@@ -2,28 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird – Tappable Canvas</title>
+  <title>Flappy Bird – Reliable Taps</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <!-- Press Start 2P for Score -->
+  <!-- Retro Font for Score -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
         rel="stylesheet" />
 
   <style>
-    html,body {
-      margin:0; padding:0; width:100%; height:100%;
-      background:#000; color:#fff; overflow:hidden;
-    }
-    #game-container {
-      position:relative; width:100%; height:100%;
-    }
-    canvas {
-      display:block; width:100%; height:100%;
-    }
+    html,body { margin:0; padding:0; width:100%; height:100%; background:#000; color:#fff; overflow:hidden }
+    #game-container { position:relative; width:100%; height:100% }
+    canvas { display:block; width:100%; height:100% }
     #score {
       position:absolute; top:10px; left:10px;
       font-family:'Press Start 2P',system-ui; font-size:48px;
-      text-shadow:2px 2px 4px rgba(0,0,0,0.7); z-index:5;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.7); z-index:5
     }
     #pauseBtn {
       position:absolute; top:10px; right:10px; display:none;
@@ -31,14 +24,15 @@
       padding:8px 16px; cursor:pointer; z-index:6;
     }
     .overlay {
-      position:absolute; top:0; left:0; width:100%; height:100%;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
       background:rgba(0,0,0,0.85);
       display:flex; flex-direction:column;
       align-items:center; justify-content:center;
-      text-align:center; font-family:Arial,sans-serif;
-      z-index:10;
+      text-align:center; z-index:10;
+      font-family:Arial,sans-serif;
     }
-    .hidden { display:none; }
+    .hidden { display:none }
     .overlay button {
       background:#f00; border:none; color:#fff;
       padding:12px 24px; margin:8px; font-size:16px;
@@ -47,22 +41,18 @@
     .scroll-list {
       width:80%; max-height:200px;
       overflow-y:auto; text-align:left;
-      margin:12px 0; color:#fff;
+      margin:12px 0; color:#fff
     }
     .scroll-list div {
-      border-bottom:1px solid #444; padding:6px 0;
+      border-bottom:1px solid #444; padding:6px 0
     }
     #loginOverlay input {
-      display:block; width:200px;
-      padding:6px; margin:8px 0; font-size:14px;
+      display:block; width:200px; padding:6px; margin:8px 0; font-size:14px
     }
     #loginOverlay label {
-      display:flex; align-items:center;
-      color:#fff; margin:8px 0;
+      display:flex; align-items:center; color:#fff; margin:8px 0
     }
-    #loginOverlay label input {
-      margin-right:6px;
-    }
+    #loginOverlay label input { margin-right:6px }
   </style>
 </head>
 <body>
@@ -74,9 +64,9 @@
     <!-- LOGIN -->
     <div id="loginOverlay" class="overlay hidden">
       <h2>Sign In</h2>
-      <input id="loginEmail" placeholder="Email" />
-      <input id="loginPass" type="password" placeholder="Password" />
-      <label><input id="loginRemember" type="checkbox" />Remember me</label>
+      <input id="loginEmail" placeholder="Email">
+      <input id="loginPass" type="password" placeholder="Password">
+      <label><input id="loginRemember" type="checkbox">Remember me</label>
       <button id="loginSubmit">Sign In</button>
       <button id="loginCancel">Cancel</button>
     </div>
@@ -84,7 +74,7 @@
     <!-- MAIN MENU -->
     <div id="menuOverlay" class="overlay">
       <img src="https://app.masonnet.org/fbrc.png"
-           style="width:240px;margin-bottom:24px;" alt="Logo" />
+           style="width:240px;margin-bottom:24px" alt="Logo">
       <button id="startBtn">Start</button>
       <button id="leaderboardBtn">Leaderboard</button>
       <button id="settingsBtn">Settings</button>
@@ -104,19 +94,19 @@
       <h2>Settings</h2>
       <div>
         <button id="soundToggle">🔊 Sound</button>
-        <p>Toggle sound on/off.</p>
+        <p>Toggle SFX on/off.</p>
       </div>
       <div>
         <button id="themeToggle">🌙 Dark Mode</button>
-        <p>Switch theme.</p>
+        <p>Switch background theme.</p>
       </div>
       <div>
         <button id="skipToggle">🚀 Skip to GO: Off</button>
-        <p>No SFX if enabled.</p>
+        <p>Immediate Game Over. No SFX if enabled.</p>
       </div>
       <div>
         <button id="authBtn">Sign In</button>
-        <p id="authDesc">Sign in for admin.</p>
+        <p id="authDesc">Sign in to access admin console.</p>
       </div>
       <button id="closeSettingsBtn">Close</button>
     </div>
@@ -149,84 +139,83 @@
     </div>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Constants
     const OBSTACLE_WIDTH   = 60;
     const PIPE_GAP_MIN     = 120;
     const PIPE_GAP_MAX     = 200;
     const FLAP_COOLDOWN_MS = 200;
-    const PARALLAX_SPEEDS  = [0.3, 0.8, 2];
+    const PARALLAX_SPEEDS  = [0.3,0.8,2];
 
-    // Firebase init
     firebase.initializeApp({
       apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain:"masonnet-app-official.firebaseapp.com",
       databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
       projectId: "masonnet-app-official"
     });
-    const auth  = firebase.auth();
-    const db    = firebase.database();
-    const lbRef = db.ref("leaderboard");
-    const fbRef = db.ref("feedback");
-    const roles = db.ref("roles");
+    const auth  = firebase.auth(),
+          db    = firebase.database(),
+          lbRef = db.ref("leaderboard"),
+          fbRef = db.ref("feedback"),
+          roles = db.ref("roles");
 
-    // Overlays
+    // Overlays helper
     const overlays = {
-      login:        $('loginOverlay'),
-      menu:         $('menuOverlay'),
-      leaderboard:  $('leaderboardOverlay'),
-      settings:     $('settingsOverlay'),
-      admin:        $('adminOverlay'),
-      pause:        $('pauseOverlay'),
-      gameover:     $('gameoverOverlay'),
-      effect:       $('effectOverlay')
+      login: $('loginOverlay'),
+      menu:  $('menuOverlay'),
+      leaderboard: $('leaderboardOverlay'),
+      settings: $('settingsOverlay'),
+      admin: $('adminOverlay'),
+      pause: $('pauseOverlay'),
+      gameover: $('gameoverOverlay'),
+      effect: $('effectOverlay')
     };
     function showOverlay(name) {
-      Object.values(overlays).forEach(o => o.classList.add('hidden'));
+      Object.values(overlays).forEach(o=>o.classList.add('hidden'));
       if (name) overlays[name].classList.remove('hidden');
     }
 
     // UI refs
-    const canvas       = $('canvas'),
-          ctx          = canvas.getContext('2d'),
-          scoreDiv     = $('score'),
-          pauseBtn     = $('pauseBtn'),
-          loginEmail   = $('loginEmail'),
-          loginPass    = $('loginPass'),
-          loginRem     = $('loginRemember'),
-          loginSubmit  = $('loginSubmit'),
-          loginCancel  = $('loginCancel'),
-          authBtn      = $('authBtn'),
-          signOutBtn   = $('signOutBtn'),
-          adminBtn     = $('adminBtn'),
-          authDesc     = $('authDesc'),
-          startBtn     = $('startBtn'),
-          leaderboardBtn = $('leaderboardBtn'),
-          settingsBtn  = $('settingsBtn'),
+    const canvas        = $('canvas'),
+          ctx           = canvas.getContext('2d'),
+          scoreDiv      = $('score'),
+          pauseBtn      = $('pauseBtn'),
+          loginEmail    = $('loginEmail'),
+          loginPass     = $('loginPass'),
+          loginRem      = $('loginRemember'),
+          loginSubmit   = $('loginSubmit'),
+          loginCancel   = $('loginCancel'),
+          authBtn       = $('authBtn'),
+          signOutBtn    = $('signOutBtn'),
+          adminBtn      = $('adminBtn'),
+          authDesc      = $('authDesc'),
+          startBtn      = $('startBtn'),
+          leaderboardBtn= $('leaderboardBtn'),
+          settingsBtn   = $('settingsBtn'),
           closeSettingsBtn = $('closeSettingsBtn'),
-          closeAdminBtn    = $('closeAdminBtn'),
-          backFromLbBtn    = $('backFromLbBtn'),
-          resumeBtn    = $('resumeBtn'),
+          closeAdminBtn = $('closeAdminBtn'),
+          backFromLbBtn = $('backFromLbBtn'),
+          resumeBtn     = $('resumeBtn'),
           backFromPauseBtn = $('backFromPauseBtn'),
-          restartBtn   = $('restartBtn'),
-          backFromGOBtn   = $('backFromGOBtn'),
+          restartBtn    = $('restartBtn'),
+          backFromGOBtn = $('backFromGOBtn'),
           leaderboardList = $('leaderboardList'),
           adminList     = $('adminList'),
           finalScore    = $('finalScore');
 
-    // Assets & SFX
+    // Assets
     const lightBg = new Image(), darkBg = new Image(),
           birdImg = new Image(), pipeImg = new Image();
-    lightBg.src  = 'https://app.masonnet.org/lightbg.png';
-    darkBg.src   = 'https://app.masonnet.org/darkbg.png';
-    birdImg.src  = 'https://app.masonnet.org/bird.png';
-    pipeImg.src  = 'https://app.masonnet.org/pipe-green.png';
+    lightBg.src = 'https://app.masonnet.org/lightbg.png';
+    darkBg.src  = 'https://app.masonnet.org/darkbg.png';
+    birdImg.src = 'https://app.masonnet.org/bird.png';
+    pipeImg.src = 'https://app.masonnet.org/pipe-green.png';
+
     const pointS = new Audio('https://app.masonnet.org/point.mp3'),
           flapS  = new Audio('https://app.masonnet.org/flap.mp3'),
           hitS   = new Audio('https://app.masonnet.org/hit.mp3'),
@@ -242,40 +231,29 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Game state
-    let state    = 'menu',
-        bird, pipes, score, frame, rafId,
-        soundOn  = true,
-        darkMode = false,
-        skipOn   = false,
-        bg       = lightBg,
-        collided = false,
-        lastFlap = 0,
-        parOff   = [0,0,0],
-        isAdmin  = false;
+    // State
+    let state = 'menu', bird, pipes, score, frame, rafId;
+    let soundOn = true, darkMode=false, skipOn=false;
+    let bg=lightBg, collided=false, lastFlap=0, parOff=[0,0,0], isAdmin=false;
 
-    // Update toggle labels
-    function updateSound() { $('soundToggle').textContent = soundOn?'🔊 Sound':'🔇 Mute'; }
-    function updateTheme() { $('themeToggle').textContent = darkMode?'☀️ Light':'🌙 Dark'; }
-    function updateSkip()  { $('skipToggle').textContent  = skipOn?'🚀 Skip: On':'🚀 Skip: Off'; }
+    // Toggles
+    function updateSound(){ $('soundToggle').textContent = soundOn?'🔊 Sound':'🔇 Mute'; }
+    function updateTheme(){ $('themeToggle').textContent = darkMode?'☀️ Light':'🌙 Dark'; }
+    function updateSkip(){ $('skipToggle').textContent = skipOn?'🚀 Skip: On':'🚀 Skip: Off'; }
 
     // Auth listener
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        isAdmin = false;
-        adminBtn.classList.add('hidden');
-        signOutBtn.classList.add('hidden');
-        authBtn.textContent = 'Sign In';
-        authDesc.textContent = 'Sign in for admin';
-        showOverlay('menu');
-        return;
+    auth.onAuthStateChanged(u=>{
+      if(!u){
+        isAdmin=false;adminBtn.classList.add('hidden');signOutBtn.classList.add('hidden');
+        authBtn.textContent='Sign In';authDesc.textContent='Sign in for admin';
+        showOverlay('menu');return;
       }
-      roles.child(user.uid).once('value', snap => {
-        isAdmin = snap.val()==='admin';
-        adminBtn.classList.toggle('hidden', !isAdmin);
+      roles.child(u.uid).once('value',snap=>{
+        isAdmin=snap.val()==='admin';
+        adminBtn.classList.toggle('hidden',!isAdmin);
       });
-      authBtn.textContent = 'Sign Out';
-      authDesc.textContent = 'Signed in as '+user.email;
+      authBtn.textContent='Sign Out';
+      authDesc.textContent='Signed in as '+u.email;
       signOutBtn.classList.remove('hidden');
       showOverlay('menu');
     });
@@ -289,15 +267,15 @@
         .then(()=>auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value))
         .catch(e=>alert(e.message));
     };
-    loginCancel.onclick=()=>showOverlay('settings');
-    authBtn.onclick    =()=>auth.currentUser?auth.signOut():showOverlay('login');
-    signOutBtn.onclick =()=>auth.signOut();
+    loginCancel.onclick = ()=>showOverlay('settings');
+    authBtn.onclick     = ()=>auth.currentUser? auth.signOut(): showOverlay('login');
+    signOutBtn.onclick  = ()=>auth.signOut();
 
-    // Bird class
+    // Bird
     class Bird {
       constructor(){
-        this.w=36;this.h=30;
-        this.x=50;this.y=(canvas.height-this.h)/2;
+        this.w=36;this.h=30;this.x=50;
+        this.y=(canvas.height-this.h)/2;
         this.vy=0;this.g=0.25;
       }
       update(){
@@ -307,9 +285,7 @@
           this.y=canvas.height-this.h;this.die();
         }
       }
-      draw(){
-        ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
-      }
+      draw(){ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);}
       flap(){
         const now=Date.now();
         if(soundOn&&now-lastFlap>=FLAP_COOLDOWN_MS){
@@ -317,14 +293,7 @@
         }
         this.vy=-6;
       }
-      collides(p){
-        return!(
-          this.x+this.w<p.x||
-          this.x>p.x+p.w||
-          this.y+this.h<p.y||
-          this.y>p.y+p.h
-        );
-      }
+      collides(p){return!(this.x+this.w<p.x||this.x>p.x+p.w||this.y+this.h<p.y||this.y>p.y+p.h);}
       die(){
         if(collided)return;
         state='dying';collided=true;
@@ -341,9 +310,9 @@
     }
 
     function spawnPipes(){
-      const x=canvas.width;
-      const h=20+Math.random()*(canvas.height/2-20);
-      const gap=PIPE_GAP_MIN+Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
+      const x=canvas.width,
+            h=20+Math.random()*(canvas.height/2-20),
+            gap=PIPE_GAP_MIN+Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
       pipes=pipes.filter(p=>p.x+p.w>0);
       if(!pipes.length||x-pipes[pipes.length-1].x>OBSTACLE_WIDTH*3){
         pipes.push({x,y:0,w:OBSTACLE_WIDTH,h,passed:false,top:true});
@@ -374,15 +343,14 @@
           if(soundOn){pointS.currentTime=0;pointS.play();}
         }
       });
-      pipes=pipes.filter(x=>x.x+x.w>0);
+      pipes=pipes.filter(p=>p.x+p.w>0);
       bird.update();bird.draw();
     }
 
     function startGame(){
-      state='playing';bird=new Bird();pipes=[];score=0;
-      frame=0;collided=false;parOff=[0,0,0];
-      bg=darkMode?darkBg:lightBg;scoreDiv.textContent=score;
-      showOverlay(null);pauseBtn.style.display='block';
+      state='playing';bird=new Bird();pipes=[];score=0;frame=0;
+      collided=false;parOff=[0,0,0];bg=darkMode?darkBg:lightBg;
+      scoreDiv.textContent=score;showOverlay(null);pauseBtn.style.display='block';
       loop();
     }
 
@@ -392,7 +360,6 @@
       showOverlay('pause');
     }
 
-    // Leaderboard
     function renderLeaderboard(){
       leaderboardList.innerHTML='';
       lbRef.orderByChild('score').limitToLast(10)
@@ -407,7 +374,6 @@
         });
     }
 
-    // Admin
     function renderAdmin(){
       adminList.innerHTML='';
       fbRef.orderByChild('timestamp')
@@ -424,37 +390,37 @@
         });
     }
 
-    // Bind UI
+    // Bind
     startBtn.onclick         = startGame;
     leaderboardBtn.onclick   = renderLeaderboard;
-    settingsBtn.onclick      = ()=>showOverlay('settings');
-    closeSettingsBtn.onclick = ()=>showOverlay('menu');
+    settingsBtn.onclick      = () => showOverlay('settings');
+    closeSettingsBtn.onclick = () => showOverlay('menu');
     adminBtn.onclick         = renderAdmin;
-    closeAdminBtn.onclick    = ()=>showOverlay('menu');
-    backFromLbBtn.onclick    = ()=>showOverlay('menu');
-    resumeBtn.onclick        = ()=>{state='playing';loop();};
-    backFromPauseBtn.onclick = ()=>showOverlay('menu');
+    closeAdminBtn.onclick    = () => showOverlay('menu');
+    backFromLbBtn.onclick    = () => showOverlay('menu');
+    resumeBtn.onclick        = () => { state='playing'; loop(); };
+    backFromPauseBtn.onclick = () => showOverlay('menu');
     restartBtn.onclick       = startGame;
-    backFromGOBtn.onclick    = ()=>showOverlay('menu');
+    backFromGOBtn.onclick    = () => showOverlay('menu');
     pauseBtn.onclick         = pauseGame;
 
-    $('soundToggle').onclick = ()=>{soundOn=!soundOn;updateSound();};
-    $('themeToggle').onclick = ()=>{darkMode=!darkMode;updateTheme();};
-    $('skipToggle').onclick  = ()=>{skipOn=!skipOn;updateSkip();};
+    $('soundToggle').onclick = () => { soundOn=!soundOn; updateSound(); };
+    $('themeToggle').onclick = () => { darkMode=!darkMode; updateTheme(); };
+    $('skipToggle').onclick  = () => { skipOn=!skipOn; updateSkip(); };
 
-    // Flap via click/tap
-    canvas.addEventListener('pointerdown', () => {
-      if(state==='playing') bird.flap();
+    // Register ANY canvas tap
+    ['pointerdown','mousedown','touchstart','click'].forEach(ev=>{
+      canvas.addEventListener(ev, e=>{
+        if(state==='playing') { bird.flap(); e.preventDefault(); }
+      });
     });
-    // Also keep spacebar
-    window.addEventListener('keydown', e => {
-      if(e.code==='Space' && state==='playing') {
-        bird.flap(); e.preventDefault();
-      }
-      if(e.key==='k' && state==='playing') pauseGame();
+    // Spacebar
+    window.addEventListener('keydown', e=>{
+      if(e.code==='Space'&&state==='playing'){ bird.flap(); e.preventDefault(); }
+      if(e.key==='k'     &&state==='playing') pauseGame();
     });
 
-    // Initialize
+    // Init labels & show menu
     updateSound(); updateTheme(); updateSkip();
     showOverlay('menu');
   });
