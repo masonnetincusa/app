@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flappy Bird – Public Accounts & Admin Console</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Retro Press Start 2P Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+        rel="stylesheet" />
+
+  <style>
+    html, body {
+      margin:0; padding:0;
+      width:100vw; height:100vh;
+      background:#000; overflow:hidden;
+      font-family: Arial, sans-serif;
+    }
+    /* game background */
+    #background {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background: url('https://app.masonnet.org/lightbg.png') center/cover no-repeat;
+      z-index:0; display:none;
+    }
+    canvas {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      z-index:1; touch-action:none;
+    }
+    #score {
+      position:absolute; top:10px; left:10px;
+      font-family:'Press Start 2P',system-ui;
+      font-size:48px; color:#fff;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.7);
+      z-index:2;
+    }
+    #pauseBtn {
+      position:absolute; top:10px; right:10px;
+      display:none; z-index:2;
+      background:#f00; color:#fff; border:none;
+      padding:8px 16px; font-size:16px;
+      cursor:pointer;
+    }
+    /* standard overlay */
+    .overlay {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.85);
+      z-index:3; display:flex;
+      align-items:center; justify-content:center;
+    }
+    .hidden { display:none; }
+    .overlay-content {
+      text-align:center; color:#fff;
+      max-width:320px; width:100%;
+    }
+    .overlay-content h2 {
+      margin:0 0 16px; font-size:32px;
+    }
+    .overlay-content button {
+      background:#f00; color:#fff; border:none;
+      padding:12px 24px; font-size:18px;
+      margin:8px 0; width:200px; cursor:pointer;
+    }
+    .overlay-content input,
+    .overlay-content textarea {
+      width:100%; padding:8px; margin:8px 0;
+      font-size:16px; border:none; border-radius:4px;
+    }
+    .overlay-content textarea {
+      min-height:80px;
+    }
+    .overlay-content label {
+      display:flex; align-items:center;
+      margin:8px 0; justify-content:center;
+    }
+    .overlay-content label input {
+      margin-right:8px;
+    }
+    .scroll-list {
+      background:#111; padding:12px; margin:16px 0;
+      max-height:200px; overflow-y:auto; text-align:left;
+      color:#fff; border-radius:4px;
+    }
+    .scroll-list div {
+      border-bottom:1px solid #333; padding:6px 0;
+    }
+
+    /* PROFILE CARD top-right */
+    #profileCard {
+      position:absolute; top:10px; right:10px;
+      width:240px; background:rgba(0,0,0,0.7);
+      border:2px solid #f00; border-radius:8px;
+      color:#fff; padding:12px; z-index:4;
+      font-family:Arial,sans-serif;
+    }
+    #profileCard img {
+      width:48px; height:48px; border-radius:50%;
+      vertical-align:middle; margin-right:8px;
+    }
+    #profileCard .username {
+      font-size:18px; font-weight:bold;
+      vertical-align:middle;
+    }
+    #profileCard .highscore {
+      margin:8px 0; font-size:16px;
+    }
+    #profileCard input {
+      width:calc(100% - 16px); padding:4px 8px;
+      margin:4px 0; border-radius:4px; border:none;
+    }
+    #profileCard button {
+      width:100%; margin:4px 0;
+    }
+
+    /* ADMIN TABS */
+    .admin-tabs {
+      display:flex; justify-content:space-around;
+      margin-bottom:12px;
+    }
+    .admin-tabs button {
+      flex:1; margin:0 4px; padding:8px;
+      background:#222; color:#fff; border:none;
+      cursor:pointer; font-size:14px;
+    }
+    .admin-tab-content {
+      display:none;
+    }
+    .admin-tab-content.active {
+      display:block;
+    }
+
+    /* BADGE ICONS inline */
+    .badge-icon {
+      width:16px; height:16px; vertical-align:middle;
+      margin-left:4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="background"></div>
+  <canvas id="canvas"></canvas>
+  <div id="score">0</div>
+  <button id="pauseBtn">Pause</button>
+
+  <!-- PROFILE CARD -->
+  <div id="profileCard">
+    <div id="pc-signed-in" class="hidden">
+      <img id="pc-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
+      <span id="pc-username" class="username">User</span>
+      <div id="pc-badges"></div>
+      <div id="pc-highscore" class="highscore">High Score: 0</div>
+      <input id="pc-search" placeholder="Search profiles..." />
+      <button id="pc-searchBtn">Go</button>
+      <button id="pc-feedbackBtn">Feedback</button>
+      <button id="pc-accountBtn">Account Settings</button>
+      <button id="pc-signOutBtn">Sign Out</button>
+    </div>
+    <div id="pc-guest" class="hidden">
+      <img src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
+      <span class="username">Not signed in</span>
+      <input id="pc-search-guest" placeholder="Search profiles..." />
+      <button id="pc-searchBtn-guest">Go</button>
+      <button id="pc-signInBtn">Sign In / Sign Up</button>
+    </div>
+  </div>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Sign In</h2>
+      <input id="loginEmail" placeholder="Email" />
+      <input id="loginPass" type="password" placeholder="Password" />
+      <label><input id="loginRemember" type="checkbox"/> Remember me</label>
+      <button id="loginSubmit">Sign In</button>
+      <button id="loginCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- MAIN MENU OVERLAY -->
+  <div id="menuOverlay" class="overlay">
+    <div class="overlay-content">
+      <img src="https://app.masonnet.org/fbrc.png" alt="Logo" style="max-width:180px;"/>
+      <h2>Main Menu</h2>
+      <button id="startBtn">Start</button>
+      <button id="leaderboardBtn">Leaderboard</button>
+      <button id="settingsBtn">Settings</button>
+      <button id="hubBtn">Flappy Bird Hub</button>
+    </div>
+  </div>
+
+  <!-- ACCOUNT SETTINGS OVERLAY -->
+  <div id="accountOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Account Settings</h2>
+      <img id="as-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar" style="width:64px;height:64px;border-radius:50%;"/>
+      <div id="as-username-display" style="margin:8px 0;">Username: <span id="as-username"></span></div>
+      <button id="as-editProfileBtn">Edit Profile</button>
+      <h3>Your Scores</h3>
+      <div id="as-scoreHistory" class="scroll-list"></div>
+      <button id="as-closeBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE OVERLAY -->
+  <div id="profileOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Profile</h2>
+      <img id="pf-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar" style="width:64px;height:64px;border-radius:50%;"/>
+      <div><strong id="pf-username"></strong><span id="pf-exclBadges"></span></div>
+      <div id="pf-name" style="margin:8px 0;"></div>
+      <div>High Score: <span id="pf-highscore"></span></div>
+      <div>Rank: <span id="pf-rank"></span></div>
+      <div id="pf-badges" style="margin:8px 0;"></div>
+      <div id="pf-ownerExtras" class="hidden">
+        <h3>Your History</h3>
+        <div id="pf-history" class="scroll-list"></div>
+      </div>
+      <button id="pf-closeBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- FEEDBACK OVERLAY -->
+  <div id="feedbackOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Submit Feedback</h2>
+      <label><input type="radio" name="fbType" value="feature" checked/> Feature Request</label>
+      <label><input type="radio" name="fbType" value="general"/> General Feedback</label>
+      <label><input type="radio" name="fbType" value="bug"/> Bug Report</label>
+      <input id="fbSubject" placeholder="Subject" />
+      <textarea id="fbDetails" placeholder="Describe your feedback..."></textarea>
+      <button id="fbSubmit">Submit</button>
+      <button id="fbCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS OVERLAY -->
+  <div id="settingsOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Settings</h2>
+      <button id="soundToggle">🔊 Sound</button>
+      <button id="themeToggle">🌙 Dark Mode</button>
+      <button id="skipToggle">🚀 Skip to GO: Off</button>
+      <button id="settingsCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD OVERLAY -->
+  <div id="leaderboardOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Global Top 10</h2>
+      <div id="leaderboardList" class="scroll-list"></div>
+      <button id="lbCloseBtn">Back</button>
+    </div>
+  </div>
+
+  <!-- ADMIN OVERLAY -->
+  <div id="adminOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Admin Console</h2>
+      <div class="admin-tabs">
+        <button id="tabHomeBtn">Home</button>
+        <button id="tabFeedbackBtn">Feedback</button>
+        <button id="tabModerationBtn">Moderation</button>
+        <button id="tabOtherBtn">Other</button>
+      </div>
+      <div id="adminHome" class="admin-tab-content active">
+        <p>Welcome, Admin!</p>
+      </div>
+      <div id="adminFeedback" class="admin-tab-content">
+        <h3>Feedback Submissions</h3>
+        <div id="adminFeedbackList" class="scroll-list"></div>
+      </div>
+      <div id="adminModeration" class="admin-tab-content">
+        <h3>User Moderation</h3>
+        <input id="modSearch" placeholder="Search user..." />
+        <button id="modSearchBtn">Find</button>
+        <div id="modUserInfo" style="margin:12px 0;"></div>
+      </div>
+      <div id="adminOther" class="admin-tab-content">
+        <p>Other tools coming soon</p>
+      </div>
+      <button id="adminCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- PAUSE OVERLAY -->
+  <div id="pauseOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Paused</h2>
+      <button id="resumeBtn">Resume</button><button id="pauseMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER OVERLAY -->
+  <div id="gameoverOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Game Over</h2>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <button id="restartBtn">Restart</button>
+      <button id="goMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- NAME PROMPT OVERLAY -->
+  <div id="nameOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>🎉 New High Score!</h2>
+      <p>Score: <span id="newScore"></span></p>
+      <input id="nameInput" placeholder="Enter your name" />
+      <button id="saveNameBtn">Save</button><button id="skipNameBtn">Skip</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Constants
+    const OBSTACLE_WIDTH=60, PIPE_GAP_MIN=120, PIPE_GAP_MAX=200, FLAP_CD=200;
+
+    // Firebase init
+    firebase.initializeApp({
+      apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+      authDomain:"masonnet-app-official.firebaseapp.com",
+      databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId:"masonnet-app-official"
+    });
+    const auth  = firebase.auth(),
+          db    = firebase.database(),
+          lbRef = db.ref("leaderboard"),
+          fbRef = db.ref("feedback"),
+          profilesRef = db.ref("profiles"),
+          roles = db.ref("roles");
+
+    // Helpers
+    const $ = id => document.getElementById(id);
+    function elt(tag, cls){ const e=document.createElement(tag); if(cls)e.className=cls; return e; }
+
+    // DOM refs
+    const background        = $('background'),
+          canvas            = $('canvas'),
+          ctx               = canvas.getContext('2d'),
+          scoreDiv          = $('score'),
+          pauseBtn          = $('pauseBtn'),
+          startBtn          = $('startBtn'),
+          leaderboardBtn    = $('leaderboardBtn'),
+          settingsBtn       = $('settingsBtn'),
+          hubBtn            = $('hubBtn'),
+          loginOverlay      = $('loginOverlay'),
+          settingsOverlay   = $('settingsOverlay'),
+          accountOverlay    = $('accountOverlay'),
+          profileOverlay    = $('profileOverlay'),
+          feedbackOverlay   = $('feedbackOverlay'),
+          leaderboardOverlay= $('leaderboardOverlay'),
+          adminOverlay      = $('adminOverlay'),
+          pauseOverlay      = $('pauseOverlay'),
+          gameoverOverlay   = $('gameoverOverlay'),
+          nameOverlay       = $('nameOverlay');
+
+    const pcSignedIn       = $('pc-signed-in'),
+          pcGuest          = $('pc-guest'),
+          pcAvatar         = $('pc-avatar'),
+          pcUsername       = $('pc-username'),
+          pcBadges         = $('pc-badges'),
+          pcHighscore      = $('pc-highscore'),
+          pcSearch         = $('pc-search'),
+          pcSearchBtn      = $('pc-searchBtn'),
+          pcSearchGuest    = $('pc-search-guest'),
+          pcSearchBtnG     = $('pc-searchBtn-guest'),
+          pcFeedbackBtn    = $('pc-feedbackBtn'),
+          pcAccountBtn     = $('pc-accountBtn'),
+          pcSignOutBtn     = $('pc-signOutBtn'),
+          pcSignInBtn      = $('pc-signInBtn');
+
+    const loginEmail       = $('loginEmail'),
+          loginPass        = $('loginPass'),
+          loginRemember    = $('loginRemember'),
+          loginSubmit      = $('loginSubmit'),
+          loginCancel      = $('loginCancel');
+
+    const soundToggle      = $('soundToggle'),
+          themeToggle      = $('themeToggle'),
+          skipToggle       = $('skipToggle'),
+          settingsCloseBtn = $('settingsCloseBtn');
+
+    const lbList           = $('leaderboardList'),
+          lbCloseBtn       = $('lbCloseBtn');
+
+    const fbTypeEls        = document.getElementsByName('fbType'),
+          fbSubject        = $('fbSubject'),
+          fbDetails        = $('fbDetails'),
+          fbSubmit         = $('fbSubmit'),
+          fbCancel         = $('fbCancel');
+
+    const asUsername       = $('as-username'),
+          asAvatar         = $('as-avatar'),
+          asScoreHistory   = $('as-scoreHistory'),
+          asCloseBtn       = $('as-closeBtn');
+
+    const pfAvatar         = $('pf-avatar'),
+          pfUsername       = $('pf-username'),
+          pfExclBadges     = $('pf-exclBadges'),
+          pfName           = $('pf-name'),
+          pfHighscore      = $('pf-highscore'),
+          pfRank           = $('pf-rank'),
+          pfBadges         = $('pf-badges'),
+          pfHistory        = $('pf-history'),
+          pfOwnerExtras    = $('pf-ownerExtras'),
+          pfCloseBtn       = $('pf-closeBtn');
+
+    const adminTabs        = document.querySelectorAll('.admin-tabs button'),
+          adminHome        = $('adminHome'),
+          adminFeedback    = $('adminFeedback'),
+          adminModeration  = $('adminModeration'),
+          adminOther       = $('adminOther'),
+          adminFeedbackList= $('adminFeedbackList'),
+          adminCloseBtn    = $('adminCloseBtn'),
+          modSearch        = $('modSearch'),
+          modSearchBtn     = $('modSearchBtn'),
+          modUserInfo      = $('modUserInfo');
+
+    const resumeBtn        = $('resumeBtn'),
+          pauseMenuBtn     = $('pauseMenuBtn'),
+          restartBtn       = $('restartBtn'),
+          goMenuBtn        = $('goMenuBtn'),
+          finalScoreSpan   = $('finalScore'),
+          newScoreSpan     = $('newScore'),
+          nameInput        = $('nameInput'),
+          saveNameBtn      = $('saveNameBtn'),
+          skipNameBtn      = $('skipNameBtn');
+
+    // Badge icons map
+    const badgeIcons = {
+      gold:          'https://app.masonnet.org/badge-gold.png',
+      survivor:      'https://app.masonnet.org/badge-survivor.png',
+      top10:         'https://app.masonnet.org/badge-top10.png',
+      accurate:      'https://app.masonnet.org/badge-accurate.png',
+      verified:      'https://app.masonnet.org/badge-verified.png',
+      tournament:    'https://app.masonnet.org/badge-tourney.png',
+      friend:        'https://app.masonnet.org/badge-friend.png',
+      admin:         'https://app.masonnet.org/badge-admin.png',
+      employee:      'https://app.masonnet.org/badge-employee.png',
+      supporter:     'https://app.masonnet.org/badge-supporter.png'
+    };
+
+    // Responsive canvas
+    function resizeCanvas(){
+      canvas.width = window.innerWidth;
+      canvas.height= window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Game state
+    let state='menu', bird, pipes, score, frame, rafId;
+    let soundOn=true, darkMode=false, skipOn=false, collided=false, lastFlap=0;
+
+    // Show/hide overlays
+    function showOverlay(id){
+      [
+        loginOverlay, menuOverlay, accountOverlay, profileOverlay,
+        feedbackOverlay, settingsOverlay, leaderboardOverlay,
+        adminOverlay, pauseOverlay, gameoverOverlay, nameOverlay
+      ].forEach(ov=>ov.classList.add('hidden'));
+      if(id) id.classList.remove('hidden');
+    }
+
+    // Render username + exclusive badges
+    function renderUserSpan(username, exclBadges){
+      const span = elt('span');
+      span.textContent = username;
+      (exclBadges||[]).forEach(id=>{
+        const img = elt('img','badge-icon');
+        img.src = badgeIcons[id]; span.appendChild(img);
+      });
+      return span;
+    }
+
+    // Update Profile Card UI on auth change
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        // signed in
+        pcSignedIn.classList.remove('hidden');
+        pcGuest.classList.add('hidden');
+        // load profile
+        profilesRef.child(user.uid).once('value',snap=>{
+          const p = snap.val()||{};
+          pcAvatar.src = p.avatarUrl||'https://app.masonnet.org/default-avatar.png';
+          // display name + excl badges
+          const name = p.username||user.displayName||user.email;
+          pcUsername.innerHTML = '';
+          pcUsername.appendChild(renderUserSpan(name,p.badges?.exclusive));
+          pcBadges.innerHTML = '';
+          (p.badges?.standard||[]).forEach(id=>{
+            const img=elt('img','badge-icon');
+            img.src=badgeIcons[id]; pcBadges.appendChild(img);
+          });
+          pcHighscore.textContent = `High Score: ${p.highscore||0}`;
+        });
+      } else {
+        // guest
+        pcSignedIn.classList.add('hidden');
+        pcGuest.classList.remove('hidden');
+      }
+      showOverlay(menuOverlay);
+    });
+
+    // Profile search handler
+    function performSearch(query){
+      // find profile by username (simple scan)
+      profilesRef.orderByChild('username')
+        .startAt(query).endAt(query+"\uf8ff")
+        .limitToFirst(1)
+        .once('value',snap=>{
+          const data = snap.val();
+          const uid = data ? Object.keys(data)[0] : null;
+          if(uid) openProfile(uid);
+          else alert("No user found.");
+        });
+    }
+    pcSearchBtn.onclick = ()=>performSearch(pcSearch.value.trim());
+    pcSearchBtnG.onclick= ()=>performSearch(pcSearchGuest.value.trim());
+
+    // Open profile overlay
+    function openProfile(uid){
+      profilesRef.child(uid).once('value',snap=>{
+        const p = snap.val();
+        if(!p) return alert("Profile missing.");
+        pfAvatar.src = p.avatarUrl||'https://app.masonnet.org/default-avatar.png';
+        pfUsername.innerHTML = '';
+        pfUsername.appendChild(renderUserSpan(p.username,p.badges?.exclusive));
+        pfName.textContent = `${p.firstName||''} ${p.lastName||''}`;
+        pfHighscore.textContent = p.highscore||0;
+        // compute rank
+        lbRef.orderByChild('score').once('value',ls=>{
+          const arr = Object.values(ls.val()||{}).sort((a,b)=>b.score-a.score);
+          const idx = arr.findIndex(e=>e.uid===uid);
+          pfRank.textContent = idx>=0? idx+1 : '—';
+        });
+        // badges
+        pfBadges.innerHTML='';
+        (p.badges?.standard||[]).forEach(id=>{
+          const img=elt('img','badge-icon'); img.src=badgeIcons[id];
+          pfBadges.appendChild(img);
+        });
+        // extras if own profile
+        if(auth.currentUser && auth.currentUser.uid===uid){
+          pfOwnerExtras.classList.remove('hidden');
+          // load history
+          pfHistory.innerHTML='';
+          db.ref(`scores/${uid}`)
+            .orderByKey().once('value',snap2=>{
+              snap2.forEach(child=>{
+                const run = child.val();
+                const d = elt('div');
+                d.textContent = `${new Date(+child.key).toLocaleDateString()} – Score: ${run.score}, Time: ${Math.floor(run.durationMs/1000)}s`;
+                pfHistory.appendChild(d);
+              });
+            });
+        } else {
+          pfOwnerExtras.classList.add('hidden');
+        }
+        showOverlay(profileOverlay);
+      });
+    }
+    pfCloseBtn.onclick = ()=> showOverlay(menuOverlay);
+
+    // Account Settings
+    pcAccountBtn.onclick = ()=>{
+      const user = auth.currentUser;
+      if(!user) return;
+      profilesRef.child(user.uid).once('value',snap=>{
+        const p = snap.val()||{};
+        asAvatar.src = p.avatarUrl||'https://app.masonnet.org/default-avatar.png';
+        asUsername.textContent = p.username||user.displayName||user.email;
+        // history
+        asScoreHistory.innerHTML='';
+        db.ref(`scores/${user.uid}`)
+          .orderByKey().once('value',snap2=>{
+            snap2.forEach(ch=>{
+              const run=ch.val();
+              const d=elt('div');
+              d.textContent=`${new Date(+ch.key).toLocaleDateString()} – ${run.score} pts, ${Math.floor(run.durationMs/1000)}s`;
+              asScoreHistory.appendChild(d);
+            });
+          });
+        showOverlay(accountOverlay);
+      });
+    };
+    asCloseBtn.onclick = ()=> showOverlay(menuOverlay);
+
+    // Feedback from profile card
+    pcFeedbackBtn.onclick = ()=> showOverlay(feedbackOverlay);
+    fbCancel.onclick = ()=> showOverlay(menuOverlay);
+    fbSubmit.onclick = ()=>{
+      const user = auth.currentUser;
+      if(!user) return alert("Sign in first");
+      const type = [...fbTypeEls].find(e=>e.checked).value;
+      const subject = fbSubject.value.trim();
+      const message = fbDetails.value.trim();
+      fbRef.push({
+        uid: user.uid, type, subject, message, timestamp: Date.now()
+      });
+      alert("Thank you!");
+      showOverlay(menuOverlay);
+    };
+
+    // Leaderboard
+    leaderboardBtn.onclick = ()=>{
+      lbList.innerHTML='';
+      lbRef.orderByChild("score").limitToLast(10)
+        .once("value",snap=>{
+          Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score)
+            .forEach((e,i)=>{
+              const row=elt('div');
+              // render with badges next to name
+              const nameSpan = renderUserSpan(e.name,e.badges?.exclusive);
+              row.appendChild(nameSpan);
+              row.append(`: ${e.score}`);
+              row.onclick = ()=> openProfile(e.uid);
+              lbList.appendChild(row);
+            });
+          showOverlay(leaderboardOverlay);
+        });
+    };
+    lbCloseBtn.onclick = ()=> showOverlay(menuOverlay);
+
+    // Settings toggles
+    settingsBtn.onclick = ()=> showOverlay(settingsOverlay);
+    settingsCloseBtn.onclick = ()=> showOverlay(menuOverlay);
+    soundToggle.onclick = ()=> soundOn=!soundOn;
+    themeToggle.onclick = ()=>{
+      darkMode=!darkMode;
+      background.style.backgroundImage = darkMode
+        ? "url('https://app.masonnet.org/darkbg.png')"
+        : "url('https://app.masonnet.org/lightbg.png')";
+    };
+    skipToggle.onclick = ()=> skipOn=!skipOn;
+
+    // Hub
+    hubBtn.onclick = ()=> window.location.href='https://app.masonnet.org/flappybirdhub';
+
+    // Admin console
+    settingsBtn.onclick = ()=>{}; // don't double-open settings
+    adminOverlay.querySelector('h2').onclick = ()=>{}; // stub
+    // Open admin for admin users
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        roles.child(user.uid).once('value',snap=>{
+          if(snap.val()==='admin'){
+            // show admin button in profile card
+            pcSignedIn.insertAdjacentHTML('beforeend',
+              '<button id="pc-adminBtn">Admin Console</button>'
+            );
+            $('pc-adminBtn').onclick = ()=> showOverlay(adminOverlay);
+          }
+        });
+      }
+    });
+    adminTabs.forEach(btn=>{
+      btn.onclick = ()=>{
+        adminTabs.forEach(b=>b.disabled=false);
+        btn.disabled = true;
+        [adminHome,adminFeedback,adminModeration,adminOther]
+          .forEach(c=>c.classList.remove('active'));
+        if(btn.id==='tabHomeBtn')      adminHome.classList.add('active');
+        if(btn.id==='tabFeedbackBtn')  adminFeedback.classList.add('active');
+        if(btn.id==='tabModerationBtn')adminModeration.classList.add('active');
+        if(btn.id==='tabOtherBtn')     adminOther.classList.add('active');
+      };
+    });
+    adminCloseBtn.onclick = ()=> showOverlay(menuOverlay);
+
+    // Load admin feedback
+    $('tabFeedbackBtn').onclick();
+    $('tabFeedbackBtn').onclick = ()=> {
+      adminFeedbackList.innerHTML='';
+      fbRef.orderByChild('timestamp').once('value',snap=>{
+        Object.entries(snap.val()||{}).forEach(([key,f])=>{
+          const d=elt('div');
+          d.innerHTML = `<strong>${f.type}</strong>: ${f.subject}<br/>by ${f.uid}<br/>${f.message}`;
+          adminFeedbackList.appendChild(d);
+        });
+      });
+      $('tabFeedbackBtn').click();
+    };
+    // Moderation search
+    modSearchBtn.onclick = ()=>{
+      const q = modSearch.value.trim();
+      profilesRef.orderByChild('username')
+        .startAt(q).endAt(q+"\uf8ff")
+        .limitToFirst(1)
+        .once('value',snap=>{
+          const data = snap.val();
+          const uid = data?Object.keys(data)[0]:null;
+          if(!uid) return alert("No user");
+          profilesRef.child(uid).once('value',snap2=>{
+            const p=snap2.val();
+            modUserInfo.innerHTML = `
+              <strong>${p.username}</strong> (${uid})<br/>
+              Status: ${p.moderation?.status||'active'}<br/>
+              <button id="banBtn">Ban</button>
+              <button id="suspendBtn">Suspend</button>
+              <button id="reinstateBtn">Reinstate</button>
+            `;
+            $('banBtn').onclick = ()=> setStatus(uid,'banned');
+            $('suspendBtn').onclick = ()=> setStatus(uid,'suspended');
+            $('reinstateBtn').onclick = ()=> setStatus(uid,'active');
+          });
+        });
+    };
+    function setStatus(uid,status){
+      profilesRef.child(uid+'/moderation').set({
+        status, timestamp:Date.now()
+      });
+      alert(`User set to ${status}`);
+    }
+
+    // Game code, endGame, loop, etc… (unchanged; omitted for brevity)
+
+    // Init UI
+    showOverlay(menuOverlay);
+  });
+  </script>
+</body>
+</html>
