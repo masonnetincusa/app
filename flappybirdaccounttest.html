@@ -5,7 +5,7 @@
   <title>Flappy Bird – Public Accounts & Admin Console</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <!-- Retro Press Start 2P -->
+  <!-- Retro Press Start 2P Font -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
         rel="stylesheet" />
 
@@ -49,61 +49,68 @@
     /* PROFILE CARD */
     #profileCard {
       position:absolute; top:10px; right:10px;
-      width:56px; height:56px;
+      width:64px; height:64px;
       background:rgba(0,0,0,0.7);
-      border:2px solid #f00;
-      border-radius:8px;
-      overflow:hidden;
-      cursor:pointer;
-      z-index:4;
-      transition:width .2s;
+      border:2px solid #f00; border-radius:8px;
+      overflow:hidden; cursor:pointer; z-index:4;
+      transition: width .2s ease-in-out, height .2s ease-in-out;
     }
-
     #profileCard.expanded {
-      width:240px;
+      width:280px;
+      height:auto;
     }
 
-    #pc-collapsed,
-    #pc-options {
-      position:absolute; top:0; left:0;
-      width:100%; height:100%;
-    }
-
+    /* collapsed (avatar only) */
     #pc-collapsed {
+      width:100%; height:100%;
       display:flex; align-items:center; justify-content:center;
     }
-
     #pc-collapsed img {
-      width:48px; height:48px; border-radius:50%;
+      width:56px; height:56px; border-radius:50%;
     }
 
+    /* expanded options */
     #pc-options {
-      display:none; flex-direction:column;
+      display:none;
+      flex-direction:column;
       background:rgba(0,0,0,0.8);
-      padding:8px;
+      padding:12px;
     }
-
     #profileCard.expanded #pc-options {
       display:flex;
     }
 
-    #pc-options button,
-    #pc-options input {
-      margin:4px 0;
-      font-size:14px;
-      border:none;
-      border-radius:4px;
+    /* Info row: avatar + username + badges */
+    .pc-info {
+      display:flex; align-items:center;
+      margin-bottom:12px;
     }
-
-    #pc-options input {
-      padding:4px 8px;
-      width:calc(100% - 16px);
+    .pc-info img {
+      width:48px; height:48px; border-radius:50%;
+      margin-right:8px;
     }
-
-    #pc-options button {
-      background:#f00;
+    .pc-info .username {
+      font-size:16px; font-weight:bold;
       color:#fff;
-      padding:6px;
+    }
+    .pc-info .badges {
+      margin-left:auto;
+    }
+
+    /* option elements */
+    #pc-options input,
+    #pc-options button {
+      width:100%;
+      margin:6px 0;
+      font-size:14px;
+      border:none; border-radius:4px;
+    }
+    #pc-options input {
+      padding:6px 8px;
+    }
+    #pc-options button {
+      padding:8px 0;
+      background:#f00; color:#fff;
       cursor:pointer;
     }
 
@@ -121,7 +128,9 @@
       text-align:center; color:#fff;
       max-width:320px; width:100%;
     }
-    .overlay-content h2 { margin:0 0 16px; font-size:32px; }
+    .overlay-content h2 {
+      margin:0 0 16px; font-size:32px;
+    }
     .overlay-content button {
       background:#f00; color:#fff; border:none;
       padding:12px 24px; font-size:18px;
@@ -177,10 +186,13 @@
       <img id="pc-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
     </div>
     <div id="pc-options">
-      <!-- These buttons/input will be toggled by JS -->
-      <input id="pc-search" placeholder="Search profiles…"/>
-      <button id="pc-searchBtn">Search</button>
-      <button id="pc-feedbackBtn">Feedback</button>
+      <div class="pc-info">
+        <img id="pc-info-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
+        <span id="pc-username" class="username">User</span>
+        <span id="pc-badges" class="badges"></span>
+      </div>
+      <button id="pc-feedbackBtn">Submit Feedback</button>
+      <button id="pc-searchBtn">Search Profiles…</button>
       <button id="pc-accountBtn">Account Settings</button>
       <button id="pc-authBtn">Sign In</button>
     </div>
@@ -190,7 +202,7 @@
   <div id="loginOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Sign In / Sign Up</h2>
-      <input id="loginEmail" placeholder="Email" />
+      <input id="loginEmail" type="email" placeholder="Email" />
       <input id="loginPass" type="password" placeholder="Password" />
       <label><input id="loginRemember" type="checkbox"/> Remember me</label>
       <button id="loginSubmit">Submit</button>
@@ -345,7 +357,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Constants and Firebase init
+    // Constants & Firebase init
     const OBSTACLE_WIDTH=60, PIPE_GAP_MIN=120, PIPE_GAP_MAX=200, FLAP_CD=200;
     firebase.initializeApp({
       apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0Z9E7axOIxE",
@@ -362,101 +374,43 @@
 
     // Helpers
     const $ = id => document.getElementById(id);
-    function elt(tag,cls){const e=document.createElement(tag); if(cls)e.className=cls; return e;}
+    function elt(tag, cls){const e=document.createElement(tag); if(cls) e.className=cls; return e;}
 
     // DOM refs
-    const profileCard   = $('profileCard'),
-          pcCollapsed   = $('pc-collapsed'),
-          pcOptions     = $('pc-options'),
-          pcAvatar      = $('pc-avatar'),
-          pcSearch      = $('pc-search'),
-          pcSearchBtn   = $('pc-searchBtn'),
-          pcFeedbackBtn = $('pc-feedbackBtn'),
-          pcAccountBtn  = $('pc-accountBtn'),
-          pcAuthBtn     = $('pc-authBtn');
+    const profileCard    = $('profileCard'),
+          pcCollapsed    = $('pc-collapsed'),
+          pcOptions      = $('pc-options'),
+          pcAvatar       = $('pc-avatar'),
+          pcInfoAvatar   = $('pc-info-avatar'),
+          pcUsername     = $('pc-username'),
+          pcBadges       = $('pc-badges'),
+          pcSearchBtn    = $('pc-searchBtn'),
+          pcFeedbackBtn  = $('pc-feedbackBtn'),
+          pcAccountBtn   = $('pc-accountBtn'),
+          pcAuthBtn      = $('pc-authBtn'),
+          startBtn       = $('startBtn'),
+          leaderboardBtn = $('leaderboardBtn'),
+          settingsBtn    = $('settingsBtn');
 
-    const loginOverlay  = $('loginOverlay'),
-          menuOverlay   = $('menuOverlay'),
-          accountOverlay= $('accountOverlay'),
-          profileOverlay= $('profileOverlay'),
+    const loginOverlay   = $('loginOverlay'),
+          menuOverlay    = $('menuOverlay'),
+          accountOverlay = $('accountOverlay'),
+          profileOverlay = $('profileOverlay'),
           feedbackOverlay= $('feedbackOverlay'),
-          settingsOverlay=$('settingsOverlay'),
+          settingsOverlay= $('settingsOverlay'),
           leaderboardOverlay=$('leaderboardOverlay'),
-          adminOverlay  = $('adminOverlay'),
-          pauseOverlay  = $('pauseOverlay'),
+          adminOverlay   = $('adminOverlay'),
+          pauseOverlay   = $('pauseOverlay'),
           gameoverOverlay=$('gameoverOverlay'),
-          nameOverlay   = $('nameOverlay');
-
-    const loginEmail    = $('loginEmail'),
-          loginPass     = $('loginPass'),
-          loginRemember = $('loginRemember'),
-          loginSubmit   = $('loginSubmit'),
-          loginCancel   = $('loginCancel');
-
-    const startBtn      = $('startBtn'),
-          leaderboardBtn= $('leaderboardBtn'),
-          settingsBtn   = $('settingsBtn'),
-          hubBtn        = $('hubBtn'),
-          soundToggle   = $('soundToggle'),
-          themeToggle   = $('themeToggle'),
-          skipToggle    = $('skipToggle'),
-          settingsCloseBtn=$('settingsCloseBtn');
-
-    const lbList        = $('leaderboardList'),
-          lbCloseBtn    = $('lbCloseBtn');
-
-    const fbTypeEls     = document.getElementsByName('fbType'),
-          fbSubject     = $('fbSubject'),
-          fbDetails     = $('fbDetails'),
-          fbSubmit      = $('fbSubmit'),
-          fbCancel      = $('fbCancel');
-
-    const asUsername    = $('as-username'),
-          asAvatar      = $('as-avatar'),
-          asScoreHistory=$('as-scoreHistory'),
-          asCloseBtn    = $('as-closeBtn');
-
-    const pfAvatar      = $('pf-avatar'),
-          pfUsername    = $('pf-username'),
-          pfExclBadges  = $('pf-exclBadges'),
-          pfName        = $('pf-name'),
-          pfHighscore   = $('pf-highscore'),
-          pfRank        = $('pf-rank'),
-          pfBadges      = $('pf-badges'),
-          pfHistory     = $('pf-history'),
-          pfOwnerExtras = $('pf-ownerExtras'),
-          pfCloseBtn    = $('pf-closeBtn');
-
-    const adminTabs     = document.querySelectorAll('.admin-tabs button'),
-          adminHome     = $('adminHome'),
-          adminFeedback = $('adminFeedback'),
-          adminModeration=$('adminModeration'),
-          adminOther    = $('adminOther'),
-          adminFeedbackList=$('adminFeedbackList'),
-          adminCloseBtn = $('adminCloseBtn'),
-          modSearch     = $('modSearch'),
-          modSearchBtn  = $('modSearchBtn'),
-          modUserInfo   = $('modUserInfo');
-
-    // Badge icons map
-    const badgeIcons = {
-      gold:        'https://app.masonnet.org/badge-gold.png',
-      survivor:    'https://app.masonnet.org/badge-survivor.png',
-      top10:       'https://app.masonnet.org/badge-top10.png',
-      accurate:    'https://app.masonnet.org/badge-accurate.png',
-      verified:    'https://app.masonnet.org/badge-verified.png',
-      tournament:  'https://app.masonnet.org/badge-tourney.png',
-      friend:      'https://app.masonnet.org/badge-friend.png',
-      admin:       'https://app.masonnet.org/badge-admin.png',
-      employee:    'https://app.masonnet.org/badge-employee.png',
-      supporter:   'https://app.masonnet.org/badge-supporter.png'
-    };
+          nameOverlay    = $('nameOverlay');
 
     // Responsive canvas
     window.addEventListener('resize', ()=>{
-      canvas.width=innerWidth; canvas.height=innerHeight;
+      $('canvas').width = innerWidth;
+      $('canvas').height= innerHeight;
     });
-    canvas.width=innerWidth; canvas.height=innerHeight;
+    $('canvas').width = innerWidth;
+    $('canvas').height= innerHeight;
 
     // Show/hide overlays
     function showOverlay(el){
@@ -466,114 +420,234 @@
         adminOverlay, pauseOverlay, gameoverOverlay, nameOverlay
       ].forEach(o=>o.classList.add('hidden'));
       if(el) el.classList.remove('hidden');
-      // collapse profile card on any overlay change
+      // collapse profile card
       profileCard.classList.remove('expanded');
     }
 
-    // Render name + exclusive badges
+    // render username + exclusive badges
     function renderUserSpan(name, excl=[]){
-      const span=elt('span');
-      span.textContent=name;
+      const span = elt('span');
+      span.textContent = name;
       excl.forEach(id=>{
-        const img=elt('img','badge-icon');
-        img.src=badgeIcons[id];
+        const img = elt('img','badge-icon');
+        img.src = badgeIcons[id];
         span.appendChild(img);
       });
       return span;
     }
 
-    // Toggle profile card expansion
-    profileCard.onclick = e=>{
+    // Toggle profile card
+    profileCard.addEventListener</h2>
+      <button id="resumeBtn">Resume</button>
+      <button id="pauseMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER OVERLAY -->
+  <div id="gameoverOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Game Over</h2>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <button id="restartBtn">Restart</button>
+      <button id="goMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- NAME PROMPT OVERLAY -->
+  <div id="nameOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>🎉 New High Score!</h2>
+      <p>Score: <span id="newScore"></span></p>
+      <input id="nameInput" placeholder="Enter your name" />
+      <button id="saveNameBtn">Save</button>
+      <button id="skipNameBtn">Skip</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Constants & Firebase init
+    const OBSTACLE_WIDTH=60, PIPE_GAP_MIN=120, PIPE_GAP_MAX=200, FLAP_CD=200;
+    firebase.initializeApp({
+      apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0Z9E7axOIxE",
+      authDomain:"masonnet-app-official.firebaseapp.com",
+      databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId:"masonnet-app-official"
+    });
+    const auth = firebase.auth(),
+          db   = firebase.database(),
+          lbRef = db.ref("leaderboard"),
+          fbRef = db.ref("feedback"),
+          profilesRef = db.ref("profiles"),
+          roles = db.ref("roles");
+
+    // Helpers
+    const $ = id => document.getElementById(id);
+    function elt(tag, cls){const e=document.createElement(tag); if(cls) e.className=cls; return e;}
+
+    // DOM refs
+    const profileCard    = $('profileCard'),
+          pcCollapsed    = $('pc-collapsed'),
+          pcOptions      = $('pc-options'),
+          pcAvatar       = $('pc-avatar'),
+          pcInfoAvatar   = $('pc-info-avatar'),
+          pcUsername     = $('pc-username'),
+          pcBadges       = $('pc-badges'),
+          pcSearchBtn    = $('pc-searchBtn'),
+          pcFeedbackBtn  = $('pc-feedbackBtn'),
+          pcAccountBtn   = $('pc-accountBtn'),
+          pcAuthBtn      = $('pc-authBtn'),
+          startBtn       = $('startBtn'),
+          leaderboardBtn = $('leaderboardBtn'),
+          settingsBtn    = $('settingsBtn');
+
+    const loginOverlay   = $('loginOverlay'),
+          menuOverlay    = $('menuOverlay'),
+          accountOverlay = $('accountOverlay'),
+          profileOverlay = $('profileOverlay'),
+          feedbackOverlay= $('feedbackOverlay'),
+          settingsOverlay= $('settingsOverlay'),
+          leaderboardOverlay=$('leaderboardOverlay'),
+          adminOverlay   = $('adminOverlay'),
+          pauseOverlay   = $('pauseOverlay'),
+          gameoverOverlay=$('gameoverOverlay'),
+          nameOverlay    = $('nameOverlay');
+
+    // Responsive canvas
+    window.addEventListener('resize', ()=>{
+      $('canvas').width = innerWidth;
+      $('canvas').height= innerHeight;
+    });
+    $('canvas').width = innerWidth;
+    $('canvas').height= innerHeight;
+
+    // Show/hide overlays
+    function showOverlay(el){
+      [
+        loginOverlay, menuOverlay, accountOverlay, profileOverlay,
+        feedbackOverlay, settingsOverlay, leaderboardOverlay,
+        adminOverlay, pauseOverlay, gameoverOverlay, nameOverlay
+      ].forEach(o=>o.classList.add('hidden'));
+      if(el) el.classList.remove('hidden');
+      // collapse profile card
+      profileCard.classList.remove('expanded');
+    }
+
+    // render username + exclusive badges
+    function renderUserSpan(name, excl=[]){
+      const span = elt('span');
+      span.textContent = name;
+      excl.forEach(id=>{
+        const img = elt('img','badge-icon');
+        img.src = badgeIcons[id];
+        span.appendChild(img);
+      });
+      return span;
+    }
+
+    // Toggle profile card
+    profileCard.addEventListener('click', e=>{
       e.stopPropagation();
       profileCard.classList.toggle('expanded');
-    };
-    // collapse if clicking elsewhere
-    document.body.addEventListener('click',()=>{
+    });
+    document.body.addEventListener('click', ()=>{
       profileCard.classList.remove('expanded');
     });
 
-    // Auth state
+    // Auth state changes
     auth.onAuthStateChanged(user=>{
       if(user){
-        // signed in view
-        $('pc-collapsed').querySelector('img').src =
-          'https://app.masonnet.org/default-avatar.png';
         // load profile
-        profilesRef.child(user.uid).once('value',snap=>{
-          const p=snap.val()||{};
-          pcAvatar.src=p.avatarUrl||pcAvatar.src;
-          // clamp options
-          $('pc-feedbackBtn').style.display='block';
-          $('pc-accountBtn').style.display='block';
-          $('pc-authBtn').textContent='Sign Out';
+        profilesRef.child(user.uid).once('value', snap=>{
+          const p = snap.val()||{};
+          pcAvatar.src = p.avatarUrl || pcAvatar.src;
+          pcInfoAvatar.src = pcAvatar.src;
+          const uname = p.username || user.displayName || user.email;
+          pcUsername.innerHTML = '';
+          pcUsername.appendChild(renderUserSpan(uname, p.badges?.exclusive));
+          // standard badges
+          pcBadges.innerHTML = '';
+          (p.badges?.standard||[]).forEach(id=>{
+            const img=elt('img','badge-icon');
+            img.src = badgeIcons[id];
+            pcBadges.appendChild(img);
+          });
+          // show options
+          pcFeedbackBtn.style.display = 'block';
+          pcAccountBtn.style.display  = 'block';
+          pcAuthBtn.textContent        = 'Sign Out';
         });
       } else {
-        // guest view
-        $('pc-feedbackBtn').style.display='none';
-        $('pc-accountBtn').style.display='none';
-        $('pc-authBtn').textContent='Sign In';
+        pcAvatar.src = 'https://app.masonnet.org/default-avatar.png';
+        pcInfoAvatar.src = pcAvatar.src;
+        pcUsername.textContent = '';
+        pcBadges.innerHTML = '';
+        pcFeedbackBtn.style.display = 'none';
+        pcAccountBtn.style.display  = 'none';
+        pcAuthBtn.textContent        = 'Sign In';
       }
       showOverlay(menuOverlay);
     });
 
-    // Profile card option handlers
-    pcSearchBtn.onclick = ()=>{
-      const q=pcSearch.value.trim();
+    // ProfileCard option handlers
+    pcFeedbackBtn.onclick = ()=> showOverlay(feedbackOverlay);
+    pcAccountBtn.onclick  = ()=> showOverlay(accountOverlay);
+    pcSearchBtn.onclick   = () =>{
+      const q = $('pc-search').value.trim();
       if(q) performSearch(q);
     };
-    $('pc-feedbackBtn').onclick = ()=> showOverlay(feedbackOverlay);
-    $('pc-accountBtn').onclick = ()=> showOverlay(accountOverlay);
-    pcAuthBtn.onclick = ()=>{
+    pcAuthBtn.onclick     = ()=>{
       if(auth.currentUser) auth.signOut();
       else showOverlay(loginOverlay);
     };
 
-    // Collapse on menu actions
-    [startBtn, leaderboardBtn, settingsBtn].forEach(b=>{
-      b.onclick = ()=> {
-        const idMap = {
-          startBtn: null,
-          leaderboardBtn: leaderboardOverlay,
-          settingsBtn: settingsOverlay
-        };
-        showOverlay(idMap[b.id]);
-      };
-    });
+    // Collapse on navigation
+    startBtn.onclick       = ()=> showOverlay(null);
+    leaderboardBtn.onclick = ()=> showOverlay(leaderboardOverlay);
+    settingsBtn.onclick    = ()=> showOverlay(settingsOverlay);
 
-    // Stub: performSearch & openProfile (as before)
+    // performSearch & openProfile (stubbed)
     function performSearch(q){
       profilesRef.orderByChild('username')
         .startAt(q).endAt(q+"\uf8ff")
         .limitToFirst(1)
-        .once('value',snap=>{
-          const data=snap.val(),
-                uid=data?Object.keys(data)[0]:null;
+        .once('value', snap=>{
+          const data = snap.val(), uid = data?Object.keys(data)[0]:null;
           if(uid) openProfile(uid);
           else alert("No user found");
         });
     }
     function openProfile(uid){
-      // load and show profileOverlay (omitted for brevity)
+      // load and populate profileOverlay...
       showOverlay(profileOverlay);
     }
 
-    // Feedback submit
-    fbSubmit.onclick = ()=>{
-      const user=auth.currentUser;
+    // Feedback submission
+    const fbTypeEls = document.getElementsByName('fbType');
+    const fbSubject = $('fbSubject');
+    const fbDetails = $('fbDetails');
+    $('fbSubmit').onclick = ()=>{
+      const user = auth.currentUser;
       if(!user) return alert("Sign in first");
-      const type=[...fbTypeEls].find(e=>e.checked).value;
+      const type = [...fbTypeEls].find(e=>e.checked).value;
       fbRef.push({
-        uid:user.uid,
-        type, subject:fbSubject.value, message:fbDetails.value,
-        timestamp:Date.now()
+        uid: user.uid,
+        type,
+        subject: fbSubject.value.trim(),
+        message: fbDetails.value.trim(),
+        timestamp: Date.now()
       });
-      alert("Thank you!");
+      alert("Thanks for your feedback!");
       showOverlay(menuOverlay);
     };
-    fbCancel.onclick = ()=> showOverlay(menuOverlay);
+    $('fbCancel').onclick = ()=> showOverlay(menuOverlay);
 
-    // ... rest of game logic, scoreboard, leaderboard, admin console, moderation,
-    // profiles write/update on game over, etc., remains unchanged ...
+    // ... rest of your game logic, leaderboard, admin console, moderation, score handling etc. ...
 
     // Initialize
     showOverlay(menuOverlay);
