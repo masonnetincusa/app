@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird – Full Public Accounts & Admin Console</title>
+  <title>Flappy Bird – Public Accounts & Admin Console</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <!-- Retro Press Start 2P Font -->
@@ -16,6 +16,7 @@
       background:#000; overflow:hidden;
       font-family: Arial, sans-serif;
     }
+
     /* Game background */
     #background {
       position:absolute; top:0; left:0;
@@ -24,11 +25,13 @@
                   center/cover no-repeat;
       z-index:0; display:none;
     }
+
     canvas {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
       z-index:1; touch-action:none;
     }
+
     #score {
       position:absolute; top:10px; left:10px;
       font-family:'Press Start 2P',system-ui;
@@ -36,12 +39,12 @@
       text-shadow:2px 2px 4px rgba(0,0,0,0.7);
       z-index:2;
     }
+
     #pauseBtn {
       position:absolute; top:10px; right:10px;
       display:none; z-index:2;
       background:#f00; color:#fff; border:none;
-      padding:8px 16px; font-size:16px;
-      cursor:pointer;
+      padding:8px 16px; font-size:16px; cursor:pointer;
     }
 
     /* PROFILE CARD */
@@ -56,7 +59,8 @@
     #profileCard.expanded {
       width:280px; height:auto;
     }
-    /* Collapsed view */
+
+    /* collapsed view */
     #pc-collapsed {
       display:flex; align-items:center; padding:0 8px;
       width:100%; height:100%;
@@ -68,7 +72,8 @@
     #pc-collapsed-text {
       font-size:14px; color:#fff;
     }
-    /* Expanded options */
+
+    /* expanded options */
     #pc-options {
       display:none; flex-direction:column;
       background:rgba(0,0,0,0.8); padding:12px;
@@ -76,19 +81,12 @@
     #profileCard.expanded #pc-options {
       display:flex;
     }
-    .pc-info {
-      display:flex; align-items:center; margin-bottom:12px;
+    /* hide any leftover info rows */
+    #pc-options .pc-info {
+      display:none;
     }
-    .pc-info img {
-      width:48px; height:48px; border-radius:50%;
-      margin-right:8px;
-    }
-    .pc-info .username {
-      font-size:16px; font-weight:bold; color:#fff;
-    }
-    .pc-info .badges {
-      margin-left:auto;
-    }
+
+    /* option buttons */
     #pc-options button {
       width:100%; margin:6px 0;
       padding:8px 0; font-size:14px;
@@ -101,8 +99,8 @@
       position:absolute; top:0; left:0;
       width:100%; height:100%;
       background:rgba(0,0,0,0.85);
-      display:flex; align-items:center;
-      justify-content:center; z-index:3;
+      display:flex; align-items:center; justify-content:center;
+      z-index:3;
     }
     .hidden { display:none; }
     .overlay-content {
@@ -124,14 +122,14 @@
     }
     .overlay-content textarea { min-height:80px; }
     .overlay-content label {
-      display:flex; align-items:center;
-      justify-content:center; margin:8px 0;
+      display:flex; align-items:center; justify-content:center;
+      margin:8px 0;
     }
     .overlay-content label input { margin-right:8px; }
     .scroll-list {
       background:#111; padding:12px; margin:16px 0;
-      max-height:200px; overflow-y:auto;
-      text-align:left; color:#fff; border-radius:4px;
+      max-height:200px; overflow-y:auto; text-align:left;
+      color:#fff; border-radius:4px;
     }
     .scroll-list div {
       border-bottom:1px solid #333; padding:6px 0;
@@ -155,6 +153,7 @@
   </style>
 </head>
 <body>
+  <!-- Background & Canvas -->
   <div id="background"></div>
   <canvas id="canvas"></canvas>
   <div id="score">0</div>
@@ -169,13 +168,6 @@
       <span id="pc-collapsed-text">Not signed in</span>
     </div>
     <div id="pc-options">
-      <div class="pc-info">
-        <img id="pc-info-avatar"
-             src="https://app.masonnet.org/default-avatar.png"
-             alt="Avatar"/>
-        <span id="pc-username" class="username"></span>
-        <span id="pc-badges" class="badges"></span>
-      </div>
       <button id="pc-authBtn">Sign In</button>
       <button id="pc-feedbackBtn">Submit Feedback</button>
       <button id="pc-accountBtn">Account Settings</button>
@@ -198,8 +190,7 @@
   <!-- MAIN MENU OVERLAY -->
   <div id="menuOverlay" class="overlay">
     <div class="overlay-content">
-      <img src="https://app.masonnet.org/fbrc.png" alt="Logo"
-           style="max-width:180px;"/>
+      <img src="https://app.masonnet.org/fbrc.png" alt="Logo" style="max-width:180px;"/>
       <h2>Main Menu</h2>
       <button id="startBtn">Start</button>
       <button id="leaderboardBtn">Leaderboard</button>
@@ -232,8 +223,7 @@
            alt="Avatar"
            style="width:64px;height:64px;border-radius:50%;"/>
       <div>
-        <strong id="pf-username"></strong>
-        <span id="pf-exclBadges"></span>
+        <strong id="pf-username"></strong><span id="pf-exclBadges"></span>
       </div>
       <div id="pf-name"></div>
       <div>High Score: <span id="pf-highscore"></span></div>
@@ -368,103 +358,92 @@
 
     // Helpers
     const $   = id => document.getElementById(id);
-    function elt(tag,cls){ const e=document.createElement(tag); if(cls)e.className=cls; return e; }
+    function elt(tag,cls){const e=document.createElement(tag); if(cls)e.className=cls; return e;}
 
-    // Profile card elements
+    // DOM refs
     const profileCard     = $('profileCard'),
           pcCollapsedTxt  = $('pc-collapsed-text'),
           pcAvatar        = $('pc-avatar'),
-          pcInfoAvatar    = $('pc-info-avatar'),
-          pcUsername      = $('pc-username'),
-          pcBadges        = $('pc-badges'),
           pcAuthBtn       = $('pc-authBtn'),
           pcFeedbackBtn   = $('pc-feedbackBtn'),
           pcAccountBtn    = $('pc-accountBtn'),
-          pcSearchBtn     = $('pc-searchBtn');
+          pcSearchBtn     = $('pc-searchBtn'),
 
-    // Overlays
-    const loginOverlay       = $('loginOverlay'),
-          menuOverlay        = $('menuOverlay'),
-          accountOverlay     = $('accountOverlay'),
-          profileOverlay     = $('profileOverlay'),
-          feedbackOverlay    = $('feedbackOverlay'),
-          settingsOverlay    = $('settingsOverlay'),
+          loginOverlay    = $('loginOverlay'),
+          menuOverlay     = $('menuOverlay'),
+          accountOverlay  = $('accountOverlay'),
+          profileOverlay  = $('profileOverlay'),
+          feedbackOverlay = $('feedbackOverlay'),
+          settingsOverlay = $('settingsOverlay'),
           leaderboardOverlay = $('leaderboardOverlay'),
-          adminOverlay       = $('adminOverlay'),
-          pauseOverlay       = $('pauseOverlay'),
-          gameoverOverlay    = $('gameoverOverlay'),
-          nameOverlay        = $('nameOverlay');
+          adminOverlay    = $('adminOverlay'),
+          pauseOverlay    = $('pauseOverlay'),
+          gameoverOverlay = $('gameoverOverlay'),
+          nameOverlay     = $('nameOverlay'),
 
-    // Canvas & main menu buttons
-    const canvas         = document.querySelector('canvas'),
-          startBtn       = $('startBtn'),
-          leaderboardBtn = $('leaderboardBtn'),
-          settingsBtn    = $('settingsBtn'),
-          hubBtn         = $('hubBtn');
+          canvas          = document.querySelector('canvas'),
+          startBtn        = $('startBtn'),
+          leaderboardBtn  = $('leaderboardBtn'),
+          settingsBtn     = $('settingsBtn'),
+          hubBtn          = $('hubBtn'),
 
-    // Login form
-    const loginEmail    = $('loginEmail'),
-          loginPass     = $('loginPass'),
-          loginRemember = $('loginRemember'),
-          loginSubmit   = $('loginSubmit'),
-          loginCancel   = $('loginCancel');
+          loginEmail      = $('loginEmail'),
+          loginPass       = $('loginPass'),
+          loginRemember   = $('loginRemember'),
+          loginSubmit     = $('loginSubmit'),
+          loginCancel     = $('loginCancel'),
 
-    // Feedback form
-    const fbTypeEls   = document.getElementsByName('fbType'),
-          fbSubject   = $('fbSubject'),
-          fbDetails   = $('fbDetails'),
-          fbSubmit    = $('fbSubmit'),
-          fbCancel    = $('fbCancel');
+          fbTypeEls       = document.getElementsByName('fbType'),
+          fbSubject       = $('fbSubject'),
+          fbDetails       = $('fbDetails'),
+          fbSubmit        = $('fbSubmit'),
+          fbCancel        = $('fbCancel'),
 
-    // Account settings
-    const asUsername     = $('as-username'),
-          asAvatar       = $('as-avatar'),
-          asScoreHistory = $('as-scoreHistory'),
-          asCloseBtn     = $('as-closeBtn');
+          asUsername      = $('as-username'),
+          asAvatar        = $('as-avatar'),
+          asScoreHistory  = $('as-scoreHistory'),
+          asCloseBtn      = $('as-closeBtn'),
 
-    // Profile page
-    const pfAvatar      = $('pf-avatar'),
-          pfUsername    = $('pf-username'),
-          pfExclBadges  = $('pf-exclBadges'),
-          pfName        = $('pf-name'),
-          pfHighscore   = $('pf-highscore'),
-          pfRank        = $('pf-rank'),
-          pfBadges      = $('pf-badges'),
-          pfHistory     = $('pf-history'),
-          pfOwnerExtras = $('pf-ownerExtras'),
-          pfCloseBtn    = $('pf-closeBtn');
+          pfAvatar        = $('pf-avatar'),
+          pfUsername      = $('pf-username'),
+          pfExclBadges    = $('pf-exclBadges'),
+          pfName          = $('pf-name'),
+          pfHighscore     = $('pf-highscore'),
+          pfRank          = $('pf-rank'),
+          pfBadges        = $('pf-badges'),
+          pfHistory       = $('pf-history'),
+          pfOwnerExtras   = $('pf-ownerExtras'),
+          pfCloseBtn      = $('pf-closeBtn'),
 
-    // Leaderboard
-    const lbList     = $('leaderboardList'),
-          lbCloseBtn = $('lbCloseBtn');
+          lbList          = $('leaderboardList'),
+          lbCloseBtn      = $('lbCloseBtn'),
 
-    // Admin console
-    const adminTabs        = document.querySelectorAll('.admin-tabs button'),
-          adminHome        = $('adminHome'),
-          adminFeedback    = $('adminFeedback'),
-          adminModeration  = $('adminModeration'),
-          adminOther       = $('adminOther'),
-          adminFeedbackList= $('adminFeedbackList'),
-          adminCloseBtn    = $('adminCloseBtn'),
-          modSearch        = $('modSearch'),
-          modSearchBtn     = $('modSearchBtn'),
-          modUserInfo      = $('modUserInfo');
+          adminTabs       = document.querySelectorAll('.admin-tabs button'),
+          adminHome       = $('adminHome'),
+          adminFeedback   = $('adminFeedback'),
+          adminModeration = $('adminModeration'),
+          adminOther      = $('adminOther'),
+          adminFeedbackList = $('adminFeedbackList'),
+          adminCloseBtn   = $('adminCloseBtn'),
+          modSearch       = $('modSearch'),
+          modSearchBtn    = $('modSearchBtn'),
+          modUserInfo     = $('modUserInfo');
 
-    // Badge icons
+    // Badge icons map
     const badgeIcons = {
-      gold:       'https://app.masonnet.org/badge-gold.png',
-      survivor:   'https://app.masonnet.org/badge-survivor.png',
-      top10:      'https://app.masonnet.org/badge-top10.png',
-      accurate:   'https://app.masonnet.org/badge-accurate.png',
-      verified:   'https://app.masonnet.org/badge-verified.png',
-      tournament: 'https://app.masonnet.org/badge-tourney.png',
-      friend:     'https://app.masonnet.org/badge-friend.png',
-      admin:      'https://app.masonnet.org/badge-admin.png',
-      employee:   'https://app.masonnet.org/badge-employee.png',
-      supporter:  'https://app.masonnet.org/badge-supporter.png'
+      gold:        'https://app.masonnet.org/badge-gold.png',
+      survivor:    'https://app.masonnet.org/badge-survivor.png',
+      top10:       'https://app.masonnet.org/badge-top10.png',
+      accurate:    'https://app.masonnet.org/badge-accurate.png',
+      verified:    'https://app.masonnet.org/badge-verified.png',
+      tournament:  'https://app.masonnet.org/badge-tourney.png',
+      friend:      'https://app.masonnet.org/badge-friend.png',
+      admin:       'https://app.masonnet.org/badge-admin.png',
+      employee:    'https://app.masonnet.org/badge-employee.png',
+      supporter:   'https://app.masonnet.org/badge-supporter.png'
     };
 
-    // Resize canvas
+    // Responsive canvas
     function resizeCanvas(){
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -472,8 +451,8 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Show/hide overlays
-    function showOverlay(el) {
+    // Show/hide overlays and collapse card
+    function showOverlay(el){
       [ loginOverlay, menuOverlay, accountOverlay, profileOverlay,
         feedbackOverlay, settingsOverlay, leaderboardOverlay,
         adminOverlay, pauseOverlay, gameoverOverlay, nameOverlay
@@ -482,19 +461,19 @@
       profileCard.classList.remove('expanded');
     }
 
-    // Render username + exclusive badges
-    function renderUserSpan(name, excl=[]) {
-      const span = elt('span');
-      span.textContent = name;
+    // Render name + badges helper
+    function renderUserSpan(name, excl=[]){
+      const span=elt('span');
+      span.textContent=name;
       excl.forEach(id=>{
-        const img = elt('img','badge-icon');
-        img.src = badgeIcons[id];
+        const img=elt('img','badge-icon');
+        img.src=badgeIcons[id];
         span.appendChild(img);
       });
       return span;
     }
 
-    // Toggle profile card expand/collapse
+    // Toggle profile card
     profileCard.addEventListener('click', e=>{
       e.stopPropagation();
       profileCard.classList.toggle('expanded');
@@ -505,36 +484,24 @@
 
     // Auth state changes
     auth.onAuthStateChanged(user=>{
-      if(user) {
+      if(user){
         // signed in
         profilesRef.child(user.uid).once('value',snap=>{
-          const p = snap.val()||{};
-          const avatar = p.avatarUrl|| pcAvatar.src;
-          pcAvatar.src = avatar;
-          pcInfoAvatar.src = avatar;
-          const uname = p.username|| user.displayName|| user.email;
-          pcUsername.innerHTML = '';
-          pcUsername.appendChild(renderUserSpan(uname,p.badges?.exclusive));
-          pcBadges.innerHTML = '';
-          (p.badges?.standard||[]).forEach(id=>{
-            const img=elt('img','badge-icon'); img.src=badgeIcons[id];
-            pcBadges.appendChild(img);
-          });
+          const p=snap.val()||{};
+          const avatarUrl=p.avatarUrl||pcAvatar.src;
+          pcAvatar.src=avatarUrl;
+          pcCollapsedTxt.textContent='';
         });
-        pcCollapsedTxt.textContent = '';
-        pcAuthBtn.textContent = 'Sign Out';
-        pcFeedbackBtn.style.display = 'block';
-        pcAccountBtn.style.display  = 'block';
+        pcAuthBtn.textContent='Sign Out';
+        pcFeedbackBtn.style.display='block';
+        pcAccountBtn.style.display='block';
       } else {
         // guest
-        pcAvatar.src = pcInfoAvatar.src =
-          'https://app.masonnet.org/default-avatar.png';
-        pcUsername.textContent = '';
-        pcBadges.innerHTML = '';
-        pcCollapsedTxt.textContent = 'Not signed in';
-        pcAuthBtn.textContent = 'Sign In';
-        pcFeedbackBtn.style.display = 'none';
-        pcAccountBtn.style.display  = 'none';
+        pcAvatar.src='https://app.masonnet.org/default-avatar.png';
+        pcCollapsedTxt.textContent='Not signed in';
+        pcAuthBtn.textContent='Sign In';
+        pcFeedbackBtn.style.display='none';
+        pcAccountBtn.style.display='none';
       }
       showOverlay(menuOverlay);
     });
@@ -547,7 +514,7 @@
     pcFeedbackBtn.onclick = ()=> showOverlay(feedbackOverlay);
     pcAccountBtn.onclick  = ()=> showOverlay(accountOverlay);
     pcSearchBtn.onclick   = ()=>{
-      const q = prompt("Search username or UID:","").trim();
+      const q=prompt("Search username or UID:","").trim();
       if(q) performSearch(q);
     };
 
@@ -568,7 +535,7 @@
     };
     loginCancel.onclick = ()=> showOverlay(menuOverlay);
 
-    // Search & open profile
+    // SEARCH & openProfile
     function performSearch(q){
       profilesRef.orderByChild('username')
         .startAt(q).endAt(q+"\uf8ff")
@@ -581,34 +548,32 @@
     }
     function openProfile(uid){
       profilesRef.child(uid).once('value',snap=>{
-        const p = snap.val();
-        if(!p) return alert("Profile not found");
+        const p=snap.val();
+        if(!p) return alert("Profile missing");
         pfAvatar.src = p.avatarUrl||pfAvatar.src;
-        pfUsername.innerHTML = '';
+        pfUsername.innerHTML='';
         pfUsername.appendChild(renderUserSpan(p.username,p.badges?.exclusive));
         pfName.textContent = `${p.firstName||''} ${p.lastName||''}`;
         pfHighscore.textContent = p.highscore||0;
-        // compute rank
         lbRef.orderByChild('score').once('value',ls=>{
           const arr=Object.values(ls.val()||{}).sort((a,b)=>b.score-a.score);
           const idx = arr.findIndex(e=>e.uid===uid);
           pfRank.textContent = idx>=0?idx+1:'—';
         });
-        pfBadges.innerHTML = '';
+        pfBadges.innerHTML='';
         (p.badges?.standard||[]).forEach(id=>{
           const img=elt('img','badge-icon'); img.src=badgeIcons[id];
           pfBadges.appendChild(img);
         });
-        // owner extras
         if(auth.currentUser && auth.currentUser.uid===uid){
           pfOwnerExtras.classList.remove('hidden');
-          pfHistory.innerHTML = '';
+          pfHistory.innerHTML='';
           db.ref(`scores/${uid}`).orderByKey().once('value',h=>{
             h.forEach(ch=>{
               const run=ch.val();
               const d=elt('div');
               d.textContent = `${new Date(+ch.key).toLocaleDateString()}
-                – Score: ${run.score}, Time: ${Math.floor(run.durationMs/1000)}s`;
+                – ${run.score} pts, ${Math.floor(run.durationMs/1000)}s`;
               pfHistory.appendChild(d);
             });
           });
@@ -618,18 +583,19 @@
     }
     pfCloseBtn.onclick = ()=> showOverlay(menuOverlay);
 
-    // FEEDBACK submission
+    // FEEDBACK submit
     fbSubmit.onclick = ()=>{
-      const user = auth.currentUser;
+      const user=auth.currentUser;
       if(!user) return alert("Please sign in first");
-      const type = [...fbTypeEls].find(e=>e.checked).value;
+      const type=[...fbTypeEls].find(e=>e.checked).value;
       fbRef.push({
         uid:user.uid,
-        type, subject:fbSubject.value.trim(),
+        type,
+        subject:fbSubject.value.trim(),
         message:fbDetails.value.trim(),
         timestamp:Date.now()
       });
-      alert("Thank you for your feedback!");
+      alert("Thanks for your feedback!");
       showOverlay(menuOverlay);
     };
     fbCancel.onclick = ()=> showOverlay(menuOverlay);
@@ -637,48 +603,46 @@
     // LEADERBOARD
     lbCloseBtn.onclick = ()=> showOverlay(menuOverlay);
     leaderboardBtn.onclick = ()=>{
-      lbList.innerHTML = '';
-      lbRef.orderByChild("score").limitToLast(10)
-        .once("value",snap=>{
-          Object.values(snap.val()||{})
-            .sort((a,b)=>b.score-a.score)
-            .forEach((e,i)=>{
-              const row = elt('div');
-              const span = renderUserSpan(e.name,e.badges?.exclusive);
-              row.appendChild(span);
-              row.append(`: ${e.score}`);
-              row.onclick = ()=> openProfile(e.uid);
-              lbList.appendChild(row);
-            });
-          showOverlay(leaderboardOverlay);
-        });
+      lbList.innerHTML='';
+      lbRef.orderByChild("score").limitToLast(10).once("value",snap=>{
+        Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score)
+          .forEach((e,i)=>{
+            const row=elt('div');
+            const span=renderUserSpan(e.name,e.badges?.exclusive);
+            row.appendChild(span);
+            row.append(`: ${e.score}`);
+            row.onclick = ()=> openProfile(e.uid);
+            lbList.appendChild(row);
+          });
+        showOverlay(leaderboardOverlay);
+      });
     };
 
-    // SETTINGS toggles
-    settingsBtn.onclick        = ()=> showOverlay(settingsOverlay);
+    // SETTINGS toggles (stubs)
+    settingsBtn.onclick = ()=> showOverlay(settingsOverlay);
     $('settingsCloseBtn').onclick = ()=> showOverlay(menuOverlay);
-    $('soundToggle').onclick      = ()=> {/* toggle sound */};
-    $('themeToggle').onclick      = ()=> {/* toggle theme */};
-    $('skipToggle').onclick       = ()=> {/* toggle skip */};
+    $('soundToggle').onclick = ()=> {};
+    $('themeToggle').onclick= ()=> {};
+    $('skipToggle').onclick = ()=> {};
 
     // HUB
-    hubBtn.onclick = ()=> window.location.href = 
-                      'https://app.masonnet.org/flappybirdhub';
+    hubBtn.onclick = ()=> window.location.href='https://app.masonnet.org/flappybirdhub';
 
     // ADMIN console activation & tabs
     auth.onAuthStateChanged(user=>{
       if(user) roles.child(user.uid).once('value',snap=>{
         if(snap.val()==='admin'){
-          const btn = elt('button'); btn.textContent = "Admin";
+          const btn=elt('button');
+          btn.textContent="Admin";
           btn.onclick = ()=> showOverlay(adminOverlay);
-          pcOptions.insertBefore(btn, pcSearchBtn);
+          document.getElementById('pc-options').insertBefore(btn, pcSearchBtn);
         }
       });
     });
     adminTabs.forEach(btn=>{
       btn.onclick = ()=>{
         adminTabs.forEach(b=>b.disabled=false);
-        btn.disabled = true;
+        btn.disabled=true;
         [adminHome,adminFeedback,adminModeration,adminOther]
           .forEach(c=>c.classList.remove('active'));
         if(btn.id==='tabHomeBtn')      adminHome.classList.add('active');
@@ -689,15 +653,15 @@
     });
     adminCloseBtn.onclick = ()=> showOverlay(menuOverlay);
 
-    // Load Admin Feedback
+    // Load Admin Feedback tab by default
     $('tabFeedbackBtn').onclick();
     $('tabFeedbackBtn').onclick = ()=>{
-      adminFeedbackList.innerHTML = '';
+      adminFeedbackList.innerHTML='';
       fbRef.orderByChild('timestamp').once('value',snap=>{
         Object.entries(snap.val()||{}).forEach(([k,f])=>{
           const d=elt('div');
           d.innerHTML = `<strong>${f.type}</strong>: ${f.subject}<br/>
-            by ${f.uid}<br/>${f.message}`;
+                         by ${f.uid}<br/>${f.message}`;
           adminFeedbackList.appendChild(d);
         });
       });
@@ -706,7 +670,7 @@
 
     // Moderation
     modSearchBtn.onclick = ()=>{
-      const q = modSearch.value.trim();
+      const q=modSearch.value.trim();
       profilesRef.orderByChild('username')
         .startAt(q).endAt(q+"\uf8ff")
         .limitToFirst(1)
@@ -727,15 +691,177 @@
           });
         });
     };
-    function setStatus(uid,status) {
+    function setStatus(uid,status){
       profilesRef.child(uid+'/moderation').set({status,timestamp:Date.now()});
       alert(`User ${status}`);
     }
 
-    // ==== CORE GAME LOGIC (Bird class, loop, spawnPipes, endGame, etc.) ====
-    // ... your existing game code here, unchanged ...
+    // ==== CORE GAME LOGIC ====
+    class Bird {
+      constructor(){
+        this.w=36; this.h=30; this.x=50;
+        this.y=canvas.height*0.4; this.vy=0; this.g=0.25;
+        this.hasFlapped=false;
+      }
+      update(){
+        if(state!=='playing') return;
+        this.vy = this.hasFlapped ? this.vy+this.g : 0.1;
+        this.y += this.vy;
+        if(this.y<0){ this.y=0; this.vy=0; }
+        if(this.y+this.h>canvas.height){
+          this.y=canvas.height-this.h; this.die();
+        }
+      }
+      draw(){ ctx.drawImage(birdImg,this.x,this.y,this.w,this.h); }
+      flap(){
+        this.hasFlapped=true;
+        const now=Date.now();
+        if(soundOn && now-lastFlap>=FLAP_CD){
+          flapS.currentTime=0; flapS.play(); lastFlap=now;
+        }
+        this.vy=-6;
+      }
+      collides(p){
+        return !(
+          this.x+this.w<p.x ||
+          this.x>p.x+p.w ||
+          this.y+this.h<p.y ||
+          this.y>p.y+p.h
+        );
+      }
+      die(){
+        if(state!=='playing' || collided) return;
+        collided=true; state='dying';
+        cancelAnimationFrame(rafId);
+        pauseBtn.style.display='none';
+        showOverlay(effectOverlay);
+        if(skipOn||!soundOn){ return endGame(); }
+        hitS.currentTime=0; hitS.play();
+        hitS.onended=()=>{
+          dieS.currentTime=0; dieS.play();
+          dieS.onended=endGame;
+        };
+      }
+    }
 
-    // Start UI
+    function spawnPipes(){
+      const x=canvas.width,
+            h=20+Math.random()*(canvas.height/2-20),
+            gap=PIPE_GAP_MIN+Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
+      pipes=pipes.filter(p=>p.x+p.w>0);
+      if(!pipes.length||x-pipes[pipes.length-1].x>OBSTACLE_WIDTH*3){
+        pipes.push({x,y:0,w:OBSTACLE_WIDTH,h,passed:false,top:true});
+        pipes.push({x,y:h+gap,w:OBSTACLE_WIDTH,h:canvas.height-h-gap,passed:false,top:false});
+      }
+    }
+
+    function endGame(){
+      showOverlay(gameoverOverlay);
+      finalScoreSpan.textContent=score;
+      lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
+        const entries=Object.values(snap.val()||{});
+        const minScore=entries.length<10
+          ? 0
+          : Math.min(...entries.map(e=>e.score));
+        if(score>minScore){
+          newScoreSpan.textContent=score;
+          nameInput.value='';
+          showOverlay(nameOverlay);
+        }
+      });
+    }
+
+    function loop(){
+      if(state!=='playing') return;
+      rafId=requestAnimationFrame(loop);
+      frame++;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      pipes.forEach(p=>{
+        p.x-=1.8; ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
+        if(!collided && bird.collides(p)) bird.die();
+        if(p.top && !p.passed && bird.x>p.x+p.w){
+          p.passed=true; score++;
+          scoreDiv.textContent=score;
+          if(soundOn){ pointS.currentTime=0; pointS.play(); }
+        }
+      });
+      pipes=pipes.filter(p=>p.x+p.w>0);
+
+      bird.update(); bird.draw();
+      if(frame===1||frame%150===0) spawnPipes();
+    }
+
+    startBtn.onclick=()=>{
+      state='playing'; bird=new Bird(); pipes=[]; score=0;
+      frame=0; collided=false; scoreDiv.textContent=0;
+      updateBackground(); pauseBtn.style.display='block';
+      showOverlay(null); loop();
+    };
+
+    pauseBtn.onclick=()=>{
+      if(state!=='playing') return;
+      state='paused'; cancelAnimationFrame(rafId);
+      showOverlay(pauseOverlay);
+    };
+    $('resumeBtn').onclick=()=>{
+      showOverlay(null); pauseBtn.style.display='block';
+      state='playing'; loop();
+    };
+    $('pauseMenuBtn').onclick=()=>{
+      cancelAnimationFrame(rafId); pauseBtn.style.display='none';
+      state='menu'; showOverlay(menuOverlay);
+    };
+
+    $('restartBtn').onclick=startBtn.onclick;
+    $('goMenuBtn').onclick=()=> showOverlay(menuOverlay);
+
+    $('saveNameBtn').onclick=()=>{
+      const name=nameInput.value.trim()||'Anonymous';
+      lbRef.push({name,score,timestamp:Date.now()});
+      showOverlay(gameoverOverlay);
+    };
+    $('skipNameBtn').onclick=()=> showOverlay(gameoverOverlay);
+
+    const birdImg=new Image(), pipeImg=new Image();
+    birdImg.src='https://app.masonnet.org/bird.png';
+    pipeImg.src='https://app.masonnet.org/pipe-green.png';
+    const pointS=new Audio('https://app.masonnet.org/point.mp3'),
+          flapS =new Audio('https://app.masonnet.org/flap.mp3'),
+          hitS  =new Audio('https://app.masonnet.org/hit.mp3'),
+          dieS  =new Audio('https://app.masonnet.org/die.mp3');
+
+    const ctx=canvas.getContext('2d'),
+          scoreDiv=$('score'),
+          finalScoreSpan=$('finalScore'),
+          newScoreSpan=$('newScore'),
+          nameInput=$('nameInput'),
+          pauseOverlayBtn=$('pauseOverlay'),
+          effectOverlay=document.getElementById('effectOverlay');
+
+    let state='menu', bird, pipes, score, frame, rafId;
+    let soundOn=true, darkMode=false, skipOn=false,
+        collided=false, lastFlap=0;
+
+    function updateBackground(){
+      const bg=$('background');
+      bg.style.display='block';
+      bg.style.backgroundImage = darkMode
+        ? "url('https://app.masonnet.org/darkbg.png')"
+        : "url('https://app.masonnet.org/lightbg.png')";
+    }
+    function updateSound(){ $('soundToggle').textContent = soundOn?'🔊 Sound':'🔇 Mute'; }
+    function updateTheme(){ $('themeToggle').textContent = darkMode?'☀️ Light':'🌙 Dark'; }
+    function updateSkip(){ $('skipToggle').textContent = skipOn?'🚀 Skip: On':'🚀 Skip: Off'; }
+
+    $('hubBtn').onclick = ()=> window.location.href='https://app.masonnet.org/flappybirdhub';
+
+    soundToggle.onclick = ()=>{ soundOn = !soundOn; updateSound(); };
+    themeToggle.onclick = ()=>{ darkMode = !darkMode; updateTheme(); updateBackground(); };
+    skipToggle.onclick  = ()=>{ skipOn  = !skipOn; updateSkip(); };
+
+    // Initialize UI
+    updateSound(); updateTheme(); updateSkip();
     showOverlay(menuOverlay);
   });
   </script>
