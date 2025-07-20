@@ -11,143 +11,136 @@
 
   <style>
     html, body {
-      margin:0; padding:0;
-      width:100vw; height:100vh;
-      background:#000; overflow:hidden;
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      background: #000; overflow: hidden;
       font-family: Arial, sans-serif;
     }
-
     /* Game background */
     #background {
-      position:absolute; top:0; left:0;
-      width:100%; height:100%;
-      background:url('https://app.masonnet.org/lightbg.png')
-                 center/cover no-repeat;
-      z-index:0; display:none;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('https://app.masonnet.org/lightbg.png') center/cover no-repeat;
+      z-index: 0; display: none;
     }
     canvas {
-      position:absolute; top:0; left:0;
-      width:100%; height:100%;
-      z-index:1; touch-action:none;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1; touch-action: none;
     }
     #score {
-      position:absolute; top:10px; left:10px;
-      font-family:'Press Start 2P',system-ui;
-      font-size:48px; color:#fff;
-      text-shadow:2px 2px 4px rgba(0,0,0,0.7);
-      z-index:2;
+      position: absolute; top: 10px; left: 10px;
+      font-family: 'Press Start 2P', system-ui;
+      font-size: 48px; color: #fff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+      z-index: 2;
     }
     #pauseBtn {
-      position:absolute; top:10px; right:10px;
-      display:none; z-index:2;
-      background:#f00; color:#fff; border:none;
-      padding:8px 16px; font-size:16px; cursor:pointer;
+      position: absolute; top: 10px; right: 10px;
+      display: none; z-index: 2;
+      background: #f00; color: #fff; border: none;
+      padding: 8px 16px; font-size: 16px; cursor: pointer;
     }
 
     /* PROFILE CARD */
     #profileCard {
-      position:absolute; top:10px; right:10px;
-      width:64px; height:64px;
-      background:rgba(0,0,0,0.7);
-      border:2px solid #f00; border-radius:8px;
-      overflow:hidden; cursor:pointer; z-index:4;
-      transition:width .2s, height .2s;
+      position: absolute; top: 10px; right: 10px;
+      width: 64px; height: 64px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #f00; border-radius: 8px;
+      overflow: hidden; cursor: pointer; z-index: 4;
+      transition: width .2s, height .2s;
     }
     #profileCard.expanded {
-      width:280px; height:auto;
+      width: 280px; height: auto;
     }
-
     /* collapsed avatar centered */
     #pc-collapsed {
-      display:flex; align-items:center; justify-content:center;
-      width:100%; height:100%;
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%;
     }
     #pc-collapsed img {
-      max-width:56px; max-height:56px;
-      border-radius:50%;
+      max-width: 56px; max-height: 56px; border-radius: 50%;
     }
     #pc-collapsed-text {
-      display:none;
-      margin-top:16px;
-      font-size:14px; color:#fff;
+      display: none;
+      margin-top: 16px; font-size: 14px; color: #fff;
     }
     /* expanded collapsed-block */
     #profileCard.expanded #pc-collapsed {
-      flex-direction:column; padding-top:40px;
-      justify-content:flex-start;
+      flex-direction: column; padding-top: 40px; justify-content: flex-start;
     }
     #profileCard.expanded #pc-collapsed-text {
-      display:block;
+      display: block;
     }
 
     /* expanded options */
     #pc-options {
-      display:none; flex-direction:column;
-      background:rgba(0,0,0,0.8); padding:12px;
+      display: none; flex-direction: column;
+      background: rgba(0,0,0,0.8); padding: 12px;
     }
     #profileCard.expanded #pc-options {
-      display:flex;
+      display: flex;
     }
-    #pc-options .pc-info { display:none; }
+    #pc-options .pc-info { display: none; }
     #pc-options button {
-      width:100%; margin:8px 0; padding:8px 0;
-      font-size:14px; border:none; border-radius:4px;
-      background:#f00; color:#fff; cursor:pointer;
+      width: 100%; margin: 8px 0; padding: 8px 0;
+      font-size: 14px; border: none; border-radius: 4px;
+      background: #f00; color: #fff; cursor: pointer;
     }
 
     /* overlays */
     .overlay {
-      position:absolute; top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.85);
-      display:flex; align-items:center; justify-content:center;
-      z-index:3;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3;
     }
-    .hidden { display:none; }
+    .hidden { display: none; }
     .overlay-content {
-      text-align:center; color:#fff;
-      max-width:320px; width:100%;
+      text-align: center; color: #fff; max-width: 320px; width: 100%;
     }
     .overlay-content h2 {
-      margin:0 0 16px; font-size:32px;
+      margin: 0 0 16px; font-size: 32px;
     }
     .overlay-content button {
-      background:#f00; color:#fff; border:none;
-      padding:12px 24px; font-size:18px;
-      margin:8px 0; width:200px; cursor:pointer;
+      background: #f00; color: #fff; border: none;
+      padding: 12px 24px; font-size: 18px;
+      margin: 8px 0; width: 200px; cursor: pointer;
     }
     .overlay-content input,
     .overlay-content textarea {
-      width:100%; padding:8px; margin:8px 0;
-      font-size:16px; border:none; border-radius:4px;
+      width: 100%; padding: 8px; margin: 8px 0;
+      font-size: 16px; border: none; border-radius: 4px;
     }
-    .overlay-content textarea { min-height:80px; }
+    .overlay-content textarea { min-height: 80px; }
     .overlay-content label {
-      display:flex; align-items:center; justify-content:center;
-      margin:8px 0;
+      display: flex; align-items: center; justify-content: center;
+      margin: 8px 0;
     }
-    .overlay-content label input { margin-right:8px; }
+    .overlay-content label input { margin-right: 8px; }
     .scroll-list {
-      background:#111; padding:12px; margin:16px 0;
-      max-height:200px; overflow-y:auto; text-align:left;
-      color:#fff; border-radius:4px;
+      background: #111; padding: 12px; margin: 16px 0;
+      max-height: 200px; overflow-y: auto; text-align: left;
+      color: #fff; border-radius: 4px;
     }
     .scroll-list div {
-      border-bottom:1px solid #333; padding:6px 0;
+      border-bottom: 1px solid #333; padding: 6px 0;
     }
 
     /* admin tabs */
-    .admin-tabs { display:flex; margin-bottom:12px; }
+    .admin-tabs { display: flex; margin-bottom: 12px; }
     .admin-tabs button {
-      flex:1; margin:0 4px; padding:8px;
-      background:#222; color:#fff; border:none; cursor:pointer;
+      flex: 1; margin: 0 4px; padding: 8px;
+      background: #222; color: #fff; border: none; cursor: pointer;
     }
-    .admin-tab-content { display:none; }
-    .admin-tab-content.active { display:block; }
+    .admin-tab-content { display: none; }
+    .admin-tab-content.active { display: block; }
 
     /* badge icons */
     .badge-icon {
-      width:16px; height:16px; vertical-align:middle; margin-left:4px;
+      width: 16px; height: 16px; vertical-align: middle; margin-left: 4px;
     }
   </style>
 </head>
@@ -160,9 +153,7 @@
   <!-- PROFILE CARD -->
   <div id="profileCard">
     <div id="pc-collapsed">
-      <img id="pc-avatar"
-           src="https://app.masonnet.org/default-avatar.png"
-           alt="Avatar"/>
+      <img id="pc-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
       <span id="pc-collapsed-text">Not signed in</span>
     </div>
     <div id="pc-options">
@@ -319,14 +310,14 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Firebase config and init
+    // Firebase config (kept for future code)
     const firebaseConfig = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0Z9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -346,11 +337,11 @@
           profilesRef = db.ref("profiles"),
           roles       = db.ref("roles");
 
-    // DOM helpers
+    // Helpers
     const $ = id => document.getElementById(id);
-    function elt(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+    function elt(tag,cls){ const e=document.createElement(tag); if(cls)e.className=cls; return e; }
 
-    // Refs
+    // Element refs
     const profileCard    = $('profileCard'),
           pcCollapsedTxt = $('pc-collapsed-text'),
           pcAvatar       = $('pc-avatar'),
@@ -417,16 +408,16 @@
 
     // Badge icons
     const badgeIcons = {
-      gold:        'https://app.masonnet.org/badge-gold.png',
-      survivor:    'https://app.masonnet.org/badge-survivor.png',
-      top10:       'https://app.masonnet.org/badge-top10.png',
-      accurate:    'https://app.masonnet.org/badge-accurate.png',
-      verified:    'https://app.masonnet.org/badge-verified.png',
-      tournament:  'https://app.masonnet.org/badge-tourney.png',
-      friend:      'https://app.masonnet.org/badge-friend.png',
-      admin:       'https://app.masonnet.org/badge-admin.png',
-      employee:    'https://app.masonnet.org/badge-employee.png',
-      supporter:   'https://app.masonnet.org/badge-supporter.png'
+      gold:'https://app.masonnet.org/badge-gold.png',
+      survivor:'https://app.masonnet.org/badge-survivor.png',
+      top10:'https://app.masonnet.org/badge-top10.png',
+      accurate:'https://app.masonnet.org/badge-accurate.png',
+      verified:'https://app.masonnet.org/badge-verified.png',
+      tournament:'https://app.masonnet.org/badge-tourney.png',
+      friend:'https://app.masonnet.org/badge-friend.png',
+      admin:'https://app.masonnet.org/badge-admin.png',
+      employee:'https://app.masonnet.org/badge-employee.png',
+      supporter:'https://app.masonnet.org/badge-supporter.png'
     };
 
     // Sounds
@@ -437,51 +428,44 @@
 
     // Canvas setup
     const ctx = canvas.getContext('2d');
-    function resizeCanvas(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+    function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     canvas.addEventListener('mousedown', ()=>{ if(state==='playing') bird.flap(); });
     canvas.addEventListener('touchstart', e=>{ e.preventDefault(); if(state==='playing') bird.flap(); });
 
-    // Show/hide overlays + profile card visibility
+    // Overlay control & profile card visibility
     function showOverlay(el){
       [loginOverlay,menuOverlay,accountOverlay,profileOverlay,
        feedbackOverlay,settingsOverlay,leaderboardOverlay,
        adminOverlay,pauseOverlay,gameoverOverlay,nameOverlay
       ].forEach(o=>o.classList.add('hidden'));
       if(el) el.classList.remove('hidden');
-      // Only show profile card in main menu
       profileCard.style.display = (el===menuOverlay?'block':'none');
       profileCard.classList.remove('expanded');
     }
 
-    // Render user + badges helper
-    function renderUserSpan(name, excl=[]){
-      const span = elt('span');
-      span.textContent = name;
+    // Render user + badges
+    function renderUserSpan(name,excl=[]){
+      const span=elt('span');
+      span.textContent=name;
       excl.forEach(id=>{
-        const img = elt('img','badge-icon');
-        img.src = badgeIcons[id];
-        span.appendChild(img);
+        const img=elt('img','badge-icon');
+        img.src=badgeIcons[id]; span.appendChild(img);
       });
       return span;
     }
 
     // Profile card toggle
-    profileCard.onclick = e => {
-      e.stopPropagation();
-      profileCard.classList.toggle('expanded');
-    };
-    document.body.addEventListener('click', ()=>{
-      profileCard.classList.remove('expanded');
-    });
+    profileCard.onclick = e=>{ e.stopPropagation(); profileCard.classList.toggle('expanded'); };
+    document.body.addEventListener('click', ()=> profileCard.classList.remove('expanded'));
 
-    // Auth state
-    auth.onAuthStateChanged(user => {
+    // Auth state handling
+    auth.onAuthStateChanged(user=>{
       if(user){
         profilesRef.child(user.uid).once('value',snap=>{
           const p=snap.val()||{};
-          pcAvatar.src = p.avatarUrl||pcAvatar.src;
+          pcAvatar.src=p.avatarUrl||pcAvatar.src;
         });
         pcCollapsedTxt.textContent='';
         pcAuthBtn.textContent='Sign Out';
@@ -501,12 +485,12 @@
     pcAuthBtn.onclick     = ()=> auth.currentUser? auth.signOut() : showOverlay(loginOverlay);
     pcFeedbackBtn.onclick = ()=> showOverlay(feedbackOverlay);
     pcAccountBtn.onclick  = ()=> showOverlay(accountOverlay);
-    pcSearchBtn.onclick   = ()=>{
+    pcSearchBtn.onclick   = ()=> {
       const q=prompt("Search username or UID:","").trim();
       if(q) performSearch(q);
     };
 
-    // Main nav
+    // Navigation
     startBtn.onclick       = ()=> startGame();
     leaderboardBtn.onclick = ()=> loadLeaderboard();
     settingsBtn.onclick    = ()=> showOverlay(settingsOverlay);
@@ -518,26 +502,24 @@
         ? firebase.auth.Auth.Persistence.LOCAL
         : firebase.auth.Auth.Persistence.SESSION;
       auth.setPersistence(pers)
-        .then(()=> auth.signInWithEmailAndPassword(
-          loginEmail.value,loginPass.value))
-        .catch(e=> alert(e.message));
+        .then(()=> auth.signInWithEmailAndPassword(loginEmail.value, loginPass.value))
+        .catch(err=> alert(err.message));
     };
     loginCancel.onclick = ()=> showOverlay(menuOverlay);
 
-    // Search & profile display
+    // Search & open profile
     function performSearch(q){
       profilesRef.orderByChild('username')
-        .startAt(q).endAt(q+"\uf8ff")
-        .limitToFirst(1)
+        .startAt(q).endAt(q+"\uf8ff").limitToFirst(1)
         .once('value',snap=>{
           const data=snap.val(), uid=data?Object.keys(data)[0]:null;
-          if(uid) openProfile(uid); else alert("No user found");
+          uid? openProfile(uid) : alert("No user found");
         });
     }
     function openProfile(uid){
       profilesRef.child(uid).once('value',snap=>{
         const p=snap.val(); if(!p) return alert("Profile missing");
-        pfAvatar.src = p.avatarUrl||pfAvatar.src;
+        pfAvatar.src=p.avatarUrl||pfAvatar.src;
         pfUsername.innerHTML = '';
         pfUsername.appendChild(renderUserSpan(p.username,p.badges?.exclusive));
         pfName.textContent = `${p.firstName||''} ${p.lastName||''}`;
@@ -594,19 +576,19 @@
           showOverlay(leaderboardOverlay);
         });
     }
-    lbCloseBtn.onclick=()=> showOverlay(menuOverlay);
+    lbCloseBtn.onclick = ()=> showOverlay(menuOverlay);
 
     // Settings toggles
-    $('settingsCloseBtn').onclick=()=> showOverlay(menuOverlay);
+    $('settingsCloseBtn').onclick = ()=> showOverlay(menuOverlay);
     let soundOn=true, darkMode=false, skipOn=false;
     $('soundToggle').onclick = ()=> {
       soundOn=!soundOn;
-      $('soundToggle').textContent=soundOn?'🔊 Sound':'🔇 Mute';
+      $('soundToggle').textContent = soundOn?'🔊 Sound':'🔇 Mute';
     };
     $('themeToggle').onclick = ()=> {
       darkMode=!darkMode;
       $('themeToggle').textContent=darkMode?'☀️ Light':'🌙 Dark';
-      $('background').style.backgroundImage=darkMode
+      $('background').style.backgroundImage = darkMode
         ?"url('https://app.masonnet.org/darkbg.png')"
         :"url('https://app.masonnet.org/lightbg.png')";
     };
@@ -627,35 +609,30 @@
     });
     adminTabs.forEach(btn=>{
       btn.onclick=()=>{
-        adminTabs.forEach(b=>b.disabled=false);
-        btn.disabled=true;
-        [adminHome,adminFeedback,adminModeration,adminOther]
-          .forEach(c=>c.classList.remove('active'));
+        adminTabs.forEach(b=>b.disabled=false); btn.disabled=true;
+        [adminHome,adminFeedback,adminModeration,adminOther].forEach(c=>c.classList.remove('active'));
         if(btn.id==='tabHomeBtn')      adminHome.classList.add('active');
         if(btn.id==='tabFeedbackBtn')  adminFeedback.classList.add('active');
         if(btn.id==='tabModerationBtn')adminModeration.classList.add('active');
         if(btn.id==='tabOtherBtn')     adminOther.classList.add('active');
       };
     });
-    adminCloseBtn.onclick=()=> showOverlay(menuOverlay);
-
+    adminCloseBtn.onclick = ()=> showOverlay(menuOverlay);
     $('tabFeedbackBtn').onclick();
-    $('tabFeedbackBtn').onclick=()=>{
+    $('tabFeedbackBtn').onclick = ()=> {
       adminFeedbackList.innerHTML='';
       fbRef.orderByChild('timestamp').once('value',snap=>{
         Object.entries(snap.val()||{}).forEach(([k,f])=>{
           const d=elt('div');
-          d.innerHTML=`<strong>${f.type}</strong>: ${f.subject}<br/>by ${f.uid}<br/>${f.message}`;
+          d.innerHTML = `<strong>${f.type}</strong>: ${f.subject}<br/>by ${f.uid}<br/>${f.message}`;
           adminFeedbackList.appendChild(d);
         });
       });
       $('tabFeedbackBtn').click();
     };
-    modSearchBtn.onclick=()=>{
+    modSearchBtn.onclick = ()=> {
       const q=modSearch.value.trim();
-      profilesRef.orderByChild('username')
-        .startAt(q).endAt(q+"\uf8ff")
-        .limitToFirst(1)
+      profilesRef.orderByChild('username').startAt(q).endAt(q+"\uf8ff").limitToFirst(1)
         .once('value',snap=>{
           const data=snap.val(), uid=data?Object.keys(data)[0]:null;
           if(!uid) return alert("User not found");
@@ -667,9 +644,9 @@
               <button id="banBtn">Ban</button>
               <button id="suspendBtn">Suspend</button>
               <button id="reinstateBtn">Reinstate</button>`;
-            $('banBtn').onclick=()=> setStatus(uid,'banned');
-            $('suspendBtn').onclick=()=> setStatus(uid,'suspended');
-            $('reinstateBtn').onclick=()=> setStatus(uid,'active');
+            $('banBtn').onclick     = ()=> setStatus(uid,'banned');
+            $('suspendBtn').onclick = ()=> setStatus(uid,'suspended');
+            $('reinstateBtn').onclick= ()=> setStatus(uid,'active');
           });
         });
     };
@@ -678,7 +655,7 @@
       alert(`User ${s}`);
     }
 
-    // Game loop & logic
+    // Core game logic
     let state='menu', bird, pipes, score, frame, rafId, collided=false;
     class Bird {
       constructor(){
@@ -689,36 +666,33 @@
         if(state!=='playing') return;
         this.vy+=this.g; this.y+=this.vy;
         if(this.y<0){ this.y=0; this.vy=0; }
-        if(this.y+this.h>canvas.height){
-          this.y=canvas.height-this.h; this.die();
-        }
+        if(this.y+this.h>canvas.height){ this.y=canvas.height-this.h; this.die(); }
       }
       draw(){ ctx.drawImage(birdImg,this.x,this.y,this.w,this.h); }
       flap(){
         this.vy=-6;
         if(soundOn){ flapS.currentTime=0; try{ flapS.play(); }catch{} }
       }
-      collides(p){
-        return !( this.x+this.w<p.x||this.x>p.x+p.w||
-                  this.y+this.h<p.y||this.y>p.y+p.h );
-      }
+      collides(p){ return !(
+        this.x+this.w<p.x || this.x>p.x+p.w ||
+        this.y+this.h<p.y || this.y>p.y+p.h
+      ); }
       die(){
         if(state!=='playing'||collided) return;
         collided=true; state='dying'; cancelAnimationFrame(rafId);
         pauseBtn.style.display='none';
         if(soundOn){
-          hitS.currentTime=0; try{ hitS.play(); }catch{} 
+          hitS.currentTime=0; try{ hitS.play(); }catch{};
           hitS.onended=()=>{
             dieS.currentTime=0; try{ dieS.play(); }catch{};
-            dieS.onended=endGame;
+            dieS.onended = endGame;
           };
         } else endGame();
       }
     }
 
     function spawnPipes(){
-      const x=canvas.width,
-            h=20+Math.random()*(canvas.height/2-20),
+      const x=canvas.width, h=20+Math.random()*(canvas.height/2-20),
             gap=120+Math.random()*80;
       if(!pipes.length||x-pipes[pipes.length-1].x>180){
         pipes.push({x,y:0,w:60,h,passed:false});
@@ -761,8 +735,7 @@
         const arr=Object.values(snap.val()||{}),
               minScore=arr.length<10?0:Math.min(...arr.map(e=>e.score));
         if(score>minScore){
-          newScoreSpan.textContent=score;
-          nameInput.value='';
+          newScoreSpan.textContent=score; nameInput.value='';
           showOverlay(nameOverlay);
         }
       });
@@ -785,7 +758,7 @@
     };
     $('skipNameBtn').onclick =()=> showOverlay(gameoverOverlay);
 
-    // Preload images
+    // Preload assets
     const birdImg=new Image(), pipeImg=new Image();
     birdImg.src='https://app.masonnet.org/bird.png';
     pipeImg.src='https://app.masonnet.org/pipe-green.png';
