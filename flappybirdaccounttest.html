@@ -4,49 +4,130 @@
   <meta charset="UTF-8"/>
   <title>Flappy Bird – Public Accounts & Admin Console</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+        rel="stylesheet"/>
   <style>
-    html, body { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; font-family:Arial,sans-serif; }
-    #background{position:absolute;top:0;left:0;width:100%;height:100%;background:url('https://app.masonnet.org/lightbg.png')center/cover no-repeat;z-index:0;display:none}
-    canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;touch-action:none}
-    #score{position:absolute;top:10px;left:10px;font-family:'Press Start 2P',system-ui;font-size:48px;color:#fff;text-shadow:2px 2px 4px rgba(0,0,0,0.7);z-index:2}
-    #pauseBtn{position:absolute;top:10px;right:10px;display:none;z-index:2;background:#f00;color:#fff;border:none;padding:8px 16px;cursor:pointer}
+    html, body { margin:0; padding:0; width:100vw; height:100vh;
+      background:#000; overflow:hidden; font-family:Arial,sans-serif; }
+    #background {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      background:url('https://app.masonnet.org/lightbg.png')
+        center/cover no-repeat; z-index:0; display:none;
+    }
+    canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      z-index:1; touch-action:none;
+    }
+    #score {
+      position:absolute; top:10px; left:10px;
+      font-family:'Press Start 2P',system-ui; font-size:48px;
+      color:#fff; text-shadow:2px 2px 4px rgba(0,0,0,0.7);
+      z-index:2;
+    }
+    #pauseBtn {
+      position:absolute; top:10px; right:10px; display:none;
+      z-index:2; background:#f00; color:#fff; border:none;
+      padding:8px 16px; font-size:16px; cursor:pointer;
+    }
 
     /* PROFILE CARD */
-    #profileCard{position:absolute;top:10px;right:10px;width:64px;height:64px;background:rgba(0,0,0,0.7);border:2px solid #f00;border-radius:8px;overflow:hidden;cursor:pointer;z-index:4;transition:width .2s,height .2s}
-    #profileCard.expanded{width:280px;height:auto}
-    #pc-collapsed{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
-    #pc-collapsed img{max-width:56px;max-height:56px;border-radius:50%}
-    #pc-collapsed-text{display:none;margin-top:16px;font-size:14px;color:#fff}
-    #profileCard.expanded #pc-collapsed{flex-direction:column;padding-top:40px;justify-content:flex-start}
-    #profileCard.expanded #pc-collapsed-text{display:block}
-    #pc-options{display:none;flex-direction:column;background:rgba(0,0,0,0.8);padding:12px}
-    #profileCard.expanded #pc-options{display:flex}
-    #pc-options button{width:100%;margin:8px 0;padding:8px 0;font-size:14px;border:none;border-radius:4px;background:#f00;color:#fff;cursor:pointer}
+    #profileCard {
+      position:absolute; top:10px; right:10px;
+      width:64px; height:64px; background:rgba(0,0,0,0.7);
+      border:2px solid #f00; border-radius:8px;
+      overflow:hidden; cursor:pointer; z-index:4;
+      transition:width .2s, height .2s;
+    }
+    #profileCard.expanded {
+      width:280px; height:auto;
+    }
+    #pc-collapsed {
+      display:flex; align-items:center; justify-content:center;
+      width:100%; height:100%;
+    }
+    #pc-collapsed img {
+      max-width:56px; max-height:56px; border-radius:50%;
+    }
+    #pc-collapsed-text {
+      display:none; margin-top:16px; font-size:14px; color:#fff;
+    }
+    #profileCard.expanded #pc-collapsed {
+      flex-direction:column; padding-top:40px; justify-content:flex-start;
+    }
+    #profileCard.expanded #pc-collapsed-text {
+      display:block;
+    }
+    #pc-options {
+      display:none; flex-direction:column;
+      background:rgba(0,0,0,0.8); padding:12px;
+    }
+    #profileCard.expanded #pc-options {
+      display:flex;
+    }
+    #pc-options button {
+      width:100%; margin:8px 0; padding:8px 0;
+      font-size:14px; border:none; border-radius:4px;
+      background:#f00; color:#fff; cursor:pointer;
+    }
 
     /* OVERLAYS */
-    .overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:3}
-    .hidden{display:none}
-    .overlay-content{max-width:320px;width:100%;text-align:center;color:#fff}
-    .overlay-content h2{margin:0 0 16px;font-size:32px}
-    .overlay-content button{background:#f00;color:#fff;border:none;padding:12px 24px;font-size:18px;margin:8px 0;width:200px;cursor:pointer}
-    .overlay-content input,.overlay-content textarea{width:100%;padding:8px;margin:8px 0;font-size:16px;border:none;border-radius:4px}
-    .overlay-content textarea{min-height:80px}
-    .overlay-content label{display:flex;align-items:center;justify-content:center;margin:8px 0}
-    .overlay-content label input{margin-right:8px}
-    .scroll-list{background:#111;padding:12px;margin:16px 0;max-height:200px;overflow-y:auto;text-align:left;color:#fff;border-radius:4px}
-    .scroll-list div{border-bottom:1px solid #333;padding:6px 0}
+    .overlay {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.85);
+      display:flex; align-items:center; justify-content:center;
+      z-index:3;
+    }
+    .hidden { display:none; }
+    .overlay-content {
+      width:100%; max-width:320px;
+      text-align:center; color:#fff;
+    }
+    .overlay-content h2 {
+      margin:0 0 16px; font-size:32px;
+    }
+    .overlay-content button {
+      background:#f00; color:#fff; border:none;
+      padding:12px 24px; font-size:18px;
+      margin:8px 0; width:200px; cursor:pointer;
+    }
+    .overlay-content input,
+    .overlay-content textarea {
+      width:100%; padding:8px; margin:8px 0;
+      font-size:16px; border:none; border-radius:4px;
+    }
+    .overlay-content textarea { min-height:80px; }
+    .overlay-content label {
+      display:flex; align-items:center; justify-content:center;
+      margin:8px 0;
+    }
+    .overlay-content label input {
+      margin-right:8px;
+    }
+    .scroll-list {
+      background:#111; padding:12px; margin:16px 0;
+      max-height:200px; overflow-y:auto; text-align:left;
+      color:#fff; border-radius:4px;
+    }
+    .scroll-list div {
+      border-bottom:1px solid #333; padding:6px 0;
+    }
 
     /* ADMIN TABS */
-    .admin-tabs{display:flex;margin-bottom:12px}
-    .admin-tabs button{flex:1;margin:0 4px;padding:8px;background:#222;color:#fff;border:none;cursor:pointer}
-    .admin-tab-content{display:none}
-    .admin-tab-content.active{display:block}
-    .badge-icon{width:16px;height:16px;vertical-align:middle;margin-left:4px}
+    .admin-tabs { display:flex; margin-bottom:12px; }
+    .admin-tabs button {
+      flex:1; margin:0 4px; padding:8px;
+      background:#222; color:#fff; border:none; cursor:pointer;
+    }
+    .admin-tab-content { display:none; }
+    .admin-tab-content.active { display:block; }
+
+    .badge-icon {
+      width:16px; height:16px; vertical-align:middle; margin-left:4px;
+    }
   </style>
 </head>
 <body>
-
   <div id="background"></div>
   <canvas id="canvas"></canvas>
   <div id="score">0</div>
@@ -70,7 +151,7 @@
   <!-- LOGIN OVERLAY -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="overlay-content">
-      <h2>Sign In / Sign Up</h2>
+      <h2>Sign In</h2>
       <input id="loginEmail" type="email" placeholder="Email"/>
       <input id="loginPass" type="password" placeholder="Password"/>
       <label><input id="loginRemember" type="checkbox"/> Remember me</label>
@@ -95,7 +176,8 @@
   <div id="accountOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Account Settings</h2>
-      <img id="as-avatar" src="https://app.masonnet.org/default-avatar.png" style="width:64px;height:64px;border-radius:50%;"/>
+      <img id="as-avatar" src="https://app.masonnet.org/default-avatar.png"
+           style="width:64px;height:64px;border-radius:50%;"/>
       <div>Username: <span id="as-username"></span></div>
       <h3>Your Score History</h3>
       <div id="as-scoreHistory" class="scroll-list"></div>
@@ -107,7 +189,8 @@
   <div id="profileOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Profile</h2>
-      <img id="pf-avatar" src="https://app.masonnet.org/default-avatar.png" style="width:64px;height:64px;border-radius:50%;"/>
+      <img id="pf-avatar" src="https://app.masonnet.org/default-avatar.png"
+           style="width:64px;height:64px;border-radius:50%;"/>
       <div><strong id="pf-username"></strong><span id="pf-exclBadges"></span></div>
       <div id="pf-name"></div>
       <div>High Score: <span id="pf-highscore"></span></div>
@@ -141,7 +224,7 @@
       <h2>Settings</h2>
       <button id="soundToggle">🔊 Sound</button>
       <button id="themeToggle">🌙 Dark Mode</button>
-      <button id="skipToggle">🚀 Skip to GO: Off</button>
+      <button id="skipToggle">🚀 Skip to GO</button>
       <button id="settingsCloseBtn">Close</button>
     </div>
   </div>
@@ -167,11 +250,13 @@
       </div>
       <div id="adminHome" class="admin-tab-content active"><p>Welcome, Admin!</p></div>
       <div id="adminFeedback" class="admin-tab-content">
-        <h3>Feedback</h3><div id="adminFeedbackList" class="scroll-list"></div>
+        <h3>Feedback Submissions</h3>
+        <div id="adminFeedbackList" class="scroll-list"></div>
       </div>
       <div id="adminModeration" class="admin-tab-content">
-        <h3>Moderation</h3>
-        <input id="modSearch" placeholder="Search user…"/><button id="modSearchBtn">Find</button>
+        <h3>User Moderation</h3>
+        <input id="modSearch" placeholder="Search user…"/>
+        <button id="modSearchBtn">Find</button>
         <div id="modUserInfo" class="scroll-list"></div>
       </div>
       <div id="adminOther" class="admin-tab-content"><p>Other tools…</p></div>
@@ -203,7 +288,7 @@
     <div class="overlay-content">
       <h2>🎉 New High Score!</h2>
       <p>Score: <span id="newScore"></span></p>
-      <input id="nameInput" placeholder="Enter your name"/>
+      <input id="nameInput" placeholder="Enter your name…"/>
       <button id="saveNameBtn">Save</button>
       <button id="skipNameBtn">Skip</button>
     </div>
@@ -216,7 +301,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Firebase configuration
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -240,13 +325,20 @@
     const $ = id => document.getElementById(id);
     function elt(tag,cls){ const e=document.createElement(tag); if(cls)e.className=cls; return e; }
 
-    // Element refs
+    // Login field clear helper
+    const loginEmail = $('loginEmail'), loginPass = $('loginPass');
+    function clearLoginFields() {
+      loginEmail.value = '';
+      loginPass.value  = '';
+    }
+
+    // DOM refs
     const profileCard    = $('profileCard'),
           pcCollapsedTxt = $('pc-collapsed-text'),
           pcAvatar       = $('pc-avatar'),
           pcAuthBtn      = $('pc-authBtn'),
           pcFeedbackBtn  = $('pc-feedbackBtn'),
-         	pcAccountBtn   = $('pc-accountBtn'),
+          pcAccountBtn   = $('pc-accountBtn'),
           pcAdminBtn     = $('pc-adminBtn'),
           pcSearchBtn    = $('pc-searchBtn'),
           loginOverlay   = $('loginOverlay'),
@@ -265,8 +357,6 @@
           leaderboardBtn = $('leaderboardBtn'),
           settingsBtn    = $('settingsBtn'),
           hubBtn         = $('hubBtn'),
-          loginEmail     = $('loginEmail'),
-          loginPass      = $('loginPass'),
           loginRemember  = $('loginRemember'),
           loginSubmit    = $('loginSubmit'),
           loginCancel    = $('loginCancel'),
@@ -305,16 +395,16 @@
 
     // Badge icons
     const badgeIcons = {
-      gold:       'https://app.masonnet.org/badge-gold.png',
-      survivor:   'https://app.masonnet.org/badge-survivor.png',
-      top10:      'https://app.masonnet.org/badge-top10.png',
-      accurate:   'https://app.masonnet.org/badge-accurate.png',
-      verified:   'https://app.masonnet.org/badge-verified.png',
-      tournament: 'https://app.masonnet.org/badge-tourney.png',
-      friend:     'https://app.masonnet.org/badge-friend.png',
-      admin:      'https://app.masonnet.org/badge-admin.png',
-      employee:   'https://app.masonnet.org/badge-employee.png',
-      supporter:  'https://app.masonnet.org/badge-supporter.png'
+      gold:'https://app.masonnet.org/badge-gold.png',
+      survivor:'https://app.masonnet.org/badge-survivor.png',
+      top10:'https://app.masonnet.org/badge-top10.png',
+      accurate:'https://app.masonnet.org/badge-accurate.png',
+      verified:'https://app.masonnet.org/badge-verified.png',
+      tournament:'https://app.masonnet.org/badge-tourney.png',
+      friend:'https://app.masonnet.org/badge-friend.png',
+      admin:'https://app.masonnet.org/badge-admin.png',
+      employee:'https://app.masonnet.org/badge-employee.png',
+      supporter:'https://app.masonnet.org/badge-supporter.png'
     };
 
     // Sounds
@@ -323,14 +413,14 @@
           hitS  =new Audio('https://app.masonnet.org/hit.mp3'),
           dieS  =new Audio('https://app.masonnet.org/die.mp3');
 
-    // Canvas
+    // Canvas setup
     const ctx=canvas.getContext('2d');
     function resizeCanvas(){ canvas.width=innerWidth; canvas.height=innerHeight; }
     window.addEventListener('resize',resizeCanvas); resizeCanvas();
     canvas.addEventListener('mousedown',()=>{ if(state==='playing') bird.flap(); });
     canvas.addEventListener('touchstart',e=>{ e.preventDefault(); if(state==='playing') bird.flap(); });
 
-    // Overlay controller
+    // Show/hide overlays + profile card
     function showOverlay(el){
       [loginOverlay,menuOverlay,accountOverlay,profileOverlay,
        feedbackOverlay,settingsOverlay,leaderboardOverlay,
@@ -341,16 +431,16 @@
       profileCard.classList.remove('expanded');
     }
 
-    // Render user + badges
+    // Render user span + badges
     function renderUserSpan(name,excl=[]){
-      const s=elt('span'); s.textContent=name;
-      excl.forEach(id=>{const i=elt('img','badge-icon');i.src=badgeIcons[id];s.appendChild(i)});
-      return s;
+      const span=elt('span'); span.textContent=name;
+      excl.forEach(id=>{const i=elt('img','badge-icon');i.src=badgeIcons[id];span.appendChild(i);});
+      return span;
     }
 
     // Profile card toggle
-    profileCard.onclick = e=>{ e.stopPropagation(); profileCard.classList.toggle('expanded'); };
-    document.body.addEventListener('click',()=> profileCard.classList.remove('expanded'));
+    profileCard.onclick = e=>{e.stopPropagation();profileCard.classList.toggle('expanded');};
+    document.body.addEventListener('click',()=>profileCard.classList.remove('expanded'));
 
     // Auth state & admin logic
     auth.onAuthStateChanged(user=>{
@@ -360,6 +450,7 @@
         });
         pcCollapsedTxt.textContent=''; pcAuthBtn.textContent='Sign Out';
         pcFeedbackBtn.style.display='block'; pcAccountBtn.style.display='block';
+
         // Show admin if role=admin
         roles.child(user.uid).once('value',snap=>{
           pcAdminBtn.style.display = snap.val()==='admin'?'block':'none';
@@ -368,7 +459,8 @@
         pcAvatar.src='https://app.masonnet.org/default-avatar.png';
         pcCollapsedTxt.textContent='Not signed in';
         pcAuthBtn.textContent='Sign In';
-        pcFeedbackBtn.style.display='none'; pcAccountBtn.style.display='none';
+        pcFeedbackBtn.style.display='none';
+        pcAccountBtn.style.display='none';
         pcAdminBtn.style.display='none';
       }
       showOverlay(menuOverlay);
@@ -378,38 +470,46 @@
     pcAuthBtn.onclick     = ()=> auth.currentUser? auth.signOut() : showOverlay(loginOverlay);
     pcFeedbackBtn.onclick = ()=> showOverlay(feedbackOverlay);
     pcAccountBtn.onclick  = ()=> showOverlay(accountOverlay);
-    pcAdminBtn.onclick    = ()=> {
-      const pwd = prompt('Enter admin password:','');
-      if(!pwd) return;
-      const user = auth.currentUser;
-      const cred = firebase.auth.EmailAuthProvider.credential(user.email, pwd);
+    pcAdminBtn.onclick    = ()=>{
+      const pwd=prompt('Enter admin password:',''); if(!pwd) return;
+      const user=auth.currentUser;
+      const cred=firebase.auth.EmailAuthProvider.credential(user.email,pwd);
       user.reauthenticateWithCredential(cred)
         .then(()=> showOverlay(adminOverlay))
         .catch(()=> alert('Invalid admin password'));
     };
-    pcSearchBtn.onclick   = ()=> { const q=prompt("Search username or UID:","").trim(); if(q) performSearch(q); };
+    pcSearchBtn.onclick   = ()=> {const q=prompt("Search username or UID:","").trim();if(q)performSearch(q);};
 
-    // Account settings close
-    $('as-closeBtn').onclick = () => showOverlay(menuOverlay);
-
-    // Main menu nav
-    startBtn.onclick       = ()=> startGame();
-    leaderboardBtn.onclick = ()=> loadLeaderboard();
-    settingsBtn.onclick    = ()=> showOverlay(settingsOverlay);
-    hubBtn.onclick         = ()=> location.href='https://app.masonnet.org/flappybirdhub';
-
-    // Login flow
+    // Clear login fields & close
+    loginCancel.onclick = ()=>{
+      clearLoginFields();
+      showOverlay(menuOverlay);
+    };
     loginSubmit.onclick = ()=>{
       const pers = loginRemember.checked
         ? firebase.auth.Auth.Persistence.LOCAL
         : firebase.auth.Auth.Persistence.SESSION;
       auth.setPersistence(pers)
-        .then(()=> auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value))
+        .then(()=> auth.signInWithEmailAndPassword(
+          loginEmail.value.trim(), loginPass.value.trim()
+        ))
+        .then(()=> {
+          clearLoginFields();
+          showOverlay(menuOverlay);
+        })
         .catch(err=> alert(err.message));
     };
-    loginCancel.onclick = ()=> showOverlay(menuOverlay);
 
-    // Search & profile page
+    // Account-settings close
+    asCloseBtn.onclick = ()=> showOverlay(menuOverlay);
+
+    // Main nav
+    startBtn.onclick       = ()=> startGame();
+    leaderboardBtn.onclick = ()=> loadLeaderboard();
+    settingsBtn.onclick    = ()=> showOverlay(settingsOverlay);
+    hubBtn.onclick         = ()=> location.href='https://app.masonnet.org/flappybirdhub';
+
+    // Search & profile
     function performSearch(q){
       profilesRef.orderByChild('username').startAt(q).endAt(q+"\uf8ff").limitToFirst(1)
         .once('value',snap=>{
@@ -419,9 +519,9 @@
     }
     function openProfile(uid){
       profilesRef.child(uid).once('value',snap=>{
-        const p=snap.val(); if(!p) return alert("Missing profile");
+        const p=snap.val(); if(!p)return alert("Profile missing");
         pfAvatar.src=p.avatarUrl||pfAvatar.src;
-        pfUsername.innerHTML=''; pfUsername.appendChild(renderUserSpan(p.username,p.badges?.exclusive));
+        pfUsername.innerHTML='';pfUsername.appendChild(renderUserSpan(p.username,p.badges?.exclusive));
         pfName.textContent=`${p.firstName||''} ${p.lastName||''}`;
         pfHighscore.textContent=p.highscore||0;
         lbRef.orderByChild('score').once('value',ls=>{
@@ -429,13 +529,14 @@
           const idx=arr.findIndex(e=>e.uid===uid);
           pfRank.textContent=idx>=0?idx+1:'—';
         });
-        pfBadges.innerHTML=''; (p.badges?.standard||[]).forEach(id=>{
-          const i=elt('img','badge-icon'); i.src=badgeIcons[id]; pfBadges.appendChild(i);
+        pfBadges.innerHTML='';(p.badges?.standard||[]).forEach(id=>{
+          const i=elt('img','badge-icon');i.src=badgeIcons[id];pfBadges.appendChild(i);
         });
         if(auth.currentUser?.uid===uid){
           pfOwnerExtras.classList.remove('hidden');
           pfHistory.innerHTML=''; db.ref(`scores/${uid}`).orderByKey().once('value',h=>{
-            h.forEach(ch=>{const r=ch.val(),d=elt('div');
+            h.forEach(ch=>{
+              const r=ch.val(),d=elt('div');
               d.textContent=`${new Date(+ch.key).toLocaleDateString()} – ${r.score} pts, ${Math.floor(r.durationMs/1000)}s`;
               pfHistory.appendChild(d);
             });
@@ -444,9 +545,9 @@
         showOverlay(profileOverlay);
       });
     }
-    $('pf-closeBtn').onclick = ()=> showOverlay(menuOverlay);
+    pfCloseBtn.onclick = ()=> showOverlay(menuOverlay);
 
-    // Feedback submission
+    // Feedback
     fbSubmit.onclick = ()=>{
       const u=auth.currentUser; if(!u) return alert("Sign in first");
       const t=[...fbTypeEls].find(e=>e.checked).value;
@@ -462,39 +563,37 @@
       lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
         Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score).forEach(e=>{
           const row=elt('div'),span=renderUserSpan(e.name,e.badges?.exclusive);
-          row.appendChild(span); row.append(`: ${e.score}`);
-          row.onclick=()=> openProfile(e.uid);
+          row.appendChild(span);row.append(`: ${e.score}`);
+          row.onclick=()=>openProfile(e.uid);
           lbList.appendChild(row);
         });
         showOverlay(leaderboardOverlay);
       });
     }
-    $('lbCloseBtn').onclick = ()=> showOverlay(menuOverlay);
+    lbCloseBtn.onclick = ()=> showOverlay(menuOverlay);
 
     // Settings toggles
     $('settingsCloseBtn').onclick = ()=> showOverlay(menuOverlay);
     let soundOn=true,darkMode=false,skipOn=false;
-    $('soundToggle').onclick = ()=>{ soundOn=!soundOn; $('soundToggle').textContent = soundOn?'🔊 Sound':'🔇 Mute'; };
-    $('themeToggle').onclick = ()=>{ darkMode=!darkMode; $('themeToggle').textContent = darkMode?'☀️ Light':'🌙 Dark';
+    $('soundToggle').onclick = ()=>{soundOn=!soundOn;$('soundToggle').textContent=soundOn?'🔊 Sound':'🔇 Mute';};
+    $('themeToggle').onclick = ()=>{darkMode=!darkMode;$('themeToggle').textContent=darkMode?'☀️ Light':'🌙 Dark';
       $('background').style.backgroundImage = darkMode?"url('https://app.masonnet.org/darkbg.png')":"url('https://app.masonnet.org/lightbg.png')";
     };
-    $('skipToggle').onclick = ()=>{ skipOn=!skipOn; $('skipToggle').textContent = skipOn?'🚀 Skip: On':'🚀 Skip: Off'; };
+    $('skipToggle').onclick = ()=>{skipOn=!skipOn;$('skipToggle').textContent=skipOn?'🚀 Skip: On':'🚀 Skip: Off';};
 
-    // Admin tab navigation
+    // Admin tabs
     adminTabs.forEach(btn=>{
       btn.onclick=()=>{
-        adminTabs.forEach(b=>b.disabled=false); btn.disabled=true;
+        adminTabs.forEach(b=>b.disabled=false);btn.disabled=true;
         [adminHome,adminFeedback,adminModeration,adminOther].forEach(c=>c.classList.remove('active'));
-        if(btn.id==='tabHomeBtn') adminHome.classList.add('active');
-        if(btn.id==='tabFeedbackBtn') adminFeedback.classList.add('active');
-        if(btn.id==='tabModerationBtn') adminModeration.classList.add('active');
-        if(btn.id==='tabOtherBtn') adminOther.classList.add('active');
+        if(btn.id==='tabHomeBtn')      adminHome.classList.add('active');
+        if(btn.id==='tabFeedbackBtn')  adminFeedback.classList.add('active');
+        if(btn.id==='tabModerationBtn')adminModeration.classList.add('active');
+        if(btn.id==='tabOtherBtn')     adminOther.classList.add('active');
       };
     });
     adminCloseBtn.onclick = ()=> showOverlay(menuOverlay);
-
-    // Load admin feedback
-    $('tabFeedbackBtn').onclick();  
+    $('tabFeedbackBtn').onclick(); // preload feedback
     $('tabFeedbackBtn').onclick = ()=>{
       adminFeedbackList.innerHTML='';
       fbRef.orderByChild('timestamp').once('value',snap=>{
@@ -506,14 +605,12 @@
       });
       $('tabFeedbackBtn').click();
     };
-
-    // User moderation
     modSearchBtn.onclick = ()=>{
       const q=modSearch.value.trim();
       profilesRef.orderByChild('username').startAt(q).endAt(q+"\uf8ff").limitToFirst(1)
         .once('value',snap=>{
           const data=snap.val(),uid=data?Object.keys(data)[0]:null;
-          if(!uid)return alert("User not found");
+          if(!uid) return alert("User not found");
           profilesRef.child(uid).once('value',snap2=>{
             const p=snap2.val();
             modUserInfo.innerHTML=`
@@ -528,65 +625,90 @@
           });
         });
     };
-    function setStatus(uid,s){ profilesRef.child(uid+'/moderation').set({status:s,timestamp:Date.now()}); alert(`User ${s}`); }
+    function setStatus(uid,s){
+      profilesRef.child(uid+'/moderation').set({status:s,timestamp:Date.now()});
+      alert(`User ${s}`);
+    }
 
-    // Game logic
+    // Core game
     let state='menu',bird,pipes,score,frame,rafId,collided=false;
     class Bird {
       constructor(){this.w=36;this.h=30;this.x=50;this.y=canvas.height*0.4;this.vy=0;this.g=0.25;}
       update(){
-        if(state!=='playing')return;
-        this.vy+=this.g;this.y+=this.vy;
+        if(state!=='playing') return;
+        this.vy+=this.g; this.y+=this.vy;
         if(this.y<0){this.y=0;this.vy=0;}
         if(this.y+this.h>canvas.height){this.y=canvas.height-this.h;this.die();}
       }
-      draw(){ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);}
-      flap(){this.vy=-6;if(soundOn){flapS.currentTime=0;try{flapS.play();}catch{}}}
-      collides(p){return!(this.x+this.w<p.x||this.x>p.x+p.w||this.y+this.h<p.y||this.y>p.y+p.h);}
+      draw(){ ctx.drawImage(birdImg,this.x,this.y,this.w,this.h); }
+      flap(){ this.vy=-6; if(soundOn){flapS.currentTime=0;try{flapS.play();}catch{}} }
+      collides(p){ return !(this.x+this.w<p.x||this.x>p.x+p.w||this.y+this.h<p.y||this.y>p.y+p.h);}
       die(){
-        if(state!=='playing'||collided)return;
-        collided=true;state='dying';cancelAnimationFrame(rafId);pauseBtn.style.display='none';
-        if(soundOn){hitS.currentTime=0;try{hitS.play();}catch{};hitS.onended=()=>{
-          dieS.currentTime=0;try{dieS.play();}catch{};dieS.onended=endGame;
-        }} else endGame();
+        if(state!=='playing'||collided) return;
+        collided=true; state='dying'; cancelAnimationFrame(rafId);
+        pauseBtn.style.display='none';
+        if(soundOn){
+          hitS.currentTime=0;try{hitS.play();}catch{};
+          hitS.onended=()=>{
+            dieS.currentTime=0;try{dieS.play();}catch{};
+            dieS.onended=endGame;
+          };
+        } else endGame();
       }
     }
     function spawnPipes(){
-      const x=canvas.width,h=20+Math.random()*(canvas.height/2-20),gap=120+Math.random()*80;
+      const x=canvas.width, h=20+Math.random()*(canvas.height/2-20),
+            gap=120+Math.random()*80;
       if(!pipes.length||x-pipes[pipes.length-1].x>180){
         pipes.push({x,y:0,w:60,h,passed:false});
         pipes.push({x,y:h+gap,w:60,h:canvas.height-h-gap,passed:false});
       }
     }
     function loop(){
-      if(state!=='playing')return;
-      rafId=requestAnimationFrame(loop);frame++;
+      if(state!=='playing') return;
+      rafId=requestAnimationFrame(loop); frame++;
       ctx.clearRect(0,0,canvas.width,canvas.height);
       pipes.forEach(p=>{
-        p.x-=1.8;ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
-        if(!collided&&bird.collides(p))bird.die();
-        if(!p.passed&&p.y>0&&bird.x>p.x+p.w){p.passed=true;score++;scoreDiv.textContent=score;if(soundOn){try{pointS.play();}catch{}}}
+        p.x-=1.8; ctx.drawImage(pipeImg,p.x,p.y,p.w,p.h);
+        if(!collided&&bird.collides(p)) bird.die();
+        if(!p.passed&&p.y>0&&bird.x>p.x+p.w){
+          p.passed=true; score++; scoreDiv.textContent=score;
+          if(soundOn){try{pointS.play();}catch{}}
+        }
       });
-      pipes=pipes.filter(p=>p.x+p.w>0);bird.update();bird.draw();
-      if(frame===1||frame%150===0)spawnPipes();
+      pipes=pipes.filter(p=>p.x+p.w>0);
+      bird.update(); bird.draw();
+      if(frame===1||frame%150===0) spawnPipes();
     }
     function startGame(){
-      state='playing';bird=new Bird();pipes=[];score=0;frame=0;collided=false;scoreDiv.textContent='0';
-      $('background').style.display='block';pauseBtn.style.display='block';showOverlay(null);loop();
+      state='playing'; bird=new Bird(); pipes=[]; score=0;
+      frame=0; collided=false; scoreDiv.textContent='0';
+      $('background').style.display='block';
+      pauseBtn.style.display='block';
+      showOverlay(null);
+      loop();
     }
     startBtn.onclick=startGame;
     function endGame(){
-      showOverlay(gameoverOverlay);finalScoreSpan.textContent=score;
+      showOverlay(gameoverOverlay);
+      finalScoreSpan.textContent=score;
       lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
-        const arr=Object.values(snap.val()||{}),minScore=arr.length<10?0:Math.min(...arr.map(e=>e.score));
-        if(score>minScore){newScoreSpan.textContent=score;nameInput.value='';showOverlay(nameOverlay);}
+        const arr=Object.values(snap.val()||{}),
+              minScore=arr.length<10?0:Math.min(...arr.map(e=>e.score));
+        if(score>minScore){
+          newScoreSpan.textContent=score;
+          nameInput.value='';
+          showOverlay(nameOverlay);
+        }
       });
     }
     pauseBtn.onclick=()=>{
-      if(state!=='playing')return;state='paused';cancelAnimationFrame(rafId);showOverlay(pauseOverlay);
+      if(state!=='playing') return;
+      state='paused'; cancelAnimationFrame(rafId);
+      showOverlay(pauseOverlay);
     };
-    $('resumeBtn').onclick   =()=>{showOverlay(null);pauseBtn.style.display='block';state='playing';loop();};
-    $('pauseMenuBtn').onclick=()=>{cancelAnimationFrame(rafId);pauseBtn.style.display='none';state='menu';showOverlay(menuOverlay);};
+    $('resumeBtn').onclick   =()=>{ showOverlay(null); pauseBtn.style.display='block'; state='playing'; loop(); };
+    $('pauseMenuBtn').onclick=()=>{ cancelAnimationFrame(rafId); pauseBtn.style.display='none'; state='menu'; showOverlay(menuOverlay); };
     $('restartBtn').onclick  =startGame;
     $('goMenuBtn').onclick   =()=> showOverlay(menuOverlay);
     $('saveNameBtn').onclick =()=>{
@@ -596,9 +718,10 @@
     };
     $('skipNameBtn').onclick =()=> showOverlay(gameoverOverlay);
 
-    // Preload images
-    const birdImg=new Image(),pipeImg=new Image();
-    birdImg.src='https://app.masonnet.org/bird.png';pipeImg.src='https://app.masonnet.org/pipe-green.png';
+    // Preload assets
+    const birdImg=new Image(), pipeImg=new Image();
+    birdImg.src='https://app.masonnet.org/bird.png';
+    pipeImg.src='https://app.masonnet.org/pipe-green.png';
   });
   </script>
 </body>
