@@ -11,140 +11,135 @@
 
   <style>
     html, body {
-      margin: 0; padding: 0;
-      width: 100vw; height: 100vh;
-      background: #000; overflow: hidden;
+      margin:0; padding:0;
+      width:100vw; height:100vh;
+      background:#000; overflow:hidden;
       font-family: Arial, sans-serif;
     }
-    /* Game background */
     #background {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: url('https://app.masonnet.org/lightbg.png') center/cover no-repeat;
-      z-index: 0; display: none;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:url('https://app.masonnet.org/lightbg.png') center/cover no-repeat;
+      z-index:0; display:none;
     }
     canvas {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 1; touch-action: none;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%; z-index:1; touch-action:none;
     }
     #score {
-      position: absolute; top: 10px; left: 10px;
-      font-family: 'Press Start 2P', system-ui;
-      font-size: 48px; color: #fff;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-      z-index: 2;
+      position:absolute; top:10px; left:10px;
+      font-family:'Press Start 2P',system-ui;
+      font-size:48px; color:#fff;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.7);
+      z-index:2;
     }
     #pauseBtn {
-      position: absolute; top: 10px; right: 10px;
-      display: none; z-index: 2;
-      background: #f00; color: #fff; border: none;
-      padding: 8px 16px; font-size: 16px; cursor: pointer;
+      position:absolute; top:10px; right:10px;
+      display:none; z-index:2;
+      background:#f00; color:#fff; border:none;
+      padding:8px 16px; font-size:16px; cursor:pointer;
     }
 
     /* PROFILE CARD */
     #profileCard {
-      position: absolute; top: 10px; right: 10px;
-      width: 64px; height: 64px;
-      background: rgba(0,0,0,0.7);
-      border: 2px solid #f00; border-radius: 8px;
-      overflow: hidden; cursor: pointer; z-index: 4;
-      transition: width .2s, height .2s;
+      position:absolute; top:10px; right:10px;
+      width:64px; height:64px;
+      background:rgba(0,0,0,0.7);
+      border:2px solid #f00; border-radius:8px;
+      overflow:hidden; cursor:pointer; z-index:4;
+      transition:width .2s, height .2s;
     }
     #profileCard.expanded {
-      width: 280px; height: auto;
+      width:280px; height:auto;
     }
-    /* collapsed avatar centered */
     #pc-collapsed {
-      display: flex; align-items: center; justify-content: center;
-      width: 100%; height: 100%;
+      display:flex; align-items:center; justify-content:center;
+      width:100%; height:100%;
     }
     #pc-collapsed img {
-      max-width: 56px; max-height: 56px; border-radius: 50%;
+      max-width:56px; max-height:56px; border-radius:50%;
     }
     #pc-collapsed-text {
-      display: none;
-      margin-top: 16px; font-size: 14px; color: #fff;
+      display:none; margin-top:16px;
+      font-size:14px; color:#fff;
     }
-    /* expanded collapsed-block */
     #profileCard.expanded #pc-collapsed {
-      flex-direction: column; padding-top: 40px; justify-content: flex-start;
+      flex-direction:column; padding-top:40px; justify-content:flex-start;
     }
     #profileCard.expanded #pc-collapsed-text {
-      display: block;
+      display:block;
     }
-
-    /* expanded options */
     #pc-options {
-      display: none; flex-direction: column;
-      background: rgba(0,0,0,0.8); padding: 12px;
+      display:none; flex-direction:column;
+      background:rgba(0,0,0,0.8); padding:12px;
     }
     #profileCard.expanded #pc-options {
-      display: flex;
+      display:flex;
     }
-    #pc-options .pc-info { display: none; }
+    #pc-options .pc-info { display:none; }
     #pc-options button {
-      width: 100%; margin: 8px 0; padding: 8px 0;
-      font-size: 14px; border: none; border-radius: 4px;
-      background: #f00; color: #fff; cursor: pointer;
+      width:100%; margin:8px 0; padding:8px 0;
+      font-size:14px; border:none; border-radius:4px;
+      background:#f00; color:#fff; cursor:pointer;
     }
 
-    /* overlays */
+    /* OVERLAYS */
     .overlay {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 3;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.85);
+      display:flex; align-items:center; justify-content:center;
+      z-index:3;
     }
-    .hidden { display: none; }
+    .hidden { display:none; }
     .overlay-content {
-      text-align: center; color: #fff; max-width: 320px; width: 100%;
+      text-align:center; color:#fff; max-width:320px; width:100%;
     }
     .overlay-content h2 {
-      margin: 0 0 16px; font-size: 32px;
+      margin:0 0 16px; font-size:32px;
     }
     .overlay-content button {
-      background: #f00; color: #fff; border: none;
-      padding: 12px 24px; font-size: 18px;
-      margin: 8px 0; width: 200px; cursor: pointer;
+      background:#f00; color:#fff; border:none;
+      padding:12px 24px; font-size:18px;
+      margin:8px 0; width:200px; cursor:pointer;
     }
     .overlay-content input,
     .overlay-content textarea {
-      width: 100%; padding: 8px; margin: 8px 0;
-      font-size: 16px; border: none; border-radius: 4px;
+      width:100%; padding:8px; margin:8px 0;
+      font-size:16px; border:none; border-radius:4px;
     }
-    .overlay-content textarea { min-height: 80px; }
+    .overlay-content textarea { min-height:80px; }
     .overlay-content label {
-      display: flex; align-items: center; justify-content: center;
-      margin: 8px 0;
+      display:flex; align-items:center; justify-content:center;
+      margin:8px 0;
     }
-    .overlay-content label input { margin-right: 8px; }
+    .overlay-content label input { margin-right:8px; }
     .scroll-list {
-      background: #111; padding: 12px; margin: 16px 0;
-      max-height: 200px; overflow-y: auto; text-align: left;
-      color: #fff; border-radius: 4px;
+      background:#111; padding:12px; margin:16px 0;
+      max-height:200px; overflow-y:auto; text-align:left;
+      color:#fff; border-radius:4px;
     }
     .scroll-list div {
-      border-bottom: 1px solid #333; padding: 6px 0;
+      border-bottom:1px solid #333; padding:6px 0;
     }
 
-    /* admin tabs */
-    .admin-tabs { display: flex; margin-bottom: 12px; }
+    /* ADMIN TABS */
+    .admin-tabs { display:flex; margin-bottom:12px; }
     .admin-tabs button {
-      flex: 1; margin: 0 4px; padding: 8px;
-      background: #222; color: #fff; border: none; cursor: pointer;
+      flex:1; margin:0 4px; padding:8px;
+      background:#222; color:#fff; border:none; cursor:pointer;
     }
-    .admin-tab-content { display: none; }
-    .admin-tab-content.active { display: block; }
+    .admin-tab-content { display:none; }
+    .admin-tab-content.active { display:block; }
 
-    /* badge icons */
+    /* BADGE ICONS */
     .badge-icon {
-      width: 16px; height: 16px; vertical-align: middle; margin-left: 4px;
+      width:16px; height:16px; vertical-align:middle; margin-left:4px;
     }
   </style>
 </head>
 <body>
+
   <div id="background"></div>
   <canvas id="canvas"></canvas>
   <div id="score">0</div>
@@ -176,7 +171,7 @@
     </div>
   </div>
 
-  <!-- MAIN MENU OVERLAY -->
+  <!-- MAIN MENU -->
   <div id="menuOverlay" class="overlay">
     <div class="overlay-content">
       <img src="https://app.masonnet.org/fbrc.png" alt="Logo" style="max-width:180px;"/>
@@ -188,12 +183,12 @@
     </div>
   </div>
 
-  <!-- ACCOUNT SETTINGS OVERLAY -->
+  <!-- ACCOUNT SETTINGS -->
   <div id="accountOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Account Settings</h2>
       <img id="as-avatar" src="https://app.masonnet.org/default-avatar.png"
-           alt="Avatar" style="width:64px;height:64px;border-radius:50%;"/>
+           style="width:64px;height:64px;border-radius:50%;"/>
       <div>Username: <span id="as-username"></span></div>
       <h3>Your Score History</h3>
       <div id="as-scoreHistory" class="scroll-list"></div>
@@ -201,12 +196,12 @@
     </div>
   </div>
 
-  <!-- PROFILE PAGE OVERLAY -->
+  <!-- PROFILE PAGE -->
   <div id="profileOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Profile</h2>
       <img id="pf-avatar" src="https://app.masonnet.org/default-avatar.png"
-           alt="Avatar" style="width:64px;height:64px;border-radius:50%;"/>
+           style="width:64px;height:64px;border-radius:50%;"/>
       <div><strong id="pf-username"></strong><span id="pf-exclBadges"></span></div>
       <div id="pf-name"></div>
       <div>High Score: <span id="pf-highscore"></span></div>
@@ -220,7 +215,7 @@
     </div>
   </div>
 
-  <!-- FEEDBACK OVERLAY -->
+  <!-- FEEDBACK -->
   <div id="feedbackOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Submit Feedback</h2>
@@ -234,7 +229,7 @@
     </div>
   </div>
 
-  <!-- SETTINGS OVERLAY -->
+  <!-- SETTINGS -->
   <div id="settingsOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Settings</h2>
@@ -245,7 +240,7 @@
     </div>
   </div>
 
-  <!-- LEADERBOARD OVERLAY -->
+  <!-- LEADERBOARD -->
   <div id="leaderboardOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Global Top 10</h2>
@@ -254,7 +249,7 @@
     </div>
   </div>
 
-  <!-- ADMIN OVERLAY -->
+  <!-- ADMIN CONSOLE -->
   <div id="adminOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Admin Console</h2>
@@ -264,7 +259,9 @@
         <button id="tabModerationBtn">Moderation</button>
         <button id="tabOtherBtn">Other</button>
       </div>
-      <div id="adminHome" class="admin-tab-content active"><p>Welcome, Admin!</p></div>
+      <div id="adminHome" class="admin-tab-content active">
+        <p>Welcome, Admin!</p>
+      </div>
       <div id="adminFeedback" class="admin-tab-content">
         <h3>Feedback Submissions</h3>
         <div id="adminFeedbackList" class="scroll-list"></div>
@@ -275,12 +272,14 @@
         <button id="modSearchBtn">Find</button>
         <div id="modUserInfo" class="scroll-list"></div>
       </div>
-      <div id="adminOther" class="admin-tab-content"><p>Other tools coming soon…</p></div>
+      <div id="adminOther" class="admin-tab-content">
+        <p>Other tools coming soon…</p>
+      </div>
       <button id="adminCloseBtn">Close</button>
     </div>
   </div>
 
-  <!-- PAUSE OVERLAY -->
+  <!-- PAUSE -->
   <div id="pauseOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Paused</h2>
@@ -289,7 +288,7 @@
     </div>
   </div>
 
-  <!-- GAME OVER OVERLAY -->
+  <!-- GAME OVER -->
   <div id="gameoverOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>Game Over</h2>
@@ -299,7 +298,7 @@
     </div>
   </div>
 
-  <!-- NAME PROMPT OVERLAY -->
+  <!-- NAME PROMPT -->
   <div id="nameOverlay" class="overlay hidden">
     <div class="overlay-content">
       <h2>🎉 New High Score!</h2>
@@ -317,9 +316,9 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Firebase config (kept for future code)
+    // Firebase configuration (corrected)
     const firebaseConfig = {
-      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0Z9E7axOIxE",
+      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFlOZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
       databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
       projectId: "masonnet-app-official",
@@ -341,7 +340,7 @@
     const $ = id => document.getElementById(id);
     function elt(tag,cls){ const e=document.createElement(tag); if(cls)e.className=cls; return e; }
 
-    // Element refs
+    // DOM references
     const profileCard    = $('profileCard'),
           pcCollapsedTxt = $('pc-collapsed-text'),
           pcAvatar       = $('pc-avatar'),
@@ -408,16 +407,16 @@
 
     // Badge icons
     const badgeIcons = {
-      gold:'https://app.masonnet.org/badge-gold.png',
-      survivor:'https://app.masonnet.org/badge-survivor.png',
-      top10:'https://app.masonnet.org/badge-top10.png',
-      accurate:'https://app.masonnet.org/badge-accurate.png',
-      verified:'https://app.masonnet.org/badge-verified.png',
-      tournament:'https://app.masonnet.org/badge-tourney.png',
-      friend:'https://app.masonnet.org/badge-friend.png',
-      admin:'https://app.masonnet.org/badge-admin.png',
-      employee:'https://app.masonnet.org/badge-employee.png',
-      supporter:'https://app.masonnet.org/badge-supporter.png'
+      gold:       'https://app.masonnet.org/badge-gold.png',
+      survivor:   'https://app.masonnet.org/badge-survivor.png',
+      top10:      'https://app.masonnet.org/badge-top10.png',
+      accurate:   'https://app.masonnet.org/badge-accurate.png',
+      verified:   'https://app.masonnet.org/badge-verified.png',
+      tournament: 'https://app.masonnet.org/badge-tourney.png',
+      friend:     'https://app.masonnet.org/badge-friend.png',
+      admin:      'https://app.masonnet.org/badge-admin.png',
+      employee:   'https://app.masonnet.org/badge-employee.png',
+      supporter:  'https://app.masonnet.org/badge-supporter.png'
     };
 
     // Sounds
@@ -428,13 +427,13 @@
 
     // Canvas setup
     const ctx = canvas.getContext('2d');
-    function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+    function resizeCanvas(){ canvas.width=innerWidth; canvas.height=innerHeight; }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     canvas.addEventListener('mousedown', ()=>{ if(state==='playing') bird.flap(); });
     canvas.addEventListener('touchstart', e=>{ e.preventDefault(); if(state==='playing') bird.flap(); });
 
-    // Overlay control & profile card visibility
+    // Show/hide overlays & profile card
     function showOverlay(el){
       [loginOverlay,menuOverlay,accountOverlay,profileOverlay,
        feedbackOverlay,settingsOverlay,leaderboardOverlay,
@@ -450,8 +449,8 @@
       const span=elt('span');
       span.textContent=name;
       excl.forEach(id=>{
-        const img=elt('img','badge-icon');
-        img.src=badgeIcons[id]; span.appendChild(img);
+        const i=elt('img','badge-icon'); i.src=badgeIcons[id];
+        span.appendChild(i);
       });
       return span;
     }
@@ -460,7 +459,7 @@
     profileCard.onclick = e=>{ e.stopPropagation(); profileCard.classList.toggle('expanded'); };
     document.body.addEventListener('click', ()=> profileCard.classList.remove('expanded'));
 
-    // Auth state handling
+    // Auth state
     auth.onAuthStateChanged(user=>{
       if(user){
         profilesRef.child(user.uid).once('value',snap=>{
@@ -490,7 +489,7 @@
       if(q) performSearch(q);
     };
 
-    // Navigation
+    // Main nav
     startBtn.onclick       = ()=> startGame();
     leaderboardBtn.onclick = ()=> loadLeaderboard();
     settingsBtn.onclick    = ()=> showOverlay(settingsOverlay);
@@ -502,12 +501,12 @@
         ? firebase.auth.Auth.Persistence.LOCAL
         : firebase.auth.Auth.Persistence.SESSION;
       auth.setPersistence(pers)
-        .then(()=> auth.signInWithEmailAndPassword(loginEmail.value, loginPass.value))
+        .then(()=> auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value))
         .catch(err=> alert(err.message));
     };
     loginCancel.onclick = ()=> showOverlay(menuOverlay);
 
-    // Search & open profile
+    // Search & profile
     function performSearch(q){
       profilesRef.orderByChild('username')
         .startAt(q).endAt(q+"\uf8ff").limitToFirst(1)
@@ -520,21 +519,20 @@
       profilesRef.child(uid).once('value',snap=>{
         const p=snap.val(); if(!p) return alert("Profile missing");
         pfAvatar.src=p.avatarUrl||pfAvatar.src;
-        pfUsername.innerHTML = '';
-        pfUsername.appendChild(renderUserSpan(p.username,p.badges?.exclusive));
-        pfName.textContent = `${p.firstName||''} ${p.lastName||''}`;
-        pfHighscore.textContent = p.highscore||0;
+        pfUsername.innerHTML=''; pfUsername.appendChild(renderUserSpan(p.username,p.badges?.exclusive));
+        pfName.textContent=`${p.firstName||''} ${p.lastName||''}`;
+        pfHighscore.textContent=p.highscore||0;
         lbRef.orderByChild('score').once('value',ls=>{
           const arr=Object.values(ls.val()||{}).sort((a,b)=>b.score-a.score),
                 idx=arr.findIndex(e=>e.uid===uid);
-          pfRank.textContent = idx>=0?idx+1:'—';
+          pfRank.textContent=idx>=0?idx+1:'—';
         });
         pfBadges.innerHTML='';
         (p.badges?.standard||[]).forEach(id=>{
-          const img=elt('img','badge-icon'); img.src=badgeIcons[id];
-          pfBadges.appendChild(img);
+          const i=elt('img','badge-icon'); i.src=badgeIcons[id];
+          pfBadges.appendChild(i);
         });
-        if(auth.currentUser && auth.currentUser.uid===uid){
+        if(auth.currentUser&&auth.currentUser.uid===uid){
           pfOwnerExtras.classList.remove('hidden');
           pfHistory.innerHTML='';
           db.ref(`scores/${uid}`).orderByKey().once('value',h=>{
@@ -565,8 +563,7 @@
       lbList.innerHTML='';
       lbRef.orderByChild('score').limitToLast(10)
         .once('value',snap=>{
-          Object.values(snap.val()||{})
-            .sort((a,b)=>b.score-a.score)
+          Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score)
             .forEach(e=>{
               const row=elt('div'), span=renderUserSpan(e.name,e.badges?.exclusive);
               row.appendChild(span); row.append(`: ${e.score}`);
@@ -578,7 +575,7 @@
     }
     lbCloseBtn.onclick = ()=> showOverlay(menuOverlay);
 
-    // Settings toggles
+    // Settings
     $('settingsCloseBtn').onclick = ()=> showOverlay(menuOverlay);
     let soundOn=true, darkMode=false, skipOn=false;
     $('soundToggle').onclick = ()=> {
@@ -610,7 +607,8 @@
     adminTabs.forEach(btn=>{
       btn.onclick=()=>{
         adminTabs.forEach(b=>b.disabled=false); btn.disabled=true;
-        [adminHome,adminFeedback,adminModeration,adminOther].forEach(c=>c.classList.remove('active'));
+        [adminHome,adminFeedback,adminModeration,adminOther]
+          .forEach(c=>c.classList.remove('active'));
         if(btn.id==='tabHomeBtn')      adminHome.classList.add('active');
         if(btn.id==='tabFeedbackBtn')  adminFeedback.classList.add('active');
         if(btn.id==='tabModerationBtn')adminModeration.classList.add('active');
@@ -624,7 +622,7 @@
       fbRef.orderByChild('timestamp').once('value',snap=>{
         Object.entries(snap.val()||{}).forEach(([k,f])=>{
           const d=elt('div');
-          d.innerHTML = `<strong>${f.type}</strong>: ${f.subject}<br/>by ${f.uid}<br/>${f.message}`;
+          d.innerHTML=`<strong>${f.type}</strong>: ${f.subject}<br/>by ${f.uid}<br/>${f.message}`;
           adminFeedbackList.appendChild(d);
         });
       });
@@ -673,10 +671,7 @@
         this.vy=-6;
         if(soundOn){ flapS.currentTime=0; try{ flapS.play(); }catch{} }
       }
-      collides(p){ return !(
-        this.x+this.w<p.x || this.x>p.x+p.w ||
-        this.y+this.h<p.y || this.y>p.y+p.h
-      ); }
+      collides(p){ return !(this.x+this.w<p.x||this.x>p.x+p.w||this.y+this.h<p.y||this.y>p.y+p.h); }
       die(){
         if(state!=='playing'||collided) return;
         collided=true; state='dying'; cancelAnimationFrame(rafId);
