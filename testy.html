@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Flappy Bird – Core Example</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif;}
+    #background{position:absolute;top:0;left:0;width:100%;height:100%;background:#222;z-index:0;}
+    canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+    .overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:500;}
+    .hidden{display:none;}
+    .panel{background:#333;padding:16px;border-radius:8px;width:300px;text-align:center;}
+    .panel input{width:100%;margin:8px 0;padding:8px;}
+    .panel button{width:100%;padding:8px;margin:8px 0;}
+    #profileCard{position:absolute;top:10px;right:10px;width:60px;height:60px;background:#555;border:2px solid #f00;border-radius:8px;cursor:pointer;z-index:1000;}
+    #profileCard.expanded{width:200px;height:auto;padding:8px;}
+  </style>
+</head>
+<body>
+
+<div id="background"></div>
+<canvas id="canvas"></canvas>
+
+<!-- PROFILE CARD -->
+<div id="profileCard">
+  <div id="pc-collapsed">
+    <img id="pc-avatar" src="https://app.masonnet.org/default-avatar.png" width="40" height="40"/>
+    <div id="pc-text" style="display:none;margin-top:8px;">User</div>
+  </div>
+  <div id="pc-options" style="display:none;">
+    <button id="pc-accountBtn">Account Settings</button>
+  </div>
+</div>
+
+<!-- LOGIN PANEL -->
+<div id="loginPanel" class="overlay hidden">
+  <div class="panel">
+    <h2>Sign In</h2>
+    <input id="loginEmail" placeholder="Email"/>
+    <input id="loginPass" type="password" placeholder="Password"/>
+    <button id="loginSubmit">Submit</button>
+    <button id="loginCancel">Cancel</button>
+  </div>
+</div>
+
+<!-- ACCOUNT SETTINGS -->
+<div id="accountPanel" class="overlay hidden">
+  <div class="panel">
+    <h2>Account Settings</h2>
+    <div>Username: <span id="as-username">Guest</span></div>
+    <button id="customBtn">Customize Profile</button>
+    <button id="as-closeBtn">Close</button>
+  </div>
+</div>
+
+<!-- CUSTOMIZE PROFILE -->
+<div id="customPanel" class="overlay hidden">
+  <div class="panel">
+    <h2>Customize</h2>
+    <input id="cust-username" placeholder="Username"/>
+    <button id="custSaveBtn">Save</button>
+    <button id="custCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- MAIN MENU -->
+<div id="menuPanel" class="overlay">
+  <div class="panel">
+    <h2>Main Menu</h2>
+    <button id="startBtn">Start</button>
+    <button id="signInBtn">Sign In</button>
+  </div>
+</div>
+
+<script>
+  // Short core example: no Firebase, mock sign-in
+  const menuPanel = document.getElementById('menuPanel');
+  const loginPanel = document.getElementById('loginPanel');
+  const accountPanel = document.getElementById('accountPanel');
+  const customPanel = document.getElementById('customPanel');
+  const profileCard = document.getElementById('profileCard');
+  const pcCollapsed = document.getElementById('pc-collapsed');
+  const pcOptions = document.getElementById('pc-options');
+  const pcText = document.getElementById('pc-text');
+  const asUsername = document.getElementById('as-username');
+  let currentUser = null;
+
+  function show(panel){[menuPanel,loginPanel,accountPanel,customPanel].forEach(p=>p.classList.add('hidden')); if(panel)panel.classList.remove('hidden');}
+
+  // Profile card toggle
+  profileCard.onclick = e=>{
+    e.stopPropagation();
+    profileCard.classList.toggle('expanded');
+    pcOptions.style.display = profileCard.classList.contains('expanded')?'block':'none';
+    pcText.style.display = profileCard.classList.contains('expanded')?'block':'none';
+  };
+  document.body.addEventListener('click',()=>{
+    profileCard.classList.remove('expanded');
+    pcOptions.style.display='none';
+    pcText.style.display='none';
+  });
+
+  // Buttons
+  document.getElementById('startBtn').onclick = ()=>{ show(); startGame(); };
+  document.getElementById('signInBtn').onclick = ()=> show(loginPanel);
+  document.getElementById('loginCancel').onclick = ()=> {clearLogin(); show(menuPanel);};
+  document.getElementById('loginSubmit').onclick = ()=>{
+    let email = document.getElementById('loginEmail').value.trim();
+    if(!email) return alert('Enter email');
+    currentUser = { email, username: email.split('@')[0] };
+    document.getElementById('pc-avatar').src = 'https://via.placeholder.com/40';
+    pcText.textContent = currentUser.username;
+    asUsername.textContent = currentUser.username;
+    clearLogin();
+    show(menuPanel);
+  };
+  function clearLogin(){document.getElementById('loginEmail').value='';document.getElementById('loginPass').value='';}
+
+  document.getElementById('pc-accountBtn').onclick = ()=> currentUser? show(accountPanel) : alert('Sign in first');
+  document.getElementById('as-closeBtn').onclick = ()=> show(menuPanel);
+
+  document.getElementById('customBtn').onclick = ()=>{
+    document.getElementById('cust-username').value = currentUser.username;
+    show(customPanel);
+  };
+  document.getElementById('custCancelBtn').onclick = ()=> show(accountPanel);
+  document.getElementById('custSaveBtn').onclick = ()=>{
+    currentUser.username = document.getElementById('cust-username').value.trim()||currentUser.username;
+    pcText.textContent = currentUser.username;
+    asUsername.textContent = currentUser.username;
+    show(accountPanel);
+  };
+
+  // Basic canvas game stub
+  const canvas= document.getElementById('canvas'), ctx=canvas.getContext('2d');
+  function resize(){canvas.width = innerWidth; canvas.height = innerHeight;}
+  window.addEventListener('resize',resize); resize();
+  let state='menu', bird, raf;
+  document.getElementById('pauseBtn').onclick=()=>{
+    if(state==='playing'){ state='paused'; cancelAnimationFrame(raf); show(loginPanel);} // hack
+  };
+
+  function startGame(){
+    state='playing';
+    bird={x:50,y:canvas.height/2,vy:0};
+    loop();
+  }
+  function loop(){
+    if(state!=='playing') return;
+    raf=requestAnimationFrame(loop);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    bird.vy+=0.25; bird.y+=bird.vy;
+    ctx.fillStyle='yellow'; ctx.fillRect(bird.x,bird.y,30,30);
+  }
+
+  resize();
+</script>
+</body>
+</html>
