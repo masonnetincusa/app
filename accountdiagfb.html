@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Firebase Auth Diagnostic</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+  <!-- Firebase (compat) SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
+
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    input, button {
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      width: 250px;
+    }
+    #status {
+      margin-top: 1rem;
+      min-height: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Firebase Auth Diagnostic</h2>
+
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button id="loginBtn">Sign In</button>
+
+  <div id="status"></div>
+
+  <script>
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0Z9E7axOIxE",
+      authDomain: "masonnet-app-official.firebaseapp.com",
+      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId: "masonnet-app-official",
+      storageBucket: "masonnet-app-official.firebasestorage.app",
+      messagingSenderId: "783919367562",
+      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+      measurementId: "G-X1YKV5VK7J"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const emailInput = document.getElementById('email');
+    const passInput  = document.getElementById('password');
+    const loginBtn   = document.getElementById('loginBtn');
+    const statusDiv  = document.getElementById('status');
+
+    loginBtn.addEventListener('click', e => {
+      e.preventDefault();
+      statusDiv.textContent = 'Signing in…';
+      auth.signInWithEmailAndPassword(
+        emailInput.value.trim(),
+        passInput.value.trim()
+      )
+      .then(userCred => {
+        statusDiv.textContent = '✅ Signed in as: ' + userCred.user.email;
+      })
+      .catch(err => {
+        console.error('Auth error:', err);
+        statusDiv.textContent = '❌ ' + err.code + ': ' + err.message;
+      });
+    });
+  </script>
+</body>
+</html> 
