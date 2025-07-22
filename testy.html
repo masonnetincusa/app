@@ -5,229 +5,193 @@
   <title>Flappy Bird</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <style>
-    /* Reset & Base */
-    * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { width:100%; height:100%; background:#000; color:#fff; font-family:Arial,sans-serif; overflow:hidden; }
-    button { background:red; color:#fff; border:none; padding:12px 24px; font-size:16px; cursor:pointer; }
-    input { width:100%; padding:8px; margin:6px 0; border:1px solid #444; border-radius:4px; background:#111; color:#fff; }
-    /* Title */
-    #titleImg { position:absolute; top:20px; left:50%; transform:translateX(-50%); z-index:10; width:200px; }
-    /* Score & Pause */
-    #score { position:absolute; top:100px; left:50%; transform:translateX(-50%); font-size:32px; z-index:10; }
-    #pauseBtn { position:absolute; top:20px; right:20px; display:none; z-index:10; }
-    /* Canvas */
-    #gameCanvas { position:absolute; top:0; left:0; width:100%; height:100%; }
-    /* Overlays */
-    .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:20; }
-    .hidden { display:none; }
-    .panel { background:#222; padding:20px; border-radius:8px; width:300px; text-align:center; }
-    .panel h2 { margin-bottom:12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width:100%; height:100%; background:#000; color:#fff; font-family:Arial,sans-serif; overflow:hidden; }
+    #menu { position:absolute; top:0; left:0; width:100%; height:100%; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10; }
+    #menu img { width:200px; margin-bottom:40px; }
+    #menu button { width:200px; margin:10px 0; padding:12px; font-size:18px; background:red; color:#fff; border:none; cursor:pointer; }
+    #canvas { display:none; position:absolute; top:0; left:0; width:100%; height:100%; }
+    #pause { display:none; position:absolute; top:20px; right:20px; padding:8px 16px; background:red; color:#fff; border:none; cursor:pointer; z-index:5; }
+    .modal { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:20; }
+    .modal .box { background:#222; padding:20px; border-radius:6px; text-align:center; width:300px; }
+    .modal .box h2 { margin-bottom:16px; }
+    .modal .box button { margin-top:20px; width:100%; padding:10px; background:red; color:#fff; border:none; cursor:pointer; }
   </style>
 </head>
 <body>
 
-  <!-- Title Image -->
-  <img id="titleImg" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"/>
-
-  <!-- Score & Pause -->
-  <div id="score">0</div>
-  <button id="pauseBtn">Pause</button>
-
   <!-- Main Menu -->
-  <div id="menuOverlay" class="overlay">
-    <div class="panel">
-      <h2>Main Menu</h2>
-      <button id="startBtn">Start</button>
-      <button id="signInBtn">Sign In</button>
-    </div>
+  <div id="menu">
+    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"/>
+    <button id="startBtn">Start</button>
+    <button id="leaderBtn">Leaderboard</button>
+    <button id="settingsBtn">Settings</button>
+    <button id="hubBtn">Flappy Bird Hub</button>
   </div>
 
-  <!-- Sign-In Overlay -->
-  <div id="loginOverlay" class="overlay hidden">
-    <div class="panel">
-      <h2>Sign In</h2>
-      <input id="loginEmail" type="email" placeholder="Email"/>
-      <input id="loginPass" type="password" placeholder="Password"/>
-      <button id="loginSubmit">Submit</button>
-      <button id="loginCancel">Cancel</button>
-    </div>
-  </div>
+  <!-- Pause Button -->
+  <button id="pause">Pause</button>
 
   <!-- Game Canvas -->
-  <canvas id="gameCanvas"></canvas>
+  <canvas id="canvas"></canvas>
+
+  <!-- Leaderboard Modal -->
+  <div id="leaderModal" class="modal">
+    <div class="box">
+      <h2>Leaderboard</h2>
+      <div id="leaderList" style="text-align:left;max-height:200px;overflow:auto;"></div>
+      <button class="close">Close</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="box">
+      <h2>Settings</h2>
+      <button id="toggleSound">🔊 Sound</button>
+      <button id="toggleDark">🌙 Dark Mode</button>
+      <button class="close">Close</button>
+    </div>
+  </div>
 
   <script>
-  // — — — GLOBAL CONFIG & ASSETS — — —
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-    authDomain: "masonnet-app-official.firebaseapp.com",
-    databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-    projectId: "masonnet-app-official",
-    storageBucket: "masonnet-app-official.firebasestorage.app",
-    messagingSenderId: "783919367562",
-    appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-    measurementId: "G-X1YKV5VK7J"
-  };
+  // Assets
   const ASSETS = {
-    bird: 'https://app.masonnet.org/bird.png',
-    pipe: 'https://app.masonnet.org/pipe-green.png',
-    flap: 'https://app.masonnet.org/flap.mp3',
-    hit:  'https://app.masonnet.org/hit.mp3',
-    die:  'https://app.masonnet.org/die.mp3',
+    bird:'https://app.masonnet.org/bird.png',
+    pipe:'https://app.masonnet.org/pipe-green.png',
+    flap:'https://app.masonnet.org/flap.mp3',
+    hit:'https://app.masonnet.org/hit.mp3',
+    die:'https://app.masonnet.org/die.mp3',
     point:'https://app.masonnet.org/point.mp3'
   };
 
-  // Initialize Firebase
-  firebase.initializeApp(FIREBASE_CONFIG);
-  const auth = firebase.auth(), db = firebase.database();
+  // DOM
+  const menu       = document.getElementById('menu');
+  const startBtn   = document.getElementById('startBtn');
+  const leaderBtn  = document.getElementById('leaderBtn');
+  const settingsBtn= document.getElementById('settingsBtn');
+  const hubBtn     = document.getElementById('hubBtn');
+  const pauseBtn   = document.getElementById('pause');
+  const canvas     = document.getElementById('canvas');
+  const ctx        = canvas.getContext('2d');
+  const leaderMod  = document.getElementById('leaderModal');
+  const settingsMod= document.getElementById('settingsModal');
 
-  // DOM Refs
-  const $       = id=>document.getElementById(id);
-  const menu    = $('menuOverlay');
-  const login   = $('loginOverlay');
-  const startB  = $('startBtn');
-  const signInB = $('signInBtn');
-  const loginSub= $('loginSubmit');
-  const loginCan= $('loginCancel');
-  const pauseB  = $('pauseBtn');
-  const scoreEl = $('score');
-  const canvas  = $('gameCanvas');
-  const ctx     = canvas.getContext('2d');
-
-  // Canvas Resize
-  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight;}
-  window.addEventListener('resize', resize);
+  // Resize
+  function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+  window.addEventListener('resize',resize);
   resize();
 
-  // Game Variables
+  // Sounds & Images
+  const flapS  = new Audio(ASSETS.flap),
+        hitS   = new Audio(ASSETS.hit),
+        dieS   = new Audio(ASSETS.die),
+        pointS = new Audio(ASSETS.point),
+        birdImg= new Image(),
+        pipeImg= new Image();
+  birdImg.src = ASSETS.bird;
+  pipeImg.src = ASSETS.pipe;
+
+  // Game State
   let state='menu', bird, pipes, score, frame, raf, collided;
   const gravity=0.25, flapPower=-6, speed=2;
 
-  // Preload
-  const birdImg  = new Image(), pipeImg = new Image();
-  birdImg.src=ASSETS.bird; pipeImg.src=ASSETS.pipe;
-  const flapS=new Audio(ASSETS.flap),hitS=new Audio(ASSETS.hit),dieS=new Audio(ASSETS.die),pointS=new Audio(ASSETS.point);
-
-  // Bird Class
   class Bird {
     constructor(){
       this.x=50; this.y=canvas.height/2;
       this.w=34; this.h=24; this.vy=0;
     }
-    flap(){
-      this.vy=flapPower;
-      flapS.play().catch(()=>{});
-    }
+    flap(){ this.vy=flapPower; flapS.play().catch(()=>{}); }
     update(){
       this.vy+=gravity; this.y+=this.vy;
-      if(this.y<0) this.y=0;
+      if(this.y<0)this.y=0;
       if(this.y+this.h>canvas.height) this.die();
     }
-    draw(){
-      ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
-    }
-    collides(pipe){
-      return !(
-        this.x+this.w < pipe.x ||
-        this.x > pipe.x+pipe.w ||
-        this.y+this.h < pipe.top ||
-        this.y > pipe.bottom
-      );
+    draw(){ ctx.drawImage(birdImg,this.x,this.y,this.w,this.h); }
+    collides(p){
+      return !(this.x+this.w < p.x ||
+               this.x     > p.x+p.w ||
+               this.y+this.h < p.top ||
+               this.y     > p.bottom);
     }
     die(){
-      if(state!=='playing' || collided) return;
+      if(state!=='playing'||collided) return;
       collided=true; state='ended';
       cancelAnimationFrame(raf);
       hitS.play().catch(()=>{ hitS.onended=()=>dieS.play().catch(()=>{}); });
     }
   }
 
-  // Spawn Pipe
   function spawnPipe(){
-    const gap=120;
-    const top=Math.random()*(canvas.height-gap-40)+20;
+    const gap=120, top=20+Math.random()*(canvas.height-gap-40);
     pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
   }
 
-  // Game Loop
   function loop(){
     if(state!=='playing') return;
-    raf=requestAnimationFrame(loop);
+    raf = requestAnimationFrame(loop);
     frame++;
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // Pipes
     pipes.forEach((p,i)=>{
-      p.x-=speed;
+      p.x -= speed;
       ctx.drawImage(pipeImg,p.x,0,p.w,p.top);
       ctx.drawImage(pipeImg,p.x,p.bottom,p.w,canvas.height-p.bottom);
       if(!p.passed && bird.x>p.x+p.w){
-        p.passed=true;
-        score++;
-        pointS.play().catch(()=>{});
+        p.passed=true; score++; pointS.play().catch(()=>{});
       }
       if(bird.collides(p)) bird.die();
-      if(p.x+p.w<0) pipes.splice(i,1);
+      if(p.x+p.w < 0) pipes.splice(i,1);
     });
 
     // Bird
-    bird.update();
-    bird.draw();
+    bird.update(); bird.draw();
 
     // Spawn
     if(frame%150===0) spawnPipe();
 
-    // Score
-    scoreEl.textContent = score;
+    // Draw Score
+    ctx.fillStyle = '#fff';
+    ctx.font = '32px Arial';
+    ctx.fillText(score,20,50);
   }
 
-  // Start Game
   function startGame(){
-    bird=new Bird();
-    pipes=[]; score=0; frame=0; collided=false;
-    state='playing';
-    menu.classList.add('hidden');
-    pauseB.style.display='block';
+    bird = new Bird();
+    pipes = [];
+    score = 0;
+    frame = 0;
+    collided = false;
+    state = 'playing';
+    menu.style.display = 'none';
+    pauseBtn.style.display = 'block';
     loop();
   }
 
   // Event Listeners
-  startB.onclick = startGame;
-  pauseB.onclick = ()=>{
+  startBtn.onclick = startGame;
+  pauseBtn.onclick = ()=>{
     if(state==='playing'){
       cancelAnimationFrame(raf);
-      showMenu();
+      menu.style.display='flex';
       state='paused';
     }
   };
   canvas.addEventListener('mousedown', ()=>{ if(state==='playing') bird.flap(); });
-  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); if(state==='playing') bird.flap(); });
+  canvas.addEventListener('touchstart',e=>{ e.preventDefault(); if(state==='playing') bird.flap(); });
 
-  signInB.onclick = ()=>{ login.classList.remove('hidden'); menu.classList.add('hidden'); };
-  loginCan.onclick= ()=>{ login.classList.add('hidden'); menu.classList.remove('hidden'); };
-  loginSub.onclick= ()=>{
-    const email=$('loginEmail').value.trim();
-    auth.signInWithEmailAndPassword(email,$('loginPass').value.trim())
-      .then(u=>{
-        $('pc-avatar').src=`https://api.adorable.io/avatars/48/${u.user.email}.png`;
-        $('pc-name').textContent=u.user.email.split('@')[0];
-        login.classList.add('hidden');
-        menu.classList.remove('hidden');
-      })
-      .catch(e=>alert(e.message));
+  leaderBtn.onclick = ()=>{
+    const list = leaderMod.querySelector('#leaderList');
+    list.innerHTML = '<div>1. Alice – 999</div><div>2. Bob – 888</div><div>…</div>';
+    leaderMod.style.display = 'flex';
   };
+  settingsBtn.onclick = ()=> settingsMod.style.display = 'flex';
+  [ ...leaderMod.querySelectorAll('.close'), ...settingsMod.querySelectorAll('.close') ]
+    .forEach(b=>b.onclick=()=>{ leaderMod.style.display='none'; settingsMod.style.display='none'; });
 
-  // Show Main Menu
-  function showMenu(){
-    menu.classList.remove('hidden');
-    pauseB.style.display='none';
-  }
-  auth.onAuthStateChanged(u=>{
-    if(!u) showMenu();
-  });
+  hubBtn.onclick = ()=> window.location.href='https://app.masonnet.org/flappybirdhub';
 
-  // Initialize
-  showMenu();
   </script>
 </body>
 </html>
