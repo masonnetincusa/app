@@ -8,7 +8,7 @@
   <style>
     /* RESET & BASE */
     * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
+    html,body { width:100%; height:100%; background:#000; color:#fff; font-family:Arial,sans-serif; overflow:hidden; }
     button,input,textarea { font-family:inherit; }
     button { background:red; color:#fff; border:none; cursor:pointer; }
     .hidden { display:none; }
@@ -70,7 +70,7 @@
     #profileCard.expanded #pc-options { display:flex; }
     #pc-options button { margin:4px 0; padding:6px; font-size:14px; }
 
-    /* CANVAS & HUD */
+    /* CANVAS & PAUSE */
     #canvas {
       position:absolute; top:0; left:0; width:100%; height:100%;
       display:none; z-index:50;
@@ -81,7 +81,6 @@
     }
 
     /* SFX POP-UP */
-    #sfxPopup { pointer-events:none; }
     #sfxPopup .panel { width:240px; }
   </style>
 </head>
@@ -108,7 +107,7 @@
     </div>
   </div>
 
-  <!-- SIGN IN OVERLAY -->
+  <!-- SIGN IN -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -201,7 +200,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // FIREBASE CONFIG & INIT
+    // FIREBASE INIT
     const cfg = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -214,30 +213,36 @@
     };
     firebase.initializeApp(cfg);
     const auth = firebase.auth(), db = firebase.database();
-    const lbRef = db.ref("leaderboard");
-    const profilesRef = db.ref("profiles"), rolesRef = db.ref("roles");
+    const lbRef = db.ref("leaderboard"), profilesRef = db.ref("profiles"), rolesRef = db.ref("roles");
 
-    // STATE FLAGS
-    let soundOn = true, darkMode = false, skipToGO = false;
-    let state = 'menu', bird, pipes, score, frame, raf, collided;
-    const gravity = 0.25, flapPower = -6, speed = 2;
+    // STATE & FLAGS
+    let soundOn=true, darkMode=false, skipToGO=false;
+    let state='menu', bird, pipes, score, frame, raf, collided;
+    const gravity=0.25, flapPower=-6, speed=2;
 
     // DOM SHORTCUT
-    const $ = id => document.getElementById(id);
+    const $ = id=>document.getElementById(id);
     const overlays = [
-      'menuOverlay','loginOverlay','searchOverlay','leaderOverlay','settingsOverlay',
-      'pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
+      'menuOverlay','loginOverlay','searchOverlay','leaderOverlay',
+      'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
     ];
     function showOverlay(id) {
-      overlays.forEach(x => $(x).classList.add('hidden'));
-      if (id) $(id).classList.remove('hidden');
+      overlays.forEach(x=>$(x).classList.add('hidden'));
+      if (id) {
+        $(id).classList.remove('hidden');
+        if (id!=='sfxPopup') {
+          canvas.style.display='none'; pauseBtn.style.display='none';
+        }
+      } else {
+        canvas.style.display='block';
+        if (state==='playing') pauseBtn.style.display='block';
+      }
     }
 
     // CANVAS SETUP
     const canvas = $('canvas'), ctx = canvas.getContext('2d');
-    function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
+    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+    window.addEventListener('resize', resize); resize();
 
     // ASSETS & AUDIO
     const ASSETS = {
@@ -248,12 +253,12 @@
       die:'https://app.masonnet.org/die.mp3',
       point:'https://app.masonnet.org/point.mp3'
     };
-    const birdImg = new Image(), pipeImg = new Image();
-    birdImg.src = ASSETS.bird; pipeImg.src = ASSETS.pipe;
-    const flapS = new Audio(ASSETS.flap),
-          hitS  = new Audio(ASSETS.hit),
-          dieS  = new Audio(ASSETS.die),
-          pointS= new Audio(ASSETS.point);
+    const birdImg=new Image(), pipeImg=new Image();
+    birdImg.src=ASSETS.bird; pipeImg.src=ASSETS.pipe;
+    const flapS=new Audio(ASSETS.flap),
+          hitS =new Audio(ASSETS.hit),
+          dieS =new Audio(ASSETS.die),
+          pointS=new Audio(ASSETS.point);
 
     // BIRD CLASS
     class Bird {
@@ -262,157 +267,133 @@
         this.w=34; this.h=24; this.vy=0;
       }
       flap(){
-        this.vy = flapPower;
-        if (soundOn) flapS.play().catch(()=>{});
+        this.vy=flapPower;
+        if(soundOn) flapS.play().catch(()=>{});
       }
       update(){
-        this.vy += gravity;
-        this.y  += this.vy;
-        if (this.y < 0) this.y = 0;
-        if (this.y + this.h > canvas.height) this.die();
+        this.vy+=gravity; this.y+=this.vy;
+        if(this.y<0) this.y=0;
+        if(this.y+this.h>canvas.height) this.die();
       }
       draw(){
         ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
       }
       collides(p){
         return !(
-          this.x+this.w < p.x ||
-          this.x     > p.x+p.w ||
-          this.y+this.h < p.top ||
-          this.y     > p.bottom
+          this.x+this.w<p.x || this.x>p.x+p.w ||
+          this.y+this.h<p.top || this.y>p.bottom
         );
       }
       die(){
-        if (state!=='playing' || collided) return;
-        collided = true; state = 'dying';
+        if(state!=='playing'||collided) return;
+        collided=true; state='dying';
         cancelAnimationFrame(raf);
-
-        if (soundOn && !skipToGO) {
+        if(soundOn && !skipToGO){
           showOverlay('sfxPopup');
           hitS.play().catch(()=>{});
-          hitS.onended = () => {
+          hitS.onended = ()=>{
             dieS.play().catch(()=>{});
-            dieS.onended = () => {
-              showOverlay();  // hide popup
+            dieS.onended = ()=>{
+              showOverlay();  // hide SFX
               endGame();
             };
           };
-        } else {
-          endGame();
-        }
+        } else endGame();
       }
     }
 
-    // GAME LOOP & LOGIC
+    // GAME LOGIC
     function spawnPipe(){
-      const gap = 120;
-      const top = 20 + Math.random()*(canvas.height-gap-40);
-      pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
+      const gap=120, top=20+Math.random()*(canvas.height-gap-40);
+      pipes.push({x:canvas.width,w:60,top,bottom:top+gap,passed:false});
     }
     function loop(){
-      if (state!=='playing') return;
-      raf = requestAnimationFrame(loop);
-      frame++;
+      if(state!=='playing') return;
+      raf=requestAnimationFrame(loop); frame++;
       ctx.clearRect(0,0,canvas.width,canvas.height);
-
       pipes.forEach((p,i)=>{
-        p.x -= speed;
+        p.x-=speed;
         ctx.drawImage(pipeImg,p.x,0,p.w,p.top);
         ctx.drawImage(pipeImg,p.x,p.bottom,p.w,canvas.height-p.bottom);
-        if (!p.passed && bird.x>p.x+p.w) {
-          p.passed = true;
-          score++;
-          if (soundOn) pointS.play().catch(()=>{});
+        if(!p.passed && bird.x>p.x+p.w){
+          p.passed=true; score++;
+          if(soundOn) pointS.play().catch(()=>{});
         }
-        if (bird.collides(p)) bird.die();
-        if (p.x + p.w < 0) pipes.splice(i,1);
+        if(bird.collides(p)) bird.die();
+        if(p.x+p.w<0) pipes.splice(i,1);
       });
-
-      bird.update();
-      bird.draw();
-
-      if (frame % 150 === 0) spawnPipe();
-
-      ctx.fillStyle = '#fff';
-      ctx.font = '32px Press Start 2P';
+      bird.update(); bird.draw();
+      if(frame%150===0) spawnPipe();
+      ctx.fillStyle='#fff'; ctx.font='32px Press Start 2P';
       ctx.fillText(score,20,50);
     }
     function startGame(){
-      bird      = new Bird();
-      pipes     = [];
-      score     = 0;
-      frame     = 0;
-      collided  = false;
-      state     = 'playing';
-      showOverlay();  // hide menus
-      $('pauseBtn').style.display = 'block';
-      loop();
+      bird=new Bird(); pipes=[]; score=0; frame=0; collided=false;
+      state='playing'; showOverlay(); $('pauseBtn').style.display='block'; loop();
     }
     function endGame(){
-      $('finalScore').textContent = score;
-      showOverlay('gameoverOverlay');
+      $('finalScore').textContent=score; showOverlay('gameoverOverlay');
     }
 
-    // UI BINDINGS
-    $('startBtn').onclick        = startGame;
-    $('pauseBtn').onclick        = ()=>{ if(state==='playing'){ cancelAnimationFrame(raf); showOverlay('pauseOverlay'); state='paused'; }};
-    $('resumeBtn').onclick       = ()=>{ showOverlay(); state='playing'; loop(); };
-    $('pauseMenuBtn').onclick    = ()=>{ cancelAnimationFrame(raf); $('pauseBtn').style.display='none'; showOverlay('menuOverlay'); state='menu'; };
-    $('restartBtn').onclick      = startGame;
-    $('goMenuBtn').onclick       = ()=>{ $('pauseBtn').style.display='none'; showOverlay('menuOverlay'); state='menu'; };
+    // UI EVENTS
+    $('startBtn').onclick      = startGame;
+    $('pauseBtn').onclick      = ()=>{ if(state==='playing'){ cancelAnimationFrame(raf); showOverlay('pauseOverlay'); state='paused'; }};
+    $('resumeBtn').onclick     = ()=>{ showOverlay(); state='playing'; loop(); };
+    $('pauseMenuBtn').onclick  = ()=>{ cancelAnimationFrame(raf); $('pauseBtn').style.display='none'; showOverlay('menuOverlay'); state='menu'; };
+    $('restartBtn').onclick    = startGame;
+    $('goMenuBtn').onclick     = ()=>{ $('pauseBtn').style.display='none'; showOverlay('menuOverlay'); state='menu'; };
 
     // HIGH SCORE PROMPT
-    $('saveNameBtn').onclick     = ()=>{ let n=$('nameInput').value.trim()||'Anonymous'; lbRef.push({ name:n, score, uid:auth.currentUser?.uid, ts:Date.now() }); showOverlay('gameoverOverlay'); };
-    $('skipNameBtn').onclick     = ()=>showOverlay('gameoverOverlay');
+    $('saveNameBtn').onclick   = ()=>{ let n=$('nameInput').value.trim()||'Anon'; lbRef.push({name:n,score,uid:auth.currentUser?.uid,ts:Date.now()}); showOverlay('gameoverOverlay'); };
+    $('skipNameBtn').onclick   = ()=>showOverlay('gameoverOverlay');
 
     // LEADERBOARD
-    $('leaderBtn').onclick       = ()=>{
+    $('leaderBtn').onclick     = ()=>{
       let L=$('leaderList'); L.innerHTML='';
-      lbRef.orderByChild('score').limitToLast(10).once('value', snap=>{
+      lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
         Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score).forEach(e=>{
           let d=document.createElement('div');
-          d.textContent = `${e.name}: ${e.score}`;
+          d.textContent=`${e.name}: ${e.score}`;
           L.appendChild(d);
         });
         showOverlay('leaderOverlay');
       });
     };
-    $('leaderClose').onclick     = ()=>showOverlay('menuOverlay');
+    $('leaderClose').onclick   = ()=>showOverlay('menuOverlay');
 
     // SETTINGS
-    $('settingsBtn').onclick     = ()=>showOverlay('settingsOverlay');
-    $('settingsCloseBtn').onclick= ()=>showOverlay('menuOverlay');
-    $('soundToggle').onclick      = ()=>{
-      soundOn = !soundOn;
-      $('soundToggle').textContent = soundOn?'🔊 Sound: On':'🔇 Sound: Off';
+    $('settingsBtn').onclick   = ()=>showOverlay('settingsOverlay');
+    $('settingsCloseBtn').onclick = ()=>showOverlay('menuOverlay');
+    $('soundToggle').onclick    = ()=>{
+      soundOn=!soundOn;
+      $('soundToggle').textContent=soundOn?'🔊 Sound: On':'🔇 Sound: Off';
     };
-    $('darkToggle').onclick       = ()=>{
-      darkMode = !darkMode;
-      $('darkToggle').textContent = darkMode?'🌙 Dark Mode: On':'☀️ Light Mode';
-      document.body.classList.toggle('dark-mode', darkMode);
+    $('darkToggle').onclick     = ()=>{
+      darkMode=!darkMode;
+      $('darkToggle').textContent=darkMode?'🌙 Dark Mode: On':'☀️ Light Mode';
+      document.body.classList.toggle('dark-mode',darkMode);
     };
-    $('skipToggle').onclick       = ()=>{
-      skipToGO = !skipToGO;
-      $('skipToggle').textContent = skipToGO?'🚀 Skip to GO: On':'🚀 Skip to GO: Off';
+    $('skipToggle').onclick     = ()=>{
+      skipToGO=!skipToGO;
+      $('skipToggle').textContent=skipToGO?'🚀 Skip to GO: On':'🚀 Skip to GO: Off';
     };
 
     // HUB NAV
-    $('hubBtn').onclick           = ()=>location.href='https://app.masonnet.org/flappybirdhub';
+    $('hubBtn').onclick         = ()=>window.location.href='https://app.masonnet.org/flappybirdhub';
 
-    // SIGN-IN
-    $('pc-authBtn').onclick       = ()=>{
-      if (auth.currentUser) auth.signOut();
+    // AUTH & PROFILE CARD
+    $('pc-authBtn').onclick     = ()=>{
+      if(auth.currentUser) auth.signOut();
       else showOverlay('loginOverlay');
     };
-    $('loginCancel').onclick      = ()=>{ clearLogin(); showOverlay('menuOverlay'); };
-    $('loginSubmit').onclick      = ()=>{
-      const em = $('loginEmail').value.trim();
-      const pw = $('loginPass').value.trim();
+    $('loginCancel').onclick    = ()=>{ clearLogin(); showOverlay('menuOverlay'); };
+    $('loginSubmit').onclick    = ()=>{
+      const em=$('loginEmail').value.trim(), pw=$('loginPass').value.trim();
       const pers = $('loginRemember').checked
         ? firebase.auth.Auth.Persistence.LOCAL
         : firebase.auth.Auth.Persistence.SESSION;
       auth.setPersistence(pers)
-        .then(()=> auth.signInWithEmailAndPassword(em,pw))
+        .then(()=>auth.signInWithEmailAndPassword(em,pw))
         .then(()=>{ clearLogin(); showOverlay('menuOverlay'); })
         .catch(e=>alert(e.message));
     };
@@ -421,97 +402,51 @@
     }
 
     // SEARCH PROFILES
-    $('pc-searchBtn').onclick     = ()=>showOverlay('searchOverlay');
-    $('searchCancel').onclick     = ()=>{ $('searchResults').innerHTML=''; showOverlay('menuOverlay'); };
-    $('searchSubmit').onclick     = ()=>{
-      const q = $('searchInput').value.trim();
-      const out = $('searchResults'); out.innerHTML='';
+    $('pc-searchBtn').onclick   = ()=>showOverlay('searchOverlay');
+    $('searchCancel').onclick   = ()=>{ $('searchResults').innerHTML=''; showOverlay('menuOverlay'); };
+    $('searchSubmit').onclick   = ()=>{
+      const q=$('searchInput').value.trim(), out=$('searchResults'); out.innerHTML='';
       profilesRef.orderByChild('username').startAt(q).endAt(q+"\uf8ff")
         .once('value',snap=>{
-          Object.entries(snap.val()||{}).forEach(([uid,p])=>{
-            const d=document.createElement('div');
-            d.textContent = p.username + (p.badges?.includes('verified') ? ' ✓' : '');
-            d.style.cursor='pointer';
-            d.onclick = ()=>openProfile(uid);
+          Object.values(snap.val()||{}).forEach(p=>{
+            let d=document.createElement('div');
+            d.textContent = p.username;
             out.appendChild(d);
           });
         });
     };
 
-    // PROFILE OVERLAY
-    function openProfile(uid){
-      profilesRef.child(uid).once('value',snap=>{
-        const p = snap.val()||{};
-        // build profileOverlay on the fly...
-        // For brevity, re-use accountOverlay:
-        $('acc-avatar').src = p.avatarUrl || $('acc-avatar').src;
-        $('acc-username').textContent = p.username || '';
-        profilesRef.child(uid+'/scores').once('value',s=>{
-          const out = $('acc-scores'); out.innerHTML='';
-          Object.values(s.val()||{}).forEach(r=>{
-            const div = document.createElement('div');
-            div.textContent = r.score;
-            out.appendChild(div);
-          });
-        });
-        showOverlay('accountOverlay');
-      });
-    }
-
-    // PROFILE CARD TOGGLE
-    $('profileCard').onclick      = e=>{ e.stopPropagation(); $('profileCard').classList.toggle('expanded'); };
-    document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
-
     // AUTH STATE HANDLER
     auth.onAuthStateChanged(u=>{
-      if (u){
+      if(u){
         profilesRef.child(u.uid).once('value',snap=>{
-          const p=snap.val()||{};
-          $('pc-avatar').src = p.avatarUrl || $('pc-avatar').src;
-          $('pc-collapsed-text').textContent = p.username || u.email.split('@')[0];
+          let p=snap.val()||{};
+          $('pc-avatar').src = p.avatarUrl||$('pc-avatar').src;
+          $('pc-collapsed-text').textContent = p.username||u.email.split('@')[0];
         });
-        // expand options
-        $('#pc-options').innerHTML = `
-          <button id="pc-authBtn">Sign Out</button>
-          <button id="pc-accBtn">Account Settings</button>
-          <button id="pc-custBtn">Customize Profile</button>
-          <button id="pc-searchBtn">Search Profiles…</button>`;
-        // re-bind
-        $('pc-authBtn').onclick = ()=>auth.signOut();
-        $('pc-accBtn').onclick  = ()=>showOverlay('accountOverlay');
-        $('pc-custBtn').onclick = ()=>showOverlay('custOverlay');
-        $('pc-searchBtn').onclick = ()=>showOverlay('searchOverlay');
+        // show expanded options
+        $('pc-feedbackBtn').style.display='none';
+        $('pc-accBtn').style.display='inline-block';
+        $('pc-custBtn').style.display='inline-block';
+        $('pc-adminBtn').style.display='none';
+        $('pc-searchBtn').style.display='inline-block';
+        $('pc-authBtn').textContent='Sign Out';
       } else {
         $('pc-avatar').src = 'https://app.masonnet.org/default-avatar.png';
         $('pc-collapsed-text').textContent = 'Not signed in';
-        $('#pc-options').innerHTML = `
-          <button id="pc-authBtn">Sign In</button>
-          <button id="pc-searchBtn">Search Profiles…</button>`;
-        $('pc-authBtn').onclick    = ()=>showOverlay('loginOverlay');
-        $('pc-searchBtn').onclick  = ()=>showOverlay('searchOverlay');
+        $('pc-accBtn').style.display='none';
+        $('pc-custBtn').style.display='none';
+        $('pc-adminBtn').style.display='none';
+        $('pc-searchBtn').style.display='inline-block';
+        $('pc-authBtn').textContent='Sign In';
       }
     });
 
-    // ACCOUNT & CUSTOMIZE (reuse accountOverlay & custOverlay)
-    $('acc-close').onclick       = ()=>showOverlay();
-    $('custCancel').onclick      = ()=>showOverlay('accountOverlay');
-    $('custSave').onclick        = ()=>{
-      const u = auth.currentUser; if(!u) return alert('Sign in');
-      const data = {
-        avatarUrl:$('custAvatar').value.trim(),
-        username:$('custUsername').value.trim(),
-        firstName:$('custFirstName').value.trim(),
-        lastName:$('custLastName').value.trim(),
-        description:$('custDesc').value.trim()
-      };
-      profilesRef.child(u.uid).update(data).then(()=>{
-        $('pc-avatar').src = data.avatarUrl || $('pc-avatar').src;
-        $('pc-collapsed-text').textContent = data.username;
-        showOverlay('accountOverlay');
-      }).catch(e=>alert(e.message));
-    };
+    // PROFILE CARD TOGGLE
+    $('profileCard').onclick = e=>{ e.stopPropagation(); $('profileCard').classList.toggle('expanded'); };
+    document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
 
-    // INITIALIZE
+    // INITIAL SHOW MENU
     clearLogin();
     showOverlay('menuOverlay');
   });
