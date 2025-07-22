@@ -2,44 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Bird – Complete</title>
+  <title>Flappy Bird – All Features</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
     /* RESET & BASE */
     * { box-sizing:border-box; margin:0; padding:0; }
-    html, body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
-    button, input, textarea { font-family:inherit; }
+    html,body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
+    button,input,textarea { font-family:inherit; }
     button { background:red; color:#fff; border:none; cursor:pointer; }
     .hidden { display:none; }
+
+    /* OVERLAY CONTAINERS */
+    .overlay {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.85); display:flex; align-items:center;
+      justify-content:center; z-index:100;
+    }
+    .panel {
+      background:#222; padding:20px; border-radius:8px;
+      width:320px; max-width:90%; text-align:center;
+    }
+    .panel h2 {
+      margin-bottom:16px; font-size:24px;
+      font-family:'Press Start 2P';
+    }
+    .panel input, .panel textarea {
+      width:100%; padding:8px; margin:8px 0;
+      border:none; border-radius:4px; background:#111; color:#fff;
+      font-size:14px;
+    }
+    .panel textarea { height:80px; resize:none; }
+    .panel button {
+      width:100%; margin:6px 0; padding:10px; font-size:16px;
+    }
+    .scroll-list {
+      max-height:160px; overflow-y:auto; text-align:left;
+      background:#111; padding:8px; border-radius:4px; margin:8px 0;
+    }
+    .scroll-list div { padding:4px 0; border-bottom:1px solid #333; }
+
     /* MAIN MENU */
-    .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:100; }
-    #menuOverlay { background:#000; z-index:110; flex-direction:column; }
+    #menuOverlay { background:#000; flex-direction:column; z-index:110; }
     #menuOverlay img { width:200px; margin-bottom:40px; }
     #menuOverlay button { width:200px; margin:8px 0; padding:12px; font-size:18px; }
+
     /* PROFILE CARD */
-    #profileCard { position:absolute; top:20px; right:20px; width:64px; height:64px; background:rgba(0,0,0,0.7); border:2px solid red; border-radius:8px; overflow:hidden; cursor:pointer; z-index:120; transition:width .2s,height .2s; }
+    #profileCard {
+      position:absolute; top:20px; right:20px;
+      width:64px; height:64px;
+      background:rgba(0,0,0,0.7); border:2px solid red;
+      border-radius:8px; overflow:hidden; cursor:pointer;
+      z-index:120; transition:width .2s,height .2s;
+    }
     #profileCard.expanded { width:220px; height:auto; }
-    #pc-collapsed { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; padding:8px; }
+    #pc-collapsed {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; width:100%; height:100%; padding:8px;
+    }
     #pc-avatar { width:48px; height:48px; border-radius:50%; }
-    #pc-collapsed-text { margin-top:6px; font-size:14px; }
-    #pc-options { display:none; flex-direction:column; background:rgba(0,0,0,0.85); padding:8px; }
+    #pc-collapsed-text { display:none; margin-top:6px; font-size:14px; }
+    #profileCard.expanded #pc-collapsed-text { display:block; }
+    #pc-options {
+      display:none; flex-direction:column;
+      background:rgba(0,0,0,0.85); padding:8px;
+    }
     #profileCard.expanded #pc-options { display:flex; }
     #pc-options button { margin:4px 0; padding:6px; font-size:14px; }
-    /* PANELS */
-    .panel { width:320px; max-width:90%; background:#222; padding:20px; border-radius:8px; text-align:center; }
-    .panel h2 { margin-bottom:16px; font-size:24px; font-family:'Press Start 2P'; }
-    .panel input, .panel textarea { width:100%; padding:8px; margin:8px 0; border:none; border-radius:4px; background:#111; color:#fff; font-size:14px; }
-    .panel textarea { height:80px; resize:none; }
-    .panel button { width:100%; padding:10px; margin:6px 0; font-size:16px; }
-    .scroll-list { max-height:160px; overflow-y:auto; text-align:left; background:#111; padding:8px; border-radius:4px; margin:8px 0; }
-    .scroll-list div { padding:4px 0; border-bottom:1px solid #333; }
-    /* SFX POPUP */
+
+    /* CANVAS & HUD */
+    #canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      display:none; z-index:50;
+    }
+    #pauseBtn {
+      position:absolute; top:20px; right:20px;
+      display:none; padding:8px 16px; z-index:80; font-size:16px;
+    }
+
+    /* SFX POP-UP */
     #sfxPopup { pointer-events:none; }
     #sfxPopup .panel { width:240px; }
-    /* CANVAS & PAUSE */
-    #canvas { display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:50; }
-    #pauseBtn { display:none; position:absolute; top:20px; right:20px; padding:8px 16px; z-index:80; font-size:16px; }
   </style>
 </head>
 <body>
@@ -65,7 +108,7 @@
     </div>
   </div>
 
-  <!-- SIGN-IN -->
+  <!-- SIGN IN OVERLAY -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -79,29 +122,14 @@
     </div>
   </div>
 
-  <!-- ACCOUNT SETTINGS -->
-  <div id="accountOverlay" class="overlay hidden">
+  <!-- SEARCH PROFILES -->
+  <div id="searchOverlay" class="overlay hidden">
     <div class="panel">
-      <h2>Account Settings</h2>
-      <img id="acc-avatar" src="" style="width:64px;height:64px;border-radius:50%;margin-bottom:12px;"/>
-      <div>Username: <span id="acc-username"></span></div>
-      <h3>Your Scores</h3>
-      <div id="acc-scores" class="scroll-list"></div>
-      <button id="acc-close">Close</button>
-    </div>
-  </div>
-
-  <!-- CUSTOMIZE PROFILE -->
-  <div id="custOverlay" class="overlay hidden">
-    <div class="panel">
-      <h2>Customize Profile</h2>
-      <input id="custAvatar" placeholder="Avatar URL"/>
-      <input id="custUsername" placeholder="Username"/>
-      <input id="custFirstName" placeholder="First Name"/>
-      <input id="custLastName" placeholder="Last Name"/>
-      <textarea id="custDesc" placeholder="Description"></textarea>
-      <button id="custSave">Save</button>
-      <button id="custCancel">Cancel</button>
+      <h2>Search Profiles</h2>
+      <input id="searchInput" placeholder="Username"/>
+      <button id="searchSubmit">Search</button>
+      <button id="searchCancel">Cancel</button>
+      <div id="searchResults" class="scroll-list"></div>
     </div>
   </div>
 
@@ -155,14 +183,14 @@
     </div>
   </div>
 
-  <!-- SFX POPUP -->
+  <!-- SFX POP-UP -->
   <div id="sfxPopup" class="overlay hidden">
     <div class="panel">
       <p>Playing sound effects…</p>
     </div>
   </div>
 
-  <!-- CANVAS & PAUSE BUTTON -->
+  <!-- CANVAS & PAUSE BTN -->
   <canvas id="canvas"></canvas>
   <button id="pauseBtn">Pause</button>
 
@@ -173,7 +201,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // FIREBASE INIT
+    // FIREBASE CONFIG & INIT
     const cfg = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -186,23 +214,30 @@
     };
     firebase.initializeApp(cfg);
     const auth = firebase.auth(), db = firebase.database();
-    const lbRef       = db.ref("leaderboard");
+    const lbRef = db.ref("leaderboard");
     const profilesRef = db.ref("profiles"), rolesRef = db.ref("roles");
 
     // STATE FLAGS
     let soundOn = true, darkMode = false, skipToGO = false;
-    let state='menu', bird, pipes, score, frame, raf, collided;
-    const gravity=0.25, flapPower=-6, speed=2;
+    let state = 'menu', bird, pipes, score, frame, raf, collided;
+    const gravity = 0.25, flapPower = -6, speed = 2;
 
     // DOM SHORTCUT
     const $ = id => document.getElementById(id);
-    const overlays = ['menuOverlay','loginOverlay','accountOverlay','custOverlay',
-                      'leaderOverlay','settingsOverlay','pauseOverlay',
-                      'gameoverOverlay','nameOverlay','sfxPopup'];
-    function show(id) {
+    const overlays = [
+      'menuOverlay','loginOverlay','searchOverlay','leaderOverlay','settingsOverlay',
+      'pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
+    ];
+    function showOverlay(id) {
       overlays.forEach(x => $(x).classList.add('hidden'));
       if (id) $(id).classList.remove('hidden');
     }
+
+    // CANVAS SETUP
+    const canvas = $('canvas'), ctx = canvas.getContext('2d');
+    function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+    window.addEventListener('resize', resize);
+    resize();
 
     // ASSETS & AUDIO
     const ASSETS = {
@@ -213,18 +248,12 @@
       die:'https://app.masonnet.org/die.mp3',
       point:'https://app.masonnet.org/point.mp3'
     };
-    const birdImg=new Image(), pipeImg=new Image();
-    birdImg.src=ASSETS.bird; pipeImg.src=ASSETS.pipe;
-    const flapS=new Audio(ASSETS.flap),
-          hitS =new Audio(ASSETS.hit),
-          dieS =new Audio(ASSETS.die),
-          pointS=new Audio(ASSETS.point);
-
-    // CANVAS SETUP
-    const canvas = $('canvas'), ctx = canvas.getContext('2d');
-    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
-    window.addEventListener('resize',resize);
-    resize();
+    const birdImg = new Image(), pipeImg = new Image();
+    birdImg.src = ASSETS.bird; pipeImg.src = ASSETS.pipe;
+    const flapS = new Audio(ASSETS.flap),
+          hitS  = new Audio(ASSETS.hit),
+          dieS  = new Audio(ASSETS.die),
+          pointS= new Audio(ASSETS.point);
 
     // BIRD CLASS
     class Bird {
@@ -255,16 +284,16 @@
       }
       die(){
         if (state!=='playing' || collided) return;
-        collided = true;
-        state    = 'dying';
+        collided = true; state = 'dying';
         cancelAnimationFrame(raf);
-        if (soundOn && !skipToGO){
-          show('sfxPopup');
+
+        if (soundOn && !skipToGO) {
+          showOverlay('sfxPopup');
           hitS.play().catch(()=>{});
-          hitS.onended = ()=>{
+          hitS.onended = () => {
             dieS.play().catch(()=>{});
-            dieS.onended = ()=>{
-              show(); // hide popup
+            dieS.onended = () => {
+              showOverlay();  // hide popup
               endGame();
             };
           };
@@ -274,25 +303,24 @@
       }
     }
 
-    // GAME LOGIC
+    // GAME LOOP & LOGIC
     function spawnPipe(){
-      const gap=120;
-      const top=20+Math.random()*(canvas.height-gap-40);
-      pipes.push({x:canvas.width,w:60,top,bottom:top+gap,passed:false});
+      const gap = 120;
+      const top = 20 + Math.random()*(canvas.height-gap-40);
+      pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
     }
     function loop(){
       if (state!=='playing') return;
-      raf=requestAnimationFrame(loop);
+      raf = requestAnimationFrame(loop);
       frame++;
       ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      // pipes
       pipes.forEach((p,i)=>{
         p.x -= speed;
         ctx.drawImage(pipeImg,p.x,0,p.w,p.top);
         ctx.drawImage(pipeImg,p.x,p.bottom,p.w,canvas.height-p.bottom);
-        if (!p.passed && bird.x>p.x+p.w){
-          p.passed=true;
+        if (!p.passed && bird.x>p.x+p.w) {
+          p.passed = true;
           score++;
           if (soundOn) pointS.play().catch(()=>{});
         }
@@ -300,19 +328,15 @@
         if (p.x + p.w < 0) pipes.splice(i,1);
       });
 
-      // bird
       bird.update();
       bird.draw();
 
-      // spawn
       if (frame % 150 === 0) spawnPipe();
 
-      // draw score
-      ctx.fillStyle='#fff';
-      ctx.font='32px Press Start 2P';
+      ctx.fillStyle = '#fff';
+      ctx.font = '32px Press Start 2P';
       ctx.fillText(score,20,50);
     }
-
     function startGame(){
       bird      = new Bird();
       pipes     = [];
@@ -320,46 +344,44 @@
       frame     = 0;
       collided  = false;
       state     = 'playing';
-      show();   // hide all overlays
-      $('pauseBtn').style.display='block';
+      showOverlay();  // hide menus
+      $('pauseBtn').style.display = 'block';
       loop();
     }
-
     function endGame(){
       $('finalScore').textContent = score;
-      show('gameoverOverlay');
+      showOverlay('gameoverOverlay');
     }
 
-    // UI EVENTS
+    // UI BINDINGS
     $('startBtn').onclick        = startGame;
-    $('pauseBtn').onclick        = ()=>{ if(state==='playing'){ cancelAnimationFrame(raf); show('pauseOverlay'); state='paused'; }};
-    $('resumeBtn').onclick       = ()=>{ show(); state='playing'; loop(); };
-    $('pauseMenuBtn').onclick    = ()=>{ cancelAnimationFrame(raf); $('pauseBtn').style.display='none'; show('menuOverlay'); state='menu'; };
+    $('pauseBtn').onclick        = ()=>{ if(state==='playing'){ cancelAnimationFrame(raf); showOverlay('pauseOverlay'); state='paused'; }};
+    $('resumeBtn').onclick       = ()=>{ showOverlay(); state='playing'; loop(); };
+    $('pauseMenuBtn').onclick    = ()=>{ cancelAnimationFrame(raf); $('pauseBtn').style.display='none'; showOverlay('menuOverlay'); state='menu'; };
     $('restartBtn').onclick      = startGame;
-    $('goMenuBtn').onclick       = ()=>{ $('pauseBtn').style.display='none'; show('menuOverlay'); state='menu'; };
+    $('goMenuBtn').onclick       = ()=>{ $('pauseBtn').style.display='none'; showOverlay('menuOverlay'); state='menu'; };
 
     // HIGH SCORE PROMPT
-    $('saveNameBtn').onclick     = ()=>{ let n=$('nameInput').value.trim()||'Anonymous'; lbRef.push({name:n,score,uid:auth.currentUser?.uid,ts:Date.now()}); show('gameoverOverlay'); };
-    $('skipNameBtn').onclick     = ()=>show('gameoverOverlay');
+    $('saveNameBtn').onclick     = ()=>{ let n=$('nameInput').value.trim()||'Anonymous'; lbRef.push({ name:n, score, uid:auth.currentUser?.uid, ts:Date.now() }); showOverlay('gameoverOverlay'); };
+    $('skipNameBtn').onclick     = ()=>showOverlay('gameoverOverlay');
 
     // LEADERBOARD
     $('leaderBtn').onclick       = ()=>{
       let L=$('leaderList'); L.innerHTML='';
-      lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
-        Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score)
-          .forEach(e=>{
-            let d=document.createElement('div');
-            d.textContent=`${e.name}: ${e.score}`;
-            L.appendChild(d);
-          });
-        show('leaderOverlay');
+      lbRef.orderByChild('score').limitToLast(10).once('value', snap=>{
+        Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score).forEach(e=>{
+          let d=document.createElement('div');
+          d.textContent = `${e.name}: ${e.score}`;
+          L.appendChild(d);
+        });
+        showOverlay('leaderOverlay');
       });
     };
-    $('leaderClose').onclick     = ()=>show('menuOverlay');
+    $('leaderClose').onclick     = ()=>showOverlay('menuOverlay');
 
     // SETTINGS
-    $('settingsBtn').onclick     = ()=>show('settingsOverlay');
-    $('settingsCloseBtn').onclick= ()=>show('menuOverlay');
+    $('settingsBtn').onclick     = ()=>showOverlay('settingsOverlay');
+    $('settingsCloseBtn').onclick= ()=>showOverlay('menuOverlay');
     $('soundToggle').onclick      = ()=>{
       soundOn = !soundOn;
       $('soundToggle').textContent = soundOn?'🔊 Sound: On':'🔇 Sound: Off';
@@ -367,47 +389,115 @@
     $('darkToggle').onclick       = ()=>{
       darkMode = !darkMode;
       $('darkToggle').textContent = darkMode?'🌙 Dark Mode: On':'☀️ Light Mode';
-      document.body.classList.toggle('dark-mode',darkMode);
+      document.body.classList.toggle('dark-mode', darkMode);
     };
     $('skipToggle').onclick       = ()=>{
       skipToGO = !skipToGO;
       $('skipToggle').textContent = skipToGO?'🚀 Skip to GO: On':'🚀 Skip to GO: Off';
     };
 
-    // HUB
-    $('hubBtn').onclick           = ()=>window.location.href='https://app.masonnet.org/flappybirdhub';
+    // HUB NAV
+    $('hubBtn').onclick           = ()=>location.href='https://app.masonnet.org/flappybirdhub';
 
-    // SIGN-IN & PROFILE CARD
-    $('pc-authBtn').onclick       = ()=>auth.currentUser?auth.signOut():show('loginOverlay');
-    $('loginCancel').onclick      = ()=>{ clearLogin(); show('menuOverlay'); };
+    // SIGN-IN
+    $('pc-authBtn').onclick       = ()=>{
+      if (auth.currentUser) auth.signOut();
+      else showOverlay('loginOverlay');
+    };
+    $('loginCancel').onclick      = ()=>{ clearLogin(); showOverlay('menuOverlay'); };
     $('loginSubmit').onclick      = ()=>{
-      const e=$('loginEmail').value.trim(), p=$('loginPass').value.trim();
-      const persistence = $('loginRemember').checked
+      const em = $('loginEmail').value.trim();
+      const pw = $('loginPass').value.trim();
+      const pers = $('loginRemember').checked
         ? firebase.auth.Auth.Persistence.LOCAL
         : firebase.auth.Auth.Persistence.SESSION;
-      auth.setPersistence(persistence)
-        .then(()=>auth.signInWithEmailAndPassword(e,p))
-        .then(()=>{ clearLogin(); show('menuOverlay'); })
-        .catch(err=>alert(err.message));
+      auth.setPersistence(pers)
+        .then(()=> auth.signInWithEmailAndPassword(em,pw))
+        .then(()=>{ clearLogin(); showOverlay('menuOverlay'); })
+        .catch(e=>alert(e.message));
     };
     function clearLogin(){
       $('loginEmail').value=''; $('loginPass').value=''; $('loginRemember').checked=false;
     }
 
+    // SEARCH PROFILES
+    $('pc-searchBtn').onclick     = ()=>showOverlay('searchOverlay');
+    $('searchCancel').onclick     = ()=>{ $('searchResults').innerHTML=''; showOverlay('menuOverlay'); };
+    $('searchSubmit').onclick     = ()=>{
+      const q = $('searchInput').value.trim();
+      const out = $('searchResults'); out.innerHTML='';
+      profilesRef.orderByChild('username').startAt(q).endAt(q+"\uf8ff")
+        .once('value',snap=>{
+          Object.entries(snap.val()||{}).forEach(([uid,p])=>{
+            const d=document.createElement('div');
+            d.textContent = p.username + (p.badges?.includes('verified') ? ' ✓' : '');
+            d.style.cursor='pointer';
+            d.onclick = ()=>openProfile(uid);
+            out.appendChild(d);
+          });
+        });
+    };
+
+    // PROFILE OVERLAY
+    function openProfile(uid){
+      profilesRef.child(uid).once('value',snap=>{
+        const p = snap.val()||{};
+        // build profileOverlay on the fly...
+        // For brevity, re-use accountOverlay:
+        $('acc-avatar').src = p.avatarUrl || $('acc-avatar').src;
+        $('acc-username').textContent = p.username || '';
+        profilesRef.child(uid+'/scores').once('value',s=>{
+          const out = $('acc-scores'); out.innerHTML='';
+          Object.values(s.val()||{}).forEach(r=>{
+            const div = document.createElement('div');
+            div.textContent = r.score;
+            out.appendChild(div);
+          });
+        });
+        showOverlay('accountOverlay');
+      });
+    }
+
+    // PROFILE CARD TOGGLE
     $('profileCard').onclick      = e=>{ e.stopPropagation(); $('profileCard').classList.toggle('expanded'); };
     document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
 
-    $('pc-searchBtn').onclick     = ()=>alert('Search Profiles…');
+    // AUTH STATE HANDLER
+    auth.onAuthStateChanged(u=>{
+      if (u){
+        profilesRef.child(u.uid).once('value',snap=>{
+          const p=snap.val()||{};
+          $('pc-avatar').src = p.avatarUrl || $('pc-avatar').src;
+          $('pc-collapsed-text').textContent = p.username || u.email.split('@')[0];
+        });
+        // expand options
+        $('#pc-options').innerHTML = `
+          <button id="pc-authBtn">Sign Out</button>
+          <button id="pc-accBtn">Account Settings</button>
+          <button id="pc-custBtn">Customize Profile</button>
+          <button id="pc-searchBtn">Search Profiles…</button>`;
+        // re-bind
+        $('pc-authBtn').onclick = ()=>auth.signOut();
+        $('pc-accBtn').onclick  = ()=>showOverlay('accountOverlay');
+        $('pc-custBtn').onclick = ()=>showOverlay('custOverlay');
+        $('pc-searchBtn').onclick = ()=>showOverlay('searchOverlay');
+      } else {
+        $('pc-avatar').src = 'https://app.masonnet.org/default-avatar.png';
+        $('pc-collapsed-text').textContent = 'Not signed in';
+        $('#pc-options').innerHTML = `
+          <button id="pc-authBtn">Sign In</button>
+          <button id="pc-searchBtn">Search Profiles…</button>`;
+        $('pc-authBtn').onclick    = ()=>showOverlay('loginOverlay');
+        $('pc-searchBtn').onclick  = ()=>showOverlay('searchOverlay');
+      }
+    });
 
-    // ACCOUNT & CUSTOMIZE
-    $('pc-searchBtn').onclick     = ()=>alert('Search Profiles…');
-    $('pc-accBtn').onclick        = ()=>show('accountOverlay');
-    $('acc-close').onclick        = ()=>show('menuOverlay');
-    $('pc-custBtn').onclick       = ()=>show('custOverlay');
-    $('custCancel').onclick       = ()=>show('accountOverlay');
-    $('custSave').onclick         = ()=>{
-      let u=auth.currentUser; if(!u)return alert('Sign in');
-      let data={
+    // ACCOUNT & CUSTOMIZE (reuse accountOverlay & custOverlay)
+    $('acc-close').onclick       = ()=>showOverlay();
+    $('custCancel').onclick      = ()=>showOverlay('accountOverlay');
+    $('custSave').onclick        = ()=>{
+      const u = auth.currentUser; if(!u) return alert('Sign in');
+      const data = {
         avatarUrl:$('custAvatar').value.trim(),
         username:$('custUsername').value.trim(),
         firstName:$('custFirstName').value.trim(),
@@ -415,41 +505,15 @@
         description:$('custDesc').value.trim()
       };
       profilesRef.child(u.uid).update(data).then(()=>{
-        $('pc-avatar').src=data.avatarUrl||$('pc-avatar').src;
-        $('pc-collapsed-text').textContent=data.username||$('pc-collapsed-text').textContent;
-        show('accountOverlay');
-      }).catch(err=>alert(err.message));
+        $('pc-avatar').src = data.avatarUrl || $('pc-avatar').src;
+        $('pc-collapsed-text').textContent = data.username;
+        showOverlay('accountOverlay');
+      }).catch(e=>alert(e.message));
     };
-
-    // AUTH STATE
-    auth.onAuthStateChanged(u=>{
-      if(u){
-        profilesRef.child(u.uid).once('value',snap=>{
-          const p=snap.val()||{};
-          $('pc-avatar').src=p.avatarUrl||$('pc-avatar').src;
-          $('pc-collapsed-text').textContent=p.username||u.email.split('@')[0];
-        });
-        document.getElementById('pc-options').innerHTML =
-          '<button id="pc-authBtn">Sign Out</button>'+
-          '<button id="pc-feedbackBtn">Submit Feedback</button>'+
-          '<button id="pc-accBtn">Account Settings</button>'+
-          '<button id="pc-custBtn">Customize Profile</button>'+
-          '<button id="pc-searchBtn">Search Profiles…</button>';
-        // rebind sign out
-        $('pc-authBtn').onclick = ()=>auth.signOut();
-      } else {
-        $('pc-avatar').src='https://app.masonnet.org/default-avatar.png';
-        $('pc-collapsed-text').textContent='Not signed in';
-        document.getElementById('pc-options').innerHTML =
-          '<button id="pc-authBtn">Sign In</button>'+
-          '<button id="pc-searchBtn">Search Profiles…</button>';
-        $('pc-authBtn').onclick = ()=>show('loginOverlay');
-      }
-    });
 
     // INITIALIZE
     clearLogin();
-    show('menuOverlay');
+    showOverlay('menuOverlay');
   });
   </script>
 </body>
