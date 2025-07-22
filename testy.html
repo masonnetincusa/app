@@ -5,119 +5,229 @@
   <title>Flappy Bird</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width:100%; height:100%; background:#000; color:#fff; font-family:Arial,sans-serif; overflow:hidden; }
-    button { background:red; color:#fff; border:none; padding:10px 20px; font-size:16px; cursor:pointer; }
-    #background { position:absolute; top:0; left:0; width:100%; height:100%; background:#000; }
-    canvas { position:absolute; top:0; left:0; width:100%; height:100%; }
-    #title { position:absolute; top:20px; left:50%; transform:translateX(-50%); z-index:2; }
-    #score { position:absolute; top:100px; left:50%; transform:translateX(-50%); font-size:32px; z-index:2; }
-    #startBtn { position:absolute; top:160px; left:50%; transform:translateX(-50%); z-index:2; }
+    /* Reset & Base */
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html,body { width:100%; height:100%; background:#000; color:#fff; font-family:Arial,sans-serif; overflow:hidden; }
+    button { background:red; color:#fff; border:none; padding:12px 24px; font-size:16px; cursor:pointer; }
+    input { width:100%; padding:8px; margin:6px 0; border:1px solid #444; border-radius:4px; background:#111; color:#fff; }
+    /* Title */
+    #titleImg { position:absolute; top:20px; left:50%; transform:translateX(-50%); z-index:10; width:200px; }
+    /* Score & Pause */
+    #score { position:absolute; top:100px; left:50%; transform:translateX(-50%); font-size:32px; z-index:10; }
+    #pauseBtn { position:absolute; top:20px; right:20px; display:none; z-index:10; }
+    /* Canvas */
+    #gameCanvas { position:absolute; top:0; left:0; width:100%; height:100%; }
+    /* Overlays */
+    .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:20; }
+    .hidden { display:none; }
+    .panel { background:#222; padding:20px; border-radius:8px; width:300px; text-align:center; }
+    .panel h2 { margin-bottom:12px; }
   </style>
 </head>
 <body>
 
   <!-- Title Image -->
-  <img id="title" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird" />
+  <img id="titleImg" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"/>
 
-  <!-- Score Display -->
+  <!-- Score & Pause -->
   <div id="score">0</div>
+  <button id="pauseBtn">Pause</button>
 
-  <!-- Start Button -->
-  <button id="startBtn">Start</button>
+  <!-- Main Menu -->
+  <div id="menuOverlay" class="overlay">
+    <div class="panel">
+      <h2>Main Menu</h2>
+      <button id="startBtn">Start</button>
+      <button id="signInBtn">Sign In</button>
+    </div>
+  </div>
 
-  <!-- Canvas for Game -->
-  <div id="background"></div>
-  <canvas id="canvas"></canvas>
+  <!-- Sign-In Overlay -->
+  <div id="loginOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Sign In</h2>
+      <input id="loginEmail" type="email" placeholder="Email"/>
+      <input id="loginPass" type="password" placeholder="Password"/>
+      <button id="loginSubmit">Submit</button>
+      <button id="loginCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas"></canvas>
 
   <script>
-    // Asset URLs
-    const BIRD_IMG = 'https://app.masonnet.org/bird.png';
-    const PIPE_IMG = 'https://app.masonnet.org/pipe-green.png';
-    const FLAP_SND = 'https://app.masonnet.org/flap.mp3';
-    const HIT_SND  = 'https://app.masonnet.org/hit.mp3';
-    const DIE_SND  = 'https://app.masonnet.org/die.mp3';
-    const POINT_SND= 'https://app.masonnet.org/point.mp3';
+  // — — — GLOBAL CONFIG & ASSETS — — —
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+    authDomain: "masonnet-app-official.firebaseapp.com",
+    databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+    projectId: "masonnet-app-official",
+    storageBucket: "masonnet-app-official.firebasestorage.app",
+    messagingSenderId: "783919367562",
+    appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+    measurementId: "G-X1YKV5VK7J"
+  };
+  const ASSETS = {
+    bird: 'https://app.masonnet.org/bird.png',
+    pipe: 'https://app.masonnet.org/pipe-green.png',
+    flap: 'https://app.masonnet.org/flap.mp3',
+    hit:  'https://app.masonnet.org/hit.mp3',
+    die:  'https://app.masonnet.org/die.mp3',
+    point:'https://app.masonnet.org/point.mp3'
+  };
 
-    // Canvas setup
-    const canvas = document.getElementById('canvas'),
-          ctx    = canvas.getContext('2d');
-    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
+  // Initialize Firebase
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth(), db = firebase.database();
 
-    // Load assets
-    const birdImg = new Image(), pipeImg = new Image();
-    birdImg.src = BIRD_IMG; pipeImg.src = PIPE_IMG;
-    const flapS = new Audio(FLAP_SND),
-          hitS  = new Audio(HIT_SND),
-          dieS  = new Audio(DIE_SND),
-          pointS= new Audio(POINT_SND);
+  // DOM Refs
+  const $       = id=>document.getElementById(id);
+  const menu    = $('menuOverlay');
+  const login   = $('loginOverlay');
+  const startB  = $('startBtn');
+  const signInB = $('signInBtn');
+  const loginSub= $('loginSubmit');
+  const loginCan= $('loginCancel');
+  const pauseB  = $('pauseBtn');
+  const scoreEl = $('score');
+  const canvas  = $('gameCanvas');
+  const ctx     = canvas.getContext('2d');
 
-    // Game state
-    let state='menu', bird, pipes, score, frame, raf;
-    const gravity=0.25, flapPower=-6, speed=2;
+  // Canvas Resize
+  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight;}
+  window.addEventListener('resize', resize);
+  resize();
 
-    class Bird {
-      constructor(){ this.x=50; this.y=canvas.height/2; this.vy=0; this.w=34; this.h=24; }
-      flap(){ this.vy=flapPower; flapS.play().catch(()=>{}); }
-      update(){
-        this.vy += gravity; this.y+=this.vy;
-        if(this.y<0) this.y=0;
-        if(this.y+this.h>canvas.height) this.die();
+  // Game Variables
+  let state='menu', bird, pipes, score, frame, raf, collided;
+  const gravity=0.25, flapPower=-6, speed=2;
+
+  // Preload
+  const birdImg  = new Image(), pipeImg = new Image();
+  birdImg.src=ASSETS.bird; pipeImg.src=ASSETS.pipe;
+  const flapS=new Audio(ASSETS.flap),hitS=new Audio(ASSETS.hit),dieS=new Audio(ASSETS.die),pointS=new Audio(ASSETS.point);
+
+  // Bird Class
+  class Bird {
+    constructor(){
+      this.x=50; this.y=canvas.height/2;
+      this.w=34; this.h=24; this.vy=0;
+    }
+    flap(){
+      this.vy=flapPower;
+      flapS.play().catch(()=>{});
+    }
+    update(){
+      this.vy+=gravity; this.y+=this.vy;
+      if(this.y<0) this.y=0;
+      if(this.y+this.h>canvas.height) this.die();
+    }
+    draw(){
+      ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
+    }
+    collides(pipe){
+      return !(
+        this.x+this.w < pipe.x ||
+        this.x > pipe.x+pipe.w ||
+        this.y+this.h < pipe.top ||
+        this.y > pipe.bottom
+      );
+    }
+    die(){
+      if(state!=='playing' || collided) return;
+      collided=true; state='ended';
+      cancelAnimationFrame(raf);
+      hitS.play().catch(()=>{ hitS.onended=()=>dieS.play().catch(()=>{}); });
+    }
+  }
+
+  // Spawn Pipe
+  function spawnPipe(){
+    const gap=120;
+    const top=Math.random()*(canvas.height-gap-40)+20;
+    pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
+  }
+
+  // Game Loop
+  function loop(){
+    if(state!=='playing') return;
+    raf=requestAnimationFrame(loop);
+    frame++;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Pipes
+    pipes.forEach((p,i)=>{
+      p.x-=speed;
+      ctx.drawImage(pipeImg,p.x,0,p.w,p.top);
+      ctx.drawImage(pipeImg,p.x,p.bottom,p.w,canvas.height-p.bottom);
+      if(!p.passed && bird.x>p.x+p.w){
+        p.passed=true;
+        score++;
+        pointS.play().catch(()=>{});
       }
-      draw(){ ctx.drawImage(birdImg, this.x, this.y, this.w, this.h); }
-      collides(p){
-        return !(this.x+this.w<p.x || this.x>p.x+p.w || this.y+this.h<p.top || this.y>p.bottom);
-      }
-      die(){ if(state!=='playing') return; state='ended'; cancelAnimationFrame(raf); hitS.play().catch(()=>{}); hitS.onended=()=>dieS.play().catch(()=>{}); }
+      if(bird.collides(p)) bird.die();
+      if(p.x+p.w<0) pipes.splice(i,1);
+    });
+
+    // Bird
+    bird.update();
+    bird.draw();
+
+    // Spawn
+    if(frame%150===0) spawnPipe();
+
+    // Score
+    scoreEl.textContent = score;
+  }
+
+  // Start Game
+  function startGame(){
+    bird=new Bird();
+    pipes=[]; score=0; frame=0; collided=false;
+    state='playing';
+    menu.classList.add('hidden');
+    pauseB.style.display='block';
+    loop();
+  }
+
+  // Event Listeners
+  startB.onclick = startGame;
+  pauseB.onclick = ()=>{
+    if(state==='playing'){
+      cancelAnimationFrame(raf);
+      showMenu();
+      state='paused';
     }
+  };
+  canvas.addEventListener('mousedown', ()=>{ if(state==='playing') bird.flap(); });
+  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); if(state==='playing') bird.flap(); });
 
-    function spawnPipe(){
-      const gap=120, top=20+Math.random()*(canvas.height-gap-40);
-      pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
-    }
+  signInB.onclick = ()=>{ login.classList.remove('hidden'); menu.classList.add('hidden'); };
+  loginCan.onclick= ()=>{ login.classList.add('hidden'); menu.classList.remove('hidden'); };
+  loginSub.onclick= ()=>{
+    const email=$('loginEmail').value.trim();
+    auth.signInWithEmailAndPassword(email,$('loginPass').value.trim())
+      .then(u=>{
+        $('pc-avatar').src=`https://api.adorable.io/avatars/48/${u.user.email}.png`;
+        $('pc-name').textContent=u.user.email.split('@')[0];
+        login.classList.add('hidden');
+        menu.classList.remove('hidden');
+      })
+      .catch(e=>alert(e.message));
+  };
 
-    function loop(){
-      if(state!=='playing') return;
-      raf=requestAnimationFrame(loop); frame++;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Show Main Menu
+  function showMenu(){
+    menu.classList.remove('hidden');
+    pauseB.style.display='none';
+  }
+  auth.onAuthStateChanged(u=>{
+    if(!u) showMenu();
+  });
 
-      // Pipes
-      pipes.forEach((p,i)=>{
-        p.x -= speed;
-        ctx.drawImage(pipeImg,p.x,0,p.w,p.top);
-        ctx.drawImage(pipeImg,p.x,p.bottom,p.w,canvas.height-p.bottom);
-        if(!p.passed && bird.x>p.x+p.w){p.passed=true;score++; pointS.play().catch(()=>{});}
-        if(bird.collides(p)) bird.die();
-        if(p.x+p.w<0) pipes.splice(i,1);
-      });
-
-      // Bird
-      bird.update(); bird.draw();
-
-      // Spawn
-      if(frame%150===0) spawnPipe();
-
-      // Score
-      document.getElementById('score').textContent = score;
-    }
-
-    function startGame(){
-      bird = new Bird();
-      pipes = [];
-      score = 0;
-      frame = 0;
-      state = 'playing';
-      document.getElementById('startBtn').style.display = 'none';
-      loop();
-    }
-
-    // Input
-    document.getElementById('startBtn').addEventListener('click', startGame);
-    canvas.addEventListener('mousedown', ()=>{ if(state==='playing') bird.flap(); });
-    canvas.addEventListener('touchstart',e=>{ e.preventDefault(); if(state==='playing') bird.flap(); });
-
+  // Initialize
+  showMenu();
   </script>
 </body>
 </html>
