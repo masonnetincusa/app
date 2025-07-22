@@ -2,84 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Bird – All Features</title>
+  <title>Flappy Bird – Complete</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
     /* RESET & BASE */
     * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
-    button,input,textarea { font-family:inherit; }
+    html, body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
+    button, input, textarea { font-family:inherit; }
     button { background:red; color:#fff; border:none; cursor:pointer; }
     .hidden { display:none; }
     /* MAIN MENU */
-    #menuOverlay {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      background:#000; display:flex; flex-direction:column;
-      align-items:center; justify-content:center; z-index:10;
-    }
+    .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:100; }
+    #menuOverlay { background:#000; z-index:110; flex-direction:column; }
     #menuOverlay img { width:200px; margin-bottom:40px; }
     #menuOverlay button { width:200px; margin:8px 0; padding:12px; font-size:18px; }
     /* PROFILE CARD */
-    #profileCard {
-      position:absolute; top:20px; right:20px;
-      width:64px; height:64px; background:rgba(0,0,0,.7);
-      border:2px solid red; border-radius:8px; overflow:hidden;
-      cursor:pointer; z-index:50; transition:width .2s,height .2s;
-    }
+    #profileCard { position:absolute; top:20px; right:20px; width:64px; height:64px; background:rgba(0,0,0,0.7); border:2px solid red; border-radius:8px; overflow:hidden; cursor:pointer; z-index:120; transition:width .2s,height .2s; }
     #profileCard.expanded { width:220px; height:auto; }
     #pc-collapsed { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; padding:8px; }
     #pc-avatar { width:48px; height:48px; border-radius:50%; }
     #pc-collapsed-text { margin-top:6px; font-size:14px; }
-    #pc-options {
-      display:none; flex-direction:column; padding:8px;
-      background:rgba(0,0,0,.85);
-    }
+    #pc-options { display:none; flex-direction:column; background:rgba(0,0,0,0.85); padding:8px; }
     #profileCard.expanded #pc-options { display:flex; }
     #pc-options button { margin:4px 0; padding:6px; font-size:14px; }
-    /* OVERLAYS */
-    .overlay {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,.85); display:flex;
-      align-items:center; justify-content:center; z-index:30;
-    }
-    .panel {
-      background:#222; padding:20px; border-radius:8px;
-      width:320px; max-width:90%; text-align:center;
-    }
-    .panel h2 {
-      margin-bottom:16px; font-size:24px; font-family:'Press Start 2P';
-    }
-    .panel input, .panel textarea {
-      width:100%; padding:8px; margin:8px 0;
-      border:none; border-radius:4px; background:#111; color:#fff;
-      font-size:14px;
-    }
+    /* PANELS */
+    .panel { width:320px; max-width:90%; background:#222; padding:20px; border-radius:8px; text-align:center; }
+    .panel h2 { margin-bottom:16px; font-size:24px; font-family:'Press Start 2P'; }
+    .panel input, .panel textarea { width:100%; padding:8px; margin:8px 0; border:none; border-radius:4px; background:#111; color:#fff; font-size:14px; }
     .panel textarea { height:80px; resize:none; }
     .panel button { width:100%; padding:10px; margin:6px 0; font-size:16px; }
-    .scroll-list {
-      max-height:160px; overflow-y:auto; text-align:left;
-      background:#111; padding:8px; border-radius:4px; margin:8px 0;
-    }
+    .scroll-list { max-height:160px; overflow-y:auto; text-align:left; background:#111; padding:8px; border-radius:4px; margin:8px 0; }
     .scroll-list div { padding:4px 0; border-bottom:1px solid #333; }
     /* SFX POPUP */
     #sfxPopup { pointer-events:none; }
     #sfxPopup .panel { width:240px; }
-    /* CANVAS & HUD */
-    #canvas {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      display:none; z-index:5;
-    }
-    #pauseBtn {
-      position:absolute; top:20px; right:20px; padding:8px 16px;
-      display:none; z-index:20; font-size:16px;
-    }
+    /* CANVAS & PAUSE */
+    #canvas { display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:50; }
+    #pauseBtn { display:none; position:absolute; top:20px; right:20px; padding:8px 16px; z-index:80; font-size:16px; }
   </style>
 </head>
 <body>
 
   <!-- MAIN MENU -->
-  <div id="menuOverlay">
+  <div id="menuOverlay" class="overlay">
     <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"/>
     <button id="startBtn">Start</button>
     <button id="leaderBtn">Leaderboard</button>
@@ -99,7 +65,7 @@
     </div>
   </div>
 
-  <!-- OVERLAYS -->
+  <!-- SIGN-IN -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -113,6 +79,7 @@
     </div>
   </div>
 
+  <!-- ACCOUNT SETTINGS -->
   <div id="accountOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Account Settings</h2>
@@ -124,6 +91,7 @@
     </div>
   </div>
 
+  <!-- CUSTOMIZE PROFILE -->
   <div id="custOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Customize Profile</h2>
@@ -137,6 +105,7 @@
     </div>
   </div>
 
+  <!-- LEADERBOARD -->
   <div id="leaderOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Global Top 10</h2>
@@ -145,6 +114,7 @@
     </div>
   </div>
 
+  <!-- SETTINGS -->
   <div id="settingsOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Settings</h2>
@@ -155,6 +125,7 @@
     </div>
   </div>
 
+  <!-- PAUSE -->
   <div id="pauseOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Paused</h2>
@@ -163,6 +134,7 @@
     </div>
   </div>
 
+  <!-- GAME OVER -->
   <div id="gameoverOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Game Over</h2>
@@ -172,6 +144,7 @@
     </div>
   </div>
 
+  <!-- NEW HIGH SCORE -->
   <div id="nameOverlay" class="overlay hidden">
     <div class="panel">
       <h2>🎉 New High Score!</h2>
@@ -182,13 +155,14 @@
     </div>
   </div>
 
+  <!-- SFX POPUP -->
   <div id="sfxPopup" class="overlay hidden">
     <div class="panel">
       <p>Playing sound effects…</p>
     </div>
   </div>
 
-  <!-- CANVAS & PAUSE -->
+  <!-- CANVAS & PAUSE BUTTON -->
   <canvas id="canvas"></canvas>
   <button id="pauseBtn">Pause</button>
 
@@ -215,28 +189,22 @@
     const lbRef       = db.ref("leaderboard");
     const profilesRef = db.ref("profiles"), rolesRef = db.ref("roles");
 
-    // STATE
+    // STATE FLAGS
     let soundOn = true, darkMode = false, skipToGO = false;
     let state='menu', bird, pipes, score, frame, raf, collided;
     const gravity=0.25, flapPower=-6, speed=2;
 
-    // DOM SHORTCUTS
-    const $ = id=>document.getElementById(id);
+    // DOM SHORTCUT
+    const $ = id => document.getElementById(id);
     const overlays = ['menuOverlay','loginOverlay','accountOverlay','custOverlay',
                       'leaderOverlay','settingsOverlay','pauseOverlay',
                       'gameoverOverlay','nameOverlay','sfxPopup'];
-    function show(id){
-      overlays.forEach(x=>$(x).classList.add('hidden'));
-      if(id) $(id).classList.remove('hidden');
+    function show(id) {
+      overlays.forEach(x => $(x).classList.add('hidden'));
+      if (id) $(id).classList.remove('hidden');
     }
 
-    // CANVAS SETUP
-    const canvas = $('canvas'), ctx = canvas.getContext('2d');
-    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
-    window.addEventListener('resize',resize);
-    resize();
-
-    // ASSETS
+    // ASSETS & AUDIO
     const ASSETS = {
       bird:'https://app.masonnet.org/bird.png',
       pipe:'https://app.masonnet.org/pipe-green.png',
@@ -248,9 +216,15 @@
     const birdImg=new Image(), pipeImg=new Image();
     birdImg.src=ASSETS.bird; pipeImg.src=ASSETS.pipe;
     const flapS=new Audio(ASSETS.flap),
-          hitS=new Audio(ASSETS.hit),
-          dieS=new Audio(ASSETS.die),
+          hitS =new Audio(ASSETS.hit),
+          dieS =new Audio(ASSETS.die),
           pointS=new Audio(ASSETS.point);
+
+    // CANVAS SETUP
+    const canvas = $('canvas'), ctx = canvas.getContext('2d');
+    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+    window.addEventListener('resize',resize);
+    resize();
 
     // BIRD CLASS
     class Bird {
@@ -258,146 +232,191 @@
         this.x=50; this.y=canvas.height*0.4;
         this.w=34; this.h=24; this.vy=0;
       }
-      flap(){ this.vy=flapPower; if(soundOn) flapS.play().catch(()=>{}); }
-      update(){
-        this.vy+=gravity; this.y+=this.vy;
-        if(this.y<0) this.y=0;
-        if(this.y+this.h>canvas.height) this.die();
+      flap(){
+        this.vy = flapPower;
+        if (soundOn) flapS.play().catch(()=>{});
       }
-      draw(){ ctx.drawImage(birdImg,this.x,this.y,this.w,this.h); }
+      update(){
+        this.vy += gravity;
+        this.y  += this.vy;
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.h > canvas.height) this.die();
+      }
+      draw(){
+        ctx.drawImage(birdImg,this.x,this.y,this.w,this.h);
+      }
       collides(p){
-        return !(this.x+this.w<p.x || this.x>p.x+p.w ||
-                 this.y+this.h<p.top || this.y>p.bottom);
+        return !(
+          this.x+this.w < p.x ||
+          this.x     > p.x+p.w ||
+          this.y+this.h < p.top ||
+          this.y     > p.bottom
+        );
       }
       die(){
-        if(state!=='playing'||collided) return;
-        collided=true; state='dying';
+        if (state!=='playing' || collided) return;
+        collided = true;
+        state    = 'dying';
         cancelAnimationFrame(raf);
-        show('sfxPopup');
-        if(soundOn){
+        if (soundOn && !skipToGO){
+          show('sfxPopup');
           hitS.play().catch(()=>{});
-          hitS.onended=()=>{
+          hitS.onended = ()=>{
             dieS.play().catch(()=>{});
-            dieS.onended=endGame;
+            dieS.onended = ()=>{
+              show(); // hide popup
+              endGame();
+            };
           };
-        } else endGame();
+        } else {
+          endGame();
+        }
       }
     }
 
-    // GAME FUNCTIONS
+    // GAME LOGIC
     function spawnPipe(){
-      const gap=120, top=20+Math.random()*(canvas.height-gap-40);
+      const gap=120;
+      const top=20+Math.random()*(canvas.height-gap-40);
       pipes.push({x:canvas.width,w:60,top,bottom:top+gap,passed:false});
     }
     function loop(){
-      if(state!=='playing') return;
-      raf=requestAnimationFrame(loop); frame++;
+      if (state!=='playing') return;
+      raf=requestAnimationFrame(loop);
+      frame++;
       ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // pipes
       pipes.forEach((p,i)=>{
-        p.x-=speed;
+        p.x -= speed;
         ctx.drawImage(pipeImg,p.x,0,p.w,p.top);
         ctx.drawImage(pipeImg,p.x,p.bottom,p.w,canvas.height-p.bottom);
-        if(!p.passed && bird.x>p.x+p.w){
-          p.passed=true; score++; if(soundOn) pointS.play().catch(()=>{});
+        if (!p.passed && bird.x>p.x+p.w){
+          p.passed=true;
+          score++;
+          if (soundOn) pointS.play().catch(()=>{});
         }
-        if(bird.collides(p)) bird.die();
-        if(p.x+p.w<0) pipes.splice(i,1);
+        if (bird.collides(p)) bird.die();
+        if (p.x + p.w < 0) pipes.splice(i,1);
       });
-      bird.update(); bird.draw();
-      if(frame%150===0) spawnPipe();
+
+      // bird
+      bird.update();
+      bird.draw();
+
+      // spawn
+      if (frame % 150 === 0) spawnPipe();
+
+      // draw score
       ctx.fillStyle='#fff';
       ctx.font='32px Press Start 2P';
       ctx.fillText(score,20,50);
     }
+
     function startGame(){
-      bird=new Bird(); pipes=[]; score=0; frame=0; collided=false;
-      state='playing'; show(); $('pauseBtn').style.display='block'; loop();
+      bird      = new Bird();
+      pipes     = [];
+      score     = 0;
+      frame     = 0;
+      collided  = false;
+      state     = 'playing';
+      show();   // hide all overlays
+      $('pauseBtn').style.display='block';
+      loop();
     }
+
     function endGame(){
-      $('finalScore').textContent=score;
+      $('finalScore').textContent = score;
       show('gameoverOverlay');
     }
 
     // UI EVENTS
-    $('startBtn').onclick       = startGame;
-    $('pauseBtn').onclick       = ()=>{ if(state==='playing'){ cancelAnimationFrame(raf); show('pauseOverlay'); state='paused'; }};
-    $('resumeBtn').onclick      = ()=>{ show(); state='playing'; loop(); };
-    $('pauseMenuBtn').onclick   = ()=>{ cancelAnimationFrame(raf); $('pauseBtn').style.display='none'; show('menuOverlay'); state='menu'; };
-    $('restartBtn').onclick     = startGame;
-    $('goMenuBtn').onclick      = ()=>{ $('pauseBtn').style.display='none'; show('menuOverlay'); state='menu'; };
+    $('startBtn').onclick        = startGame;
+    $('pauseBtn').onclick        = ()=>{ if(state==='playing'){ cancelAnimationFrame(raf); show('pauseOverlay'); state='paused'; }};
+    $('resumeBtn').onclick       = ()=>{ show(); state='playing'; loop(); };
+    $('pauseMenuBtn').onclick    = ()=>{ cancelAnimationFrame(raf); $('pauseBtn').style.display='none'; show('menuOverlay'); state='menu'; };
+    $('restartBtn').onclick      = startGame;
+    $('goMenuBtn').onclick       = ()=>{ $('pauseBtn').style.display='none'; show('menuOverlay'); state='menu'; };
 
-    // HIGH SCORE
-    $('saveNameBtn').onclick    = ()=>{ let n=$('nameInput').value.trim()||'Anon'; lbRef.push({name:n,score,uid:auth.currentUser?.uid,ts:Date.now()}); show('gameoverOverlay'); };
-    $('skipNameBtn').onclick    = ()=>show('gameoverOverlay');
+    // HIGH SCORE PROMPT
+    $('saveNameBtn').onclick     = ()=>{ let n=$('nameInput').value.trim()||'Anonymous'; lbRef.push({name:n,score,uid:auth.currentUser?.uid,ts:Date.now()}); show('gameoverOverlay'); };
+    $('skipNameBtn').onclick     = ()=>show('gameoverOverlay');
 
     // LEADERBOARD
-    $('leaderBtn').onclick      = ()=>{
+    $('leaderBtn').onclick       = ()=>{
       let L=$('leaderList'); L.innerHTML='';
       lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
-        Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score).forEach(e=>{
-          let d=document.createElement('div');
-          d.textContent=`${e.name}: ${e.score}`;
-          L.appendChild(d);
-        });
+        Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score)
+          .forEach(e=>{
+            let d=document.createElement('div');
+            d.textContent=`${e.name}: ${e.score}`;
+            L.appendChild(d);
+          });
         show('leaderOverlay');
       });
     };
-    $('leaderClose').onclick    = ()=>show('menuOverlay');
+    $('leaderClose').onclick     = ()=>show('menuOverlay');
 
     // SETTINGS
-    $('settingsBtn').onclick    = ()=>show('settingsOverlay');
-    $('settingsCloseBtn').onclick = ()=>show('menuOverlay');
-    $('soundToggle').onclick     = ()=>{
-      soundOn=!soundOn;
+    $('settingsBtn').onclick     = ()=>show('settingsOverlay');
+    $('settingsCloseBtn').onclick= ()=>show('menuOverlay');
+    $('soundToggle').onclick      = ()=>{
+      soundOn = !soundOn;
       $('soundToggle').textContent = soundOn?'🔊 Sound: On':'🔇 Sound: Off';
     };
-    $('darkToggle').onclick      = ()=>{
-      darkMode=!darkMode;
+    $('darkToggle').onclick       = ()=>{
+      darkMode = !darkMode;
       $('darkToggle').textContent = darkMode?'🌙 Dark Mode: On':'☀️ Light Mode';
       document.body.classList.toggle('dark-mode',darkMode);
     };
-    $('skipToggle').onclick      = ()=>{
-      skipToGO=!skipToGO;
+    $('skipToggle').onclick       = ()=>{
+      skipToGO = !skipToGO;
       $('skipToggle').textContent = skipToGO?'🚀 Skip to GO: On':'🚀 Skip to GO: Off';
     };
 
     // HUB
-    $('hubBtn').onclick          = ()=>location.href='https://app.masonnet.org/flappybirdhub';
+    $('hubBtn').onclick           = ()=>window.location.href='https://app.masonnet.org/flappybirdhub';
 
     // SIGN-IN & PROFILE CARD
-    $('pc-authBtn').onclick      = ()=>auth.currentUser?auth.signOut():show('loginOverlay');
-    $('loginCancel').onclick     = ()=>{ clearLogin(); show('menuOverlay'); };
-    $('loginSubmit').onclick     = ()=>{
-      const e=$('loginEmail').value.trim(), p=$('loginPass').value.trim(),
-            pers=$('loginRemember').checked?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION;
-      auth.setPersistence(pers).then(()=>auth.signInWithEmailAndPassword(e,p))
-          .then(()=>{ clearLogin(); show('menuOverlay'); })
-          .catch(err=>alert(err.message));
+    $('pc-authBtn').onclick       = ()=>auth.currentUser?auth.signOut():show('loginOverlay');
+    $('loginCancel').onclick      = ()=>{ clearLogin(); show('menuOverlay'); };
+    $('loginSubmit').onclick      = ()=>{
+      const e=$('loginEmail').value.trim(), p=$('loginPass').value.trim();
+      const persistence = $('loginRemember').checked
+        ? firebase.auth.Auth.Persistence.LOCAL
+        : firebase.auth.Auth.Persistence.SESSION;
+      auth.setPersistence(persistence)
+        .then(()=>auth.signInWithEmailAndPassword(e,p))
+        .then(()=>{ clearLogin(); show('menuOverlay'); })
+        .catch(err=>alert(err.message));
     };
-
     function clearLogin(){
       $('loginEmail').value=''; $('loginPass').value=''; $('loginRemember').checked=false;
     }
 
-    $('profileCard').onclick     = e=>{ e.stopPropagation(); $('profileCard').classList.toggle('expanded'); };
-    document.body.addEventListener('click', ()=>$('profileCard').classList.remove('expanded'));
+    $('profileCard').onclick      = e=>{ e.stopPropagation(); $('profileCard').classList.toggle('expanded'); };
+    document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
+
+    $('pc-searchBtn').onclick     = ()=>alert('Search Profiles…');
 
     // ACCOUNT & CUSTOMIZE
-    $('pc-searchBtn').onclick    = ()=>alert('Search Profiles feature…');
-    $('pc-accBtn').onclick       = ()=>show('accountOverlay');
-    $('acc-close').onclick       = ()=>show('menuOverlay');
-    $('pc-custBtn').onclick      = ()=>show('custOverlay');
-    $('custCancel').onclick      = ()=>show('accountOverlay');
-    $('custSave').onclick        = ()=>{
-      let u=auth.currentUser; if(!u) return alert('Sign in');
-      let d={ avatarUrl:$('custAvatar').value.trim(),
-              username:$('custUsername').value.trim(),
-              firstName:$('custFirstName').value.trim(),
-              lastName:$('custLastName').value.trim(),
-              description:$('custDesc').value.trim() };
-      profilesRef.child(u.uid).update(d).then(()=>{
-        $('pc-avatar').src=d.avatarUrl||$('pc-avatar').src;
-        $('pc-collapsed-text').textContent=d.username||$('pc-collapsed-text').textContent;
+    $('pc-searchBtn').onclick     = ()=>alert('Search Profiles…');
+    $('pc-accBtn').onclick        = ()=>show('accountOverlay');
+    $('acc-close').onclick        = ()=>show('menuOverlay');
+    $('pc-custBtn').onclick       = ()=>show('custOverlay');
+    $('custCancel').onclick       = ()=>show('accountOverlay');
+    $('custSave').onclick         = ()=>{
+      let u=auth.currentUser; if(!u)return alert('Sign in');
+      let data={
+        avatarUrl:$('custAvatar').value.trim(),
+        username:$('custUsername').value.trim(),
+        firstName:$('custFirstName').value.trim(),
+        lastName:$('custLastName').value.trim(),
+        description:$('custDesc').value.trim()
+      };
+      profilesRef.child(u.uid).update(data).then(()=>{
+        $('pc-avatar').src=data.avatarUrl||$('pc-avatar').src;
+        $('pc-collapsed-text').textContent=data.username||$('pc-collapsed-text').textContent;
         show('accountOverlay');
       }).catch(err=>alert(err.message));
     };
@@ -406,29 +425,29 @@
     auth.onAuthStateChanged(u=>{
       if(u){
         profilesRef.child(u.uid).once('value',snap=>{
-          let p=snap.val()||{};
+          const p=snap.val()||{};
           $('pc-avatar').src=p.avatarUrl||$('pc-avatar').src;
           $('pc-collapsed-text').textContent=p.username||u.email.split('@')[0];
         });
-        $('pc-options').innerHTML =
-          '<button id="pc-authBtn">Sign Out</button>' +
-          '<button id="pc-feedbackBtn">Submit Feedback</button>' +
-          '<button id="pc-accBtn">Account Settings</button>' +
-          '<button id="pc-custBtn">Customize Profile</button>' +
+        document.getElementById('pc-options').innerHTML =
+          '<button id="pc-authBtn">Sign Out</button>'+
+          '<button id="pc-feedbackBtn">Submit Feedback</button>'+
+          '<button id="pc-accBtn">Account Settings</button>'+
+          '<button id="pc-custBtn">Customize Profile</button>'+
           '<button id="pc-searchBtn">Search Profiles…</button>';
-        // rebind authBtn
+        // rebind sign out
         $('pc-authBtn').onclick = ()=>auth.signOut();
       } else {
         $('pc-avatar').src='https://app.masonnet.org/default-avatar.png';
         $('pc-collapsed-text').textContent='Not signed in';
-        $('pc-options').innerHTML =
-          '<button id="pc-authBtn">Sign In</button>' +
+        document.getElementById('pc-options').innerHTML =
+          '<button id="pc-authBtn">Sign In</button>'+
           '<button id="pc-searchBtn">Search Profiles…</button>';
         $('pc-authBtn').onclick = ()=>show('loginOverlay');
       }
     });
 
-    // INIT
+    // INITIALIZE
     clearLogin();
     show('menuOverlay');
   });
