@@ -2,58 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Overlay Isolation Test</title>
+  <title>Flappy Isolation Test</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <style>
-    body, html { margin:0; padding:0; height:100%; overflow:hidden; background:#000; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html,body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.85); display:flex;
-      align-items:center; justify-content:center; color:#fff; font-size:24px;
+      align-items:center; justify-content:center; z-index:100;
     }
     .hidden { display:none; }
-    button { padding:12px 24px; font-size:18px; }
+    button { background:red; color:#fff; border:none; padding:12px 24px; font-size:16px; cursor:pointer; }
+    #canvas { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#222; }
   </style>
 </head>
 <body>
 
   <!-- MAIN MENU -->
   <div id="menuOverlay" class="overlay">
-    <button>MENU ONLY</button>
+    <button id="startBtn">Start</button>
   </div>
 
-  <!-- SFX POP-UP (should stay hidden) -->
+  <!-- SFX POP-UP (death only) -->
   <div id="sfxPopup" class="overlay hidden">
-    <span>🔊 SFX POP-UP</span>
+    <p>🔊 Playing sound effects…</p>
   </div>
 
-  <!-- NEW HIGH SCORE (should stay hidden) -->
-  <div id="nameOverlay" class="overlay hidden">
-    <span>🏆 NEW HIGH SCORE</span>
+  <!-- GAME OVER -->
+  <div id="gameoverOverlay" class="overlay hidden">
+    <div>
+      <p>💀 Game Over</p>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <button id="restartBtn">Restart</button>
+    </div>
   </div>
+
+  <canvas id="canvas"></canvas>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const ids = ['menuOverlay','sfxPopup','nameOverlay'];
-      console.log('DOMContentLoaded fired');
+      const $ = id => document.getElementById(id);
+      const overlays = ['menuOverlay','sfxPopup','gameoverOverlay'];
 
-      // Explicitly hide all, then show only menuOverlay
-      ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.classList.add('hidden');
-          console.log(id, 'hidden after hideAll? →', el.classList.contains('hidden'));
-        } else {
-          console.warn(id, 'not found');
-        }
-      });
-
-      // Show only menu
-      const menu = document.getElementById('menuOverlay');
-      if (menu) {
-        menu.classList.remove('hidden');
-        console.log('menuOverlay shown → hidden? →', menu.classList.contains('hidden'));
+      function hideAll() {
+        overlays.forEach(id => $(id)?.classList.add('hidden'));
       }
+      function showOverlay(id) {
+        hideAll();
+        if (id) $(id).classList.remove('hidden');
+        else $('#canvas').style.display = 'block';
+      }
+
+      // Game state
+      let gameState = 'menu';    // 'menu' | 'playing' | 'dying'
+      let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
+      const gravity = 0.25, flapPower = -6, speed = 2;
+
+      // Bird class
+      class Bird {
+        constructor() {
+          this.x = 50;
+          this.y = innerHeight * 0.4;
+          this.vy = 0;
+          this.w = 34;
+          this.h = 24;
+        }
+        flap() {
+          this.vy = flapPower;
+        }
+        update() {
+          this.vy += gravity;
+          this.y  += this.vy;
+          if (this.y < 0) this.y = 0;
+          if (this.y + this.h > innerHeight) this.die();
+        }
+        draw(ctx) {
+          ctx.fillStyle = 'yellow';
+          ctx.fillRect(this.x, this.y, this.w, this.h);
+        }
+        collides(pipe) {
+          return !(
+            this.x + this.w < pipe.x ||
+            this.x > pipe.x + pipe.w ||
+            this.y + this.h < pipe.top ||
+            this.y > pipe.bottom
+          );
+        }
+        die() {
+          if (gameState !== 'playing' || collided) return;
+          console.log('💥 Bird.die');
+          collided = true;
+          gameState = 'dying';
+          cancelAnimationFrame(rafId);
+
+          // SFX popup (simulated with timeout here)
+          showOverlay('sfxPopup');
+          setTimeout(() => {
+            console.log('▶️ endGame');
+            endGame();
+          }, 800);  // simulate hit+die sound length
+        }
+      }
+
+      // Pipes logic
+      function spawnPipe() {
+        const gap = 120;
+        const top = 20 + Math.random()*(innerHeight-gap-40);
+        pipes.push({ x: innerWidth, w:60, top, bottom: top+gap, passed:false });
+      }
+
+      // Main loop
+      function loop() {
+        if (gameState !== 'playing') return;
+        rafId = requestAnimationFrame(loop);
+        frame++;
+        const ctx = $('canvas').getContext('2d');
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+
+        // draw pipes
+        pipes.forEach((p,i) => {
+          p.x -= speed;
+          ctx.fillStyle = 'green';
+          ctx.fillRect(p.x, 0, p.w, p.top);
+          ctx.fillRect(p.x, p.bottom, p.w, innerHeight-p.bottom);
+
+          if (!p.passed && bird.x > p.x + p.w) {
+            p.passed = true;
+            score++;
+          }
+          if (bird.collides(p)) bird.die();
+          if (p.x + p.w < 0) pipes.splice(i,1);
+        });
+
+        bird.update();
+        bird.draw(ctx);
+
+        if (frame % 150 === 0) spawnPipe();
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '24px Arial';
+        ctx.fillText(score, 20, 40);
+      }
+
+      // Start
+      function startGame() {
+        console.log('▶️ startGame');
+        hideAll();
+        $('#canvas').style.display = 'block';
+        $('canvas').width = innerWidth;
+        $('canvas').height = innerHeight;
+
+        gameState = 'playing';
+        collided = false;
+        score = 0; frame = 0; pipes = [];
+        bird = new Bird();
+
+        loop();
+      }
+
+      // End
+      function endGame() {
+        gameState = 'menu';
+        $('finalScore').textContent = score;
+        showOverlay('gameoverOverlay');
+      }
+
+      // Event bindings
+      $('#startBtn').onclick    = startGame;
+      $('#restartBtn').onclick  = startGame;
+      window.addEventListener('mousedown',  ()=> bird?.flap());
+      window.addEventListener('touchstart', ()=> bird?.flap(), { passive: true });
+
+      // Initial view
+      showOverlay('menuOverlay');
     });
   </script>
 </body>
