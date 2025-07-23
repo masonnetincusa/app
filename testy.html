@@ -2,94 +2,276 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Bird – Safe Bindings Demo</title>
+  <title>Flappy Bird Recreated</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
-    body { margin:0; background:#000; color:#fff; font-family:Arial,sans-serif; }
-    .overlay { position:absolute; top:0; left:0; width:100%; height:100%;
-               background:rgba(0,0,0,0.85); display:flex;
-               align-items:center; justify-content:center; }
+    /* RESET & BASE */
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html,body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
+    button,input,textarea { font-family:inherit; }
+    button { background:red; color:#fff; border:none; cursor:pointer; }
     .hidden { display:none; }
-    button { background:red; color:#fff; border:none; padding:12px 24px; font-size:16px; cursor:pointer; }
-    #canvas { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#222; }
+
+    /* OVERLAY & PANEL */
+    .overlay {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.85); display:flex;
+      align-items:center; justify-content:center; z-index:100;
+    }
+    .panel {
+      background:#111; padding:20px; border-radius:8px;
+      width:320px; max-width:90%; text-align:center;
+      border:2px solid transparent;
+    }
+    .panel h2 {
+      margin-bottom:16px; font-size:24px;
+      font-family:'Press Start 2P', monospace;
+    }
+    .panel button, .panel input {
+      width:100%; margin:8px 0; padding:12px; font-size:16px;
+    }
+    .scroll-list {
+      max-height:160px; overflow-y:auto; text-align:left;
+      background:#222; padding:8px; border-radius:4px; margin:8px 0;
+      font-family:'Press Start 2P', monospace; font-size:14px;
+    }
+    .scroll-list div { padding:6px 0; border-bottom:1px solid #333; }
+
+    /* MAIN MENU */
+    #menuOverlay .panel { border-color:red; }
+    #menuOverlay img { width:100%; max-width:280px; margin-bottom:20px; }
+    #menuOverlay p {
+      margin-bottom:16px; font-size:14px; color:#bbb;
+      font-family:'Press Start 2P', monospace;
+    }
+    #menuOverlay button {
+      font-size:18px; padding:14px; margin:6px 0;
+    }
+
+    /* PROFILE CARD */
+    #profileCard {
+      position:absolute; top:20px; right:20px;
+      width:64px; height:64px; background:rgba(0,0,0,0.7);
+      border:2px solid red; border-radius:8px; overflow:hidden;
+      cursor:pointer; z-index:110; transition:width .2s,height .2s;
+    }
+    #profileCard.expanded { width:220px; height:auto; }
+    #pc-collapsed {
+      width:100%; height:100%; display:flex;
+      align-items:center; justify-content:center; padding:8px;
+    }
+    #pc-avatar { width:48px; height:48px; border-radius:50%; }
+    #pc-options {
+      display:none; flex-direction:column;
+      background:rgba(0,0,0,0.85); padding:8px;
+    }
+    #profileCard.expanded #pc-options { display:flex; }
+    #pc-options button { margin:4px 0; padding:6px; font-size:14px; }
+
+    /* SPECIFIC OVERLAY BORDERS */
+    #leaderOverlay .panel,
+    #settingsOverlay .panel {
+      border-color: red;
+    }
+
+    /* CANVAS & PAUSE */
+    #canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      display:none; z-index:10; background:#000;
+    }
+    #pauseBtn {
+      position:absolute; top:20px; right:20px;
+      display:none; padding:8px 16px; font-size:16px; z-index:20;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Main Menu -->
+  <!-- MAIN MENU -->
   <div id="menuOverlay" class="overlay">
-    <button id="startBtn">Start</button>
-    <button id="leaderBtn">Leaderboard</button>
-    <button id="settingsBtn">Settings</button>
-    <button id="hubBtn">Hub</button>
+    <div class="panel">
+      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Recreated"/>
+      <p>by <strong>MASONNET</strong> and <strong>Mason Murphy</strong></p>
+      <button id="startBtn">Start</button>
+      <button id="leaderBtn">Leaderboard</button>
+      <button id="settingsBtn">Settings</button>
+      <button id="hubBtn">Flappy Bird Hub</button>
+    </div>
   </div>
 
-  <!-- Dummy Overlays -->
-  <div id="leaderOverlay" class="overlay hidden"><button id="leaderClose">Close LB</button></div>
-  <div id="settingsOverlay" class="overlay hidden"><button id="settingsCloseBtn">Close Settings</button></div>
+  <!-- PROFILE CARD -->
+  <div id="profileCard">
+    <div id="pc-collapsed">
+      <img id="pc-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
+    </div>
+    <div id="pc-options">
+      <button id="pc-authBtn">Sign In</button>
+      <button id="pc-searchBtn">Search Profiles…</button>
+    </div>
+  </div>
 
-  <!-- Canvas Placeholder -->
+  <!-- SIGN-IN OVERLAY -->
+  <div id="loginOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Sign In</h2>
+      <input id="loginEmail" type="email" placeholder="Email" autocomplete="off"/>
+      <input id="loginPass" type="password" placeholder="Password"/>
+      <label style="display:flex;align-items:center;justify-content:center;">
+        <input id="loginRemember" type="checkbox" style="margin-right:6px;"/>Remember me
+      </label>
+      <button id="loginSubmit">Submit</button>
+      <button id="loginCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- SEARCH PROFILES OVERLAY -->
+  <div id="searchOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Search Profiles</h2>
+      <input id="searchInput" placeholder="Username"/>
+      <button id="searchSubmit">Search</button>
+      <button id="searchCancel">Cancel</button>
+      <div id="searchResults" class="scroll-list"></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD OVERLAY -->
+  <div id="leaderOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Global Top 10</h2>
+      <div id="leaderList" class="scroll-list"></div>
+      <button id="leaderClose">Back</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS OVERLAY -->
+  <div id="settingsOverlay" class="overlay hidden">
+    <div class="panel">
+      <button id="soundToggle">🔊 Sound: On</button>
+      <button id="darkToggle">🌙 Dark Mode: Off</button>
+      <button id="skipToggle">🚀 Skip to GO: Off</button>
+      <button id="settingsCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="pauseOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <button id="resumeBtn">Resume</button>
+      <button id="pauseMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="gameoverOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Game Over</h2>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <button id="restartBtn">Restart</button>
+      <button id="goMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- NEW HIGH SCORE -->
+  <div id="nameOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>🎉 New High Score!</h2>
+      <p>Score: <span id="newScore">0</span></p>
+      <input id="nameInput" placeholder="Enter your name…"/>
+      <button id="saveNameBtn">Save</button>
+      <button id="skipNameBtn">Skip</button>
+    </div>
+  </div>
+
+  <!-- SFX POP-UP -->
+  <div id="sfxPopup" class="overlay hidden">
+    <div class="panel">
+      <p>Playing sound effects…</p>
+    </div>
+  </div>
+
+  <!-- CANVAS & PAUSE BUTTON -->
   <canvas id="canvas"></canvas>
+  <button id="pauseBtn">Pause</button>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const $ = id => document.getElementById(id);
+      const overlays = [
+        'menuOverlay','loginOverlay','searchOverlay','leaderOverlay',
+        'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
+      ];
 
-      // safely bind an event only if the element exists
-      function bind(id, event, handler) {
-        const el = $(id);
-        if (!el) {
-          console.warn(`❌ #${id} not found`);
-          return;
-        }
-        el.addEventListener(event, handler);
-      }
-
-      // hide all overlays (pass no id to show game view)
       function hideAll() {
-        ['menuOverlay','leaderOverlay','settingsOverlay'].forEach(id => {
-          $(id)?.classList.add('hidden');
-        });
+        overlays.forEach(id => $(id)?.classList.add('hidden'));
       }
-
-      // stub: start the game
-      function startGame() {
-        console.log('▶️ startGame() called');
-        // show canvas, hide menus
+      function showOverlay(id) {
         hideAll();
-        $('canvas').style.display = 'block';
-        // TODO: replace with your real game init logic
+        if (!id) {
+          $('#canvas').style.display = 'block';
+          $('#pauseBtn').style.display = 'block';
+        } else {
+          $(id).classList.remove('hidden');
+          $('#canvas').style.display = 'none';
+          $('#pauseBtn').style.display = 'none';
+        }
       }
 
-      // stub: load leaderboard
+      // Safe binding helper
+      function bind(id, event, fn) {
+        const el = $(id);
+        if (el) el.addEventListener(event, fn);
+        else console.warn(`#${id} not found`);
+      }
+
+      // STUB FUNCTIONS (replace with real logic)
+      function startGame()    { console.log('▶️ startGame'); showOverlay(); }
       function loadLeaderboard() {
-        console.log('📊 loadLeaderboard() called');
-        // TODO: replace with your real Firebase call
+        console.log('📊 loadLeaderboard');
+        const list = $('leaderList');
+        if (list) {
+          list.innerHTML = '';
+          // fetch & append items here
+        }
       }
+      function toggleSound()  { console.log('🔊 toggleSound'); }
+      function toggleDark()   { console.log('🌙 toggleDark'); }
+      function toggleSkip()   { console.log('🚀 toggleSkip'); }
+      function signIn()       { console.log('🔐 signIn'); }
+      function searchProfiles(){ console.log('🔎 searchProfiles'); }
 
-      // stub: show settings
-      function showSettings() {
-        console.log('⚙️ showSettings() called');
-      }
+      // BIND BUTTONS
+      bind('startBtn','click',startGame);
+      bind('leaderBtn','click',() => { showOverlay('leaderOverlay'); loadLeaderboard(); });
+      bind('leaderClose','click',() => showOverlay('menuOverlay'));
+      bind('settingsBtn','click',() => showOverlay('settingsOverlay'));
+      bind('settingsCloseBtn','click',() => showOverlay('menuOverlay'));
+      bind('soundToggle','click',toggleSound);
+      bind('darkToggle','click',toggleDark);
+      bind('skipToggle','click',toggleSkip);
+      bind('pc-authBtn','click',signIn);
+      bind('pc-searchBtn','click',() => showOverlay('searchOverlay'));
+      bind('searchSubmit','click',searchProfiles);
+      bind('searchCancel','click',() => showOverlay('menuOverlay'));
+      bind('hubBtn','click',() => window.location.href='https://app.masonnet.org/flappybirdhub');
+      bind('resumeBtn','click',() => showOverlay()); 
+      bind('pauseMenuBtn','click',() => showOverlay('menuOverlay'));
+      bind('restartBtn','click',startGame);
+      bind('goMenuBtn','click',() => showOverlay('menuOverlay'));
+      bind('saveNameBtn','click',() => console.log('💾 saveName'));
+      bind('skipNameBtn','click',() => showOverlay('gameoverOverlay'));
 
-      // Bind buttons safely
-      bind('startBtn', 'click', () => startGame());
-      bind('leaderBtn', 'click', () => {
-        hideAll();
-        $('leaderOverlay')?.classList.remove('hidden');
-        loadLeaderboard();
+      // PROFILE CARD TOGGLE
+      bind('profileCard','click',e => {
+        e.stopPropagation();
+        $('#profileCard').classList.toggle('expanded');
       });
-      bind('leaderClose', 'click', () => hideAll());
-      bind('settingsBtn', 'click', () => {
-        hideAll();
-        $('settingsOverlay')?.classList.remove('hidden');
-        showSettings();
-      });
-      bind('settingsCloseBtn', 'click', () => hideAll());
-      bind('hubBtn', 'click', () => console.log('🌐 Hub clicked'));
+      document.body.addEventListener('click', () => $('#profileCard').classList.remove('expanded'));
 
-      // Verify script loaded
-      console.log('✅ Safe bindings initialized');
+      // INITIAL STATE
+      showOverlay('menuOverlay');
     });
   </script>
 </body>
