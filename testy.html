@@ -2,181 +2,221 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Isolation Test</title>
+  <title>Flappy Bird Recreated</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <style>
-    * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
+    * { box-sizing:border-box; margin:0; padding:0 }
+    html, body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif }
+    button,input { font-family:inherit }
+    button { background:red; color:#fff; border:none; cursor:pointer }
+    .hidden { display:none }
     .overlay {
       position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.85); display:flex;
       align-items:center; justify-content:center; z-index:100;
     }
-    .hidden { display:none; }
-    button { background:red; color:#fff; border:none; padding:12px 24px; font-size:16px; cursor:pointer; }
-    #canvas { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#222; }
+    .panel {
+      background:#111; padding:20px; border-radius:8px;
+      width:320px; max-width:90%; text-align:center;
+      border:2px solid transparent;
+    }
+    .panel h2 { margin-bottom:16px; font-size:24px }
+    .scroll-list {
+      max-height:160px; overflow-y:auto; text-align:left;
+      background:#222; padding:8px; border-radius:4px; margin:8px 0;
+      font-size:14px;
+    }
+    #canvas { display:none; position:absolute; top:0; left:0; width:100%; height:100% }
+    #pauseBtn { display:none; position:absolute; top:20px; right:20px; padding:8px 16px }
+    /* add your existing menu/profile/overlay CSS here */
   </style>
 </head>
 <body>
 
-  <!-- MAIN MENU -->
+  <!-- MENU OVERLAY -->
   <div id="menuOverlay" class="overlay">
-    <button id="startBtn">Start</button>
-  </div>
-
-  <!-- SFX POP-UP (death only) -->
-  <div id="sfxPopup" class="overlay hidden">
-    <p>🔊 Playing sound effects…</p>
-  </div>
-
-  <!-- GAME OVER -->
-  <div id="gameoverOverlay" class="overlay hidden">
-    <div>
-      <p>💀 Game Over</p>
-      <p>Your Score: <span id="finalScore">0</span></p>
-      <button id="restartBtn">Restart</button>
+    <div class="panel" style="border-color:red">
+      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Recreated" style="width:100%;margin-bottom:20px"/>
+      <p style="color:#bbb;font-size:14px">by <strong>MASONNET</strong> and <strong>Mason Murphy</strong></p>
+      <button id="startBtn">Start</button>
+      <button id="leaderBtn">Leaderboard</button>
+      <button id="settingsBtn">Settings</button>
+      <button id="hubBtn">Flappy Bird Hub</button>
     </div>
   </div>
 
+  <!-- OTHER OVERLAYS… (leaderOverlay, settingsOverlay, profileCard, etc.) -->
+  <!-- Use the same HTML you already have for overlays; keep the IDs the same -->
+
   <canvas id="canvas"></canvas>
+  <button id="pauseBtn">Pause</button>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const $ = id => document.getElementById(id);
-      const overlays = ['menuOverlay','sfxPopup','gameoverOverlay'];
+  document.addEventListener('DOMContentLoaded', () => {
+    // helper: safe bind
+    function bind(id, event, fn) {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener(event, fn);
+      else console.warn(`❌ #${id} not found`);
+    }
 
-      function hideAll() {
-        overlays.forEach(id => $(id)?.classList.add('hidden'));
+    // overlays management
+    const overlayIds = [
+      'menuOverlay','loginOverlay','searchOverlay','leaderOverlay',
+      'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
+    ];
+    function hideAll() {
+      overlayIds.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    }
+    function showOverlay(id) {
+      hideAll();
+      if (id) {
+        document.getElementById(id)?.classList.remove('hidden');
+        document.getElementById('canvas').style.display = 'none';
+        document.getElementById('pauseBtn').style.display = 'none';
+      } else {
+        document.getElementById('canvas').style.display = 'block';
+        document.getElementById('pauseBtn').style.display = 'block';
       }
-      function showOverlay(id) {
-        hideAll();
-        if (id) $(id).classList.remove('hidden');
-        else $('#canvas').style.display = 'block';
-      }
+    }
 
-      // Game state
-      let gameState = 'menu';    // 'menu' | 'playing' | 'dying'
-      let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
-      const gravity = 0.25, flapPower = -6, speed = 2;
-
-      // Bird class
-      class Bird {
-        constructor() {
-          this.x = 50;
-          this.y = innerHeight * 0.4;
-          this.vy = 0;
-          this.w = 34;
-          this.h = 24;
-        }
-        flap() {
-          this.vy = flapPower;
-        }
-        update() {
-          this.vy += gravity;
-          this.y  += this.vy;
-          if (this.y < 0) this.y = 0;
-          if (this.y + this.h > innerHeight) this.die();
-        }
-        draw(ctx) {
-          ctx.fillStyle = 'yellow';
-          ctx.fillRect(this.x, this.y, this.w, this.h);
-        }
-        collides(pipe) {
-          return !(
-            this.x + this.w < pipe.x ||
-            this.x > pipe.x + pipe.w ||
-            this.y + this.h < pipe.top ||
-            this.y > pipe.bottom
-          );
-        }
-        die() {
-          if (gameState !== 'playing' || collided) return;
-          console.log('💥 Bird.die');
-          collided = true;
-          gameState = 'dying';
-          cancelAnimationFrame(rafId);
-
-          // SFX popup (simulated with timeout here)
-          showOverlay('sfxPopup');
-          setTimeout(() => {
-            console.log('▶️ endGame');
-            endGame();
-          }, 800);  // simulate hit+die sound length
-        }
-      }
-
-      // Pipes logic
-      function spawnPipe() {
-        const gap = 120;
-        const top = 20 + Math.random()*(innerHeight-gap-40);
-        pipes.push({ x: innerWidth, w:60, top, bottom: top+gap, passed:false });
-      }
-
-      // Main loop
-      function loop() {
-        if (gameState !== 'playing') return;
-        rafId = requestAnimationFrame(loop);
-        frame++;
-        const ctx = $('canvas').getContext('2d');
-        ctx.clearRect(0,0,innerWidth,innerHeight);
-
-        // draw pipes
-        pipes.forEach((p,i) => {
-          p.x -= speed;
-          ctx.fillStyle = 'green';
-          ctx.fillRect(p.x, 0, p.w, p.top);
-          ctx.fillRect(p.x, p.bottom, p.w, innerHeight-p.bottom);
-
-          if (!p.passed && bird.x > p.x + p.w) {
-            p.passed = true;
-            score++;
-          }
-          if (bird.collides(p)) bird.die();
-          if (p.x + p.w < 0) pipes.splice(i,1);
-        });
-
-        bird.update();
-        bird.draw(ctx);
-
-        if (frame % 150 === 0) spawnPipe();
-
-        ctx.fillStyle = '#fff';
-        ctx.font = '24px Arial';
-        ctx.fillText(score, 20, 40);
-      }
-
-      // Start
-      function startGame() {
-        console.log('▶️ startGame');
-        hideAll();
-        $('#canvas').style.display = 'block';
-        $('canvas').width = innerWidth;
-        $('canvas').height = innerHeight;
-
-        gameState = 'playing';
-        collided = false;
-        score = 0; frame = 0; pipes = [];
-        bird = new Bird();
-
-        loop();
-      }
-
-      // End
-      function endGame() {
-        gameState = 'menu';
-        $('finalScore').textContent = score;
-        showOverlay('gameoverOverlay');
-      }
-
-      // Event bindings
-      $('#startBtn').onclick    = startGame;
-      $('#restartBtn').onclick  = startGame;
-      window.addEventListener('mousedown',  ()=> bird?.flap());
-      window.addEventListener('touchstart', ()=> bird?.flap(), { passive: true });
-
-      // Initial view
-      showOverlay('menuOverlay');
+    // game state
+    let gameState = 'menu'; // 'menu'|'playing'|'dying'
+    let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
+    const gravity = 0.25, flapPower = -6, speed = 2;
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    window.addEventListener('resize', () => {
+      canvas.width = innerWidth; canvas.height = innerHeight;
     });
+    canvas.width = innerWidth; canvas.height = innerHeight;
+
+    // Bird class
+    class Bird {
+      constructor() {
+        this.x = 50; this.y = innerHeight * 0.4;
+        this.vy = 0; this.w = 34; this.h = 24;
+      }
+      flap() { this.vy = flapPower; }
+      update() {
+        this.vy += gravity; this.y += this.vy;
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.h > innerHeight) this.die();
+      }
+      draw() {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+      }
+      collides(p) {
+        return !(this.x + this.w < p.x ||
+                 this.x > p.x + p.w ||
+                 this.y + this.h < p.top ||
+                 this.y > p.bottom);
+      }
+      die() {
+        if (gameState !== 'playing' || collided) return;
+        console.log('💥 Bird.die');
+        collided = true;
+        gameState = 'dying';
+        cancelAnimationFrame(rafId);
+        // show SFX popup only here
+        showOverlay('sfxPopup');
+        setTimeout(() => endGame(), 800); // simulate sound length
+      }
+    }
+
+    function spawnPipe() {
+      const gap = 120;
+      const top = 20 + Math.random()*(innerHeight-gap-40);
+      pipes.push({ x: innerWidth, w:60, top, bottom:top+gap, passed:false });
+    }
+
+    function loop() {
+      if (gameState !== 'playing') return;
+      rafId = requestAnimationFrame(loop);
+      frame++;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      pipes.forEach((p,i) => {
+        p.x -= speed;
+        ctx.fillStyle = 'green';
+        ctx.fillRect(p.x, 0, p.w, p.top);
+        ctx.fillRect(p.x, p.bottom, p.w, innerHeight-p.bottom);
+        if (!p.passed && bird.x > p.x + p.w) {
+          p.passed = true; score++;
+        }
+        if (bird.collides(p)) bird.die();
+        if (p.x + p.w < 0) pipes.splice(i,1);
+      });
+
+      bird.update(); bird.draw(ctx);
+
+      if (frame % 150 === 0) spawnPipe();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '24px Arial';
+      ctx.fillText(score, 20, 40);
+    }
+
+    function startGame() {
+      console.log('▶️ startGame');
+      hideAll();
+      bird = new Bird();
+      pipes = []; score = 0; frame = 0; collided = false;
+      gameState = 'playing';
+      showOverlay(); 
+      loop();
+    }
+
+    function endGame() {
+      console.log('▶️ endGame');
+      gameState = 'menu';
+      document.getElementById('finalScore')?.textContent = score;
+      showOverlay('gameoverOverlay');
+    }
+
+    // SAFE BINDINGS
+    bind('startBtn',       'click',  startGame);
+    bind('restartBtn',     'click',  startGame);
+    bind('pauseBtn',       'click',  ()=> {
+      if (gameState==='playing') { cancelAnimationFrame(rafId); gameState='paused'; showOverlay('pauseOverlay'); }
+    });
+    bind('resumeBtn',      'click',  ()=> { showOverlay(); gameState='playing'; loop(); });
+    bind('pauseMenuBtn',   'click',  ()=> showOverlay('menuOverlay'));
+    bind('goMenuBtn',      'click',  ()=> showOverlay('menuOverlay'));
+
+    bind('leaderBtn',      'click',  ()=> {
+      const L = document.getElementById('leaderList');
+      if (L) L.innerHTML = '';
+      // fetch & append here…
+      showOverlay('leaderOverlay');
+    });
+    bind('leaderClose',    'click',  ()=> showOverlay('menuOverlay'));
+
+    bind('settingsBtn',    'click',  ()=> showOverlay('settingsOverlay'));
+    bind('settingsCloseBtn','click',  ()=> showOverlay('menuOverlay'));
+    bind('soundToggle',    'click',  ()=> console.log('🔊 toggleSound'));
+    bind('darkToggle',     'click',  ()=> console.log('🌙 toggleDark'));
+    bind('skipToggle',     'click',  ()=> console.log('🚀 toggleSkip'));
+
+    bind('hubBtn',         'click',  ()=> window.location.href='https://app.masonnet.org/flappybirdhub');
+
+    bind('profileCard',    'click',  e=> {
+      e.stopPropagation();
+      document.getElementById('profileCard')?.classList.toggle('expanded');
+    });
+    document.body.addEventListener('click', ()=> {
+      document.getElementById('profileCard')?.classList.remove('expanded');
+    });
+
+    bind('pc-authBtn',     'click',  ()=> console.log('🔐 signIn'));
+    bind('pc-searchBtn',   'click',  ()=> showOverlay('searchOverlay'));
+    bind('searchSubmit',   'click',  ()=> console.log('🔎 searchProfiles'));
+    bind('searchCancel',   'click',  ()=> showOverlay('menuOverlay'));
+
+    // start at menu
+    showOverlay('menuOverlay');
+  });
   </script>
 </body>
 </html>
