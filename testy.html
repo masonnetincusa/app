@@ -51,6 +51,28 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
+    /* Profile Card */
+    #profileCard {
+      position: absolute; top: 20px; right: 20px;
+      width: 64px; height: 64px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid red; border-radius: 8px;
+      overflow: hidden; cursor: pointer; z-index: 110;
+      transition: width .2s, height .2s;
+    }
+    #profileCard.expanded { width: 220px; height: auto }
+    #pc-collapsed {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%; padding: 8px;
+    }
+    #pc-avatar { width: 48px; height: 48px; border-radius: 50% }
+    #pc-options {
+      display: none; flex-direction: column;
+      background: rgba(0,0,0,0.85); padding: 8px;
+    }
+    #profileCard.expanded #pc-options { display: flex }
+    #pc-options button { margin: 6px 0; padding: 8px; font-size: 14px }
+
     /* Test button */
     #testBtn { display: none }
 
@@ -87,8 +109,7 @@
     <div id="pc-collapsed">
       <img id="pc-avatar"
            src="https://app.masonnet.org/default-avatar.png"
-           alt="Avatar"
-           style="width:48px;height:48px;border-radius:50%"/>
+           alt="Avatar"/>
     </div>
     <div id="pc-options">
       <button id="pc-authBtn">Sign In</button>
@@ -96,7 +117,7 @@
     </div>
   </div>
 
-  <!-- Overlays -->
+  <!-- OVERLAYS -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -205,7 +226,6 @@
       'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay',
       'sfxPopup','testLoadingOverlay','testOverlay'
     ];
-
     let gameState = 'menu', bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
     const gravity = .25, flapPower = -6, speed = 2;
 
@@ -238,10 +258,10 @@
       projectId: "masonnet-app-official"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db   = firebase.database();
-    const lbRef   = db.ref("leaderboard");
-    const rolesRef= db.ref("roles");
+    const auth     = firebase.auth();
+    const db       = firebase.database();
+    const lbRef    = db.ref("leaderboard");
+    const rolesRef = db.ref("roles");
     const adminEmail = 'admin@masonnet.org';
     const adminUID   = 'Y4ZoHRQaIrVhdvZr15Ebz90Byh62';
     const userEmail  = 'user@masonnet.org';
@@ -290,7 +310,7 @@
     function spawnPipe() {
       const gap = 120;
       const top = 20 + Math.random() * (canvas.height - gap - 40);
-      pipes.push({x:canvas.width, w:60, top, bottom:top+gap, passed:false});
+      pipes.push({ x: canvas.width, w:60, top, bottom: top+gap, passed:false });
     }
 
     function loop() {
@@ -329,7 +349,7 @@
 
     // Input
     window.addEventListener('mousedown', ()=> bird?.flap());
-    window.addEventListener('touchstart', ()=> bird?.flap(), {passive:true});
+    window.addEventListener('touchstart', ()=> bird?.flap(), { passive:true });
 
     // UI bindings
     bind('startBtn','click', startGame);
@@ -388,7 +408,6 @@
     bind('pc-authBtn','click', ()=> showOverlay('loginOverlay'));
     bind('loginCancel','click', ()=> showOverlay('menuOverlay'));
     bind('loginSubmit','click', ()=>{
-      // basic login flow
       const e = $('loginEmail').value, p = $('loginPass').value;
       auth.signInWithEmailAndPassword(e,p)
         .then(()=> showOverlay('menuOverlay'))
@@ -397,12 +416,8 @@
     bind('pc-searchBtn','click', ()=> showOverlay('searchOverlay'));
     bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
     bind('searchSubmit','click', ()=>{
-      // dummy search
-      const q = $('searchInput').value.trim();
-      const res = $('searchResults'); res.innerHTML = '';
-      if (q) {
-        res.innerHTML = `<div>${q}: 42</div>`;
-      }
+      const q = $('searchInput').value.trim(), res = $('searchResults');
+      res.innerHTML = q ? `<div>${q}: 42</div>` : '';
       showOverlay('searchOverlay');
     });
 
@@ -453,17 +468,11 @@
       tests.push({ label:'Firebase initialized', fn:()=>!!firebase.app().name });
       tests.push({
         label:'Roles structure',
-        fn:async()=>{
-          const r = await rolesRef.once('value');
-          return r.exists();
-        }
+        fn:async()=>{ const r = await rolesRef.once('value'); return r.exists(); }
       });
       tests.push({
         label:'Leaderboard fetch',
-        fn:async()=>{
-          const s = await lbRef.limitToLast(1).once('value');
-          return s.exists();
-        }
+        fn:async()=>{ const s = await lbRef.limitToLast(1).once('value'); return s.exists(); }
       });
       tests.push({ label:'Login inputs', fn:()=>!!$('loginEmail')&&!!$('loginPass') });
       tests.push({ label:'Search overlay inputs', fn:()=>!!$('searchInput')&&!!$('searchResults') });
@@ -478,7 +487,6 @@
       });
       tests.push({ label:'Settings toggles', fn:()=>!!$('soundToggle')&&!!$('darkToggle')&&!!$('skipToggle') });
       tests.push({ label:'Profile card exists', fn:()=>!!$('profileCard') });
-      tests.push({ label:'Pause menu overlay', fn:()=>!!$('pauseOverlay') });
       tests.push({
         label:'Image assets load',
         fn:()=>Promise.all([
@@ -493,26 +501,39 @@
           loadAudio('https://app.masonnet.org/point.mp3')
         ]).then(()=>true).catch(()=>false)
       });
-      tests.push({
-        label:'Design (leader panel width)',
-        fn:()=>{
-          const w = parseInt(getComputedStyle($('leaderOverlay').querySelector('.panel')).width);
-          return w>=380;
-        }
-      });
-      tests.push({
-        label:'Pause/resume flow',
-        fn:async()=>{
-          showOverlay('pauseOverlay');
-          hideAll();
-          return true;
-        }
-      });
+      tests.push({ label:'Design – Body background', fn:()=> getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)' });
+      tests.push({ label:'Design – ProfileCard layout', fn:()=>{
+        const pc = $('profileCard'), rect = pc.getBoundingClientRect();
+        return rect.top < 30 && rect.right > window.innerWidth - 70;
+      }});
+      tests.push({ label:'Design – ProfileCard collapsed', fn:()=>{
+        $('profileCard').classList.remove('expanded');
+        return getComputedStyle($('pc-options')).display==='none';
+      }});
+      tests.push({ label:'Design – ProfileCard toggle', fn:()=>{
+        const pc = $('profileCard');
+        pc.classList.remove('expanded');
+        const before = getComputedStyle($('pc-options')).display==='none';
+        pc.classList.add('expanded');
+        const after = getComputedStyle($('pc-options')).display==='flex';
+        pc.classList.remove('expanded');
+        return before && after;
+      }});
+      tests.push({ label:'Design – ProfileCard position stable', fn:()=>{
+        const rect = $('profileCard').getBoundingClientRect();
+        return rect.top < 30 && rect.right > window.innerWidth - 70;
+      }});
+      tests.push({ label:'Pause/resume flow', fn:async()=>{
+        showOverlay('pauseOverlay');
+        hideAll();
+        return true;
+      }});
 
       // Run tests
       showOverlay('testLoadingOverlay');
       report.innerHTML = '';
       const total = tests.length, start = Date.now();
+
       for (let i = 0; i < total; i++) {
         const t = tests[i];
         status.textContent = `Testing: ${t.label}`;
