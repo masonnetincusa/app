@@ -6,14 +6,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
-    * { box-sizing: border-box; margin:0; padding:0 }
-    html,body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif }
-    .hidden { display:none !important }
+    * { box-sizing:border-box; margin:0; padding:0 }
+    html, body {
+      width:100%; height:100%; overflow:hidden;
+      background:#000; color:#fff; font-family:Arial,sans-serif;
+    }
     button, input { font-family:inherit }
+    .hidden { display:none !important }
     .overlay {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.85); display:flex;
-      align-items:center; justify-content:center; z-index:100;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.85);
+      display:flex; align-items:center; justify-content:center;
+      z-index:100;
     }
     .panel {
       background:#111; padding:20px; border-radius:8px;
@@ -22,8 +27,8 @@
     }
     .panel button {
       width:100%; background:red; color:#fff; border:none;
-      font-size:20px; padding:16px; margin:12px 0; cursor:pointer;
-      border-radius:4px;
+      font-size:20px; padding:16px; margin:12px 0;
+      cursor:pointer; border-radius:4px;
     }
     .panel button:hover { background:#d10000 }
     .scroll-list {
@@ -36,7 +41,7 @@
     #menuOverlay img {
       width:100%; max-width:280px; margin-bottom:20px;
     }
-    /* Profile card */
+    /* profile card */
     #profileCard {
       position:absolute; top:20px; right:20px;
       width:64px; height:64px; background:rgba(0,0,0,0.7);
@@ -56,15 +61,18 @@
     }
     #profileCard.expanded #pc-options { display:flex }
     #pc-options button { margin:6px 0; padding:8px; font-size:14px }
-    /* Canvas & pause */
+    /* canvas & pause */
     #canvas {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      background:#000; display:none; z-index:10;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%; background:#000;
+      display:none; z-index:10;
     }
     #pauseBtn {
-      position:absolute; top:20px; right:20px; background:red;
-      color:#fff; border:none; padding:8px 16px; font-size:16px;
-      cursor:pointer; border-radius:4px; display:none; z-index:20;
+      position:absolute; top:20px; right:20px;
+      background:red; color:#fff; border:none;
+      padding:8px 16px; font-size:16px;
+      cursor:pointer; border-radius:4px;
+      display:none; z-index:20;
     }
   </style>
 </head>
@@ -73,7 +81,7 @@
   <!-- MAIN MENU -->
   <div id="menuOverlay" class="overlay">
     <div class="panel">
-      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Recreated"/>
+      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"/>
       <button id="startBtn">Start</button>
       <button id="leaderBtn">Leaderboard</button>
       <button id="settingsBtn">Settings</button>
@@ -92,15 +100,75 @@
     </div>
   </div>
 
-  <!-- OVERLAYS: Login, Search, Leader, Settings, Pause, Game Over, Name, SFX -->
-  <div id="loginOverlay" class="overlay hidden">…</div>
-  <div id="searchOverlay" class="overlay hidden">…</div>
-  <div id="leaderOverlay" class="overlay hidden">…</div>
-  <div id="settingsOverlay" class="overlay hidden">…</div>
-  <div id="pauseOverlay" class="overlay hidden">…</div>
-  <div id="gameoverOverlay" class="overlay hidden">…</div>
-  <div id="nameOverlay" class="overlay hidden">…</div>
-  <div id="sfxPopup" class="overlay hidden">…</div>
+  <!-- OVERLAYS -->
+  <div id="loginOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Sign In</h2>
+      <input id="loginEmail" type="email" placeholder="Email"/>
+      <input id="loginPass" type="password" placeholder="Password"/>
+      <label><input id="loginRemember" type="checkbox"/> Remember me</label>
+      <button id="loginSubmit">Submit</button>
+      <button id="loginCancel">Cancel</button>
+    </div>
+  </div>
+
+  <div id="searchOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Search Profiles</h2>
+      <input id="searchInput" placeholder="Username"/>
+      <button id="searchSubmit">Search</button>
+      <button id="searchCancel">Cancel</button>
+      <div id="searchResults" class="scroll-list"></div>
+    </div>
+  </div>
+
+  <div id="leaderOverlay" class="overlay hidden">
+    <div class="panel" style="border-color:red">
+      <h2>Global Top 10</h2>
+      <div id="leaderList" class="scroll-list"></div>
+      <button id="leaderClose">Back</button>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" class="overlay hidden">
+    <div class="panel" style="border-color:red">
+      <button id="soundToggle">🔊 Sound: On</button>
+      <button id="darkToggle">🌙 Dark Mode: Off</button>
+      <button id="skipToggle">🚀 Skip to GO: Off</button>
+      <button id="settingsCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <div id="pauseOverlay" class="overlay hidden">
+    <div class="panel" style="border-color:red">
+      <h2>Paused</h2>
+      <button id="resumeBtn">Resume</button>
+      <button id="pauseMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="gameoverOverlay" class="overlay hidden">
+    <div class="panel" style="border-color:red">
+      <h2>Game Over</h2>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <button id="restartBtn">Restart</button>
+      <button id="goMenuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="nameOverlay" class="overlay hidden">
+    <div class="panel" style="border-color:red">
+      <h2>🎉 New High Score!</h2>
+      <p>Score: <span id="newScore">0</span></p>
+      <input id="nameInput" placeholder="Enter your name…"/>
+      <button id="saveNameBtn">Save</button>
+      <button id="skipNameBtn">Skip</button>
+    </div>
+  </div>
+
+  <div id="sfxPopup" class="overlay hidden">
+    <div class="panel"><p>Playing sound effects…</p></div>
+  </div>
 
   <canvas id="canvas"></canvas>
   <button id="pauseBtn">Pause</button>
@@ -113,69 +181,194 @@
       'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
     ];
 
-    let gameState = 'menu';   // 'menu' | 'playing' | 'dying'
-    let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
-    const gravity = .25, flapPower = -6, speed = 2;
-
     function hideAll() {
       overlays.forEach(id => $(id)?.classList.add('hidden'));
     }
 
-    // Guard sfxPopup & nameOverlay so they ONLY fire when dying
+    let gameState = 'menu'; // 'menu' | 'playing' | 'dying'
+    let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
+    const gravity = .25, flapPower = -6, speed = 2;
+
+    // guarded showOverlay
     function showOverlay(id) {
+      // block these until dying
       if ((id==='sfxPopup'||id==='nameOverlay') && gameState!=='dying') {
-        console.warn(`Blocked ${id} (state=${gameState})`);
         return;
       }
       hideAll();
       if (id) {
         $(id)?.classList.remove('hidden');
-        $('#canvas').style.display = 'none';
-        $('#pauseBtn').style.display = 'none';
+        const c = $('canvas'), p = $('pauseBtn');
+        if (c) c.style.display = 'none';
+        if (p) p.style.display = 'none';
       } else {
-        $('#canvas').style.display = 'block';
-        $('#pauseBtn').style.display = 'block';
+        const c = $('canvas'), p = $('pauseBtn');
+        if (c) c.style.display = 'block';
+        if (p) p.style.display = 'block';
       }
     }
 
     function bind(id, ev, fn) {
       const el = $(id);
       if (el) el.addEventListener(ev, fn);
-      else console.warn(`#${id} not found`);
     }
 
-    // Canvas setup
+    // Canvas init
     const canvas = $('canvas'), ctx = canvas.getContext('2d');
-    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
     window.addEventListener('resize', resize);
     resize();
 
-    // Bird class & game loop (flap, spawnPipe, loop…)  
-    class Bird { /*…*/ }    
-    function spawnPipe(){ /*…*/ }
-    function loop(){ /*…*/ }
-    function endGame(){
-      if (gameState!=='dying') return;
-      $('finalScore')?.textContent = score;
+    // Bird & game loop
+    class Bird {
+      constructor() {
+        this.x = 50; this.y = canvas.height * 0.4;
+        this.vy = 0; this.w = 34; this.h = 24;
+      }
+      flap() { this.vy = flapPower }
+      update() {
+        this.vy += gravity; this.y += this.vy;
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.h > canvas.height) this.die();
+      }
+      draw() {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+      }
+      collides(pipe) {
+        return !(
+          this.x + this.w < pipe.x ||
+          this.x > pipe.x + pipe.w ||
+          this.y + this.h < pipe.top ||
+          this.y > pipe.bottom
+        );
+      }
+      die() {
+        if (gameState!=='playing' || collided) return;
+        collided = true; gameState = 'dying';
+        cancelAnimationFrame(rafId);
+        showOverlay('sfxPopup');
+        setTimeout(() => {
+          showOverlay(); // hide popup
+          endGame();
+        }, 800);
+      }
+    }
+
+    function spawnPipe() {
+      const gap = 120;
+      const top = 20 + Math.random() * (canvas.height - gap - 40);
+      pipes.push({ x: canvas.width, w: 60, top, bottom: top + gap, passed: false });
+    }
+
+    function loop() {
+      if (gameState !== 'playing') return;
+      rafId = requestAnimationFrame(loop);
+      frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      pipes.forEach((p, i) => {
+        p.x -= speed;
+        ctx.fillStyle = 'green';
+        ctx.fillRect(p.x, 0, p.w, p.top);
+        ctx.fillRect(p.x, p.bottom, p.w, canvas.height - p.bottom);
+        if (!p.passed && bird.x > p.x + p.w) {
+          p.passed = true; score++;
+        }
+        if (bird.collides(p)) bird.die();
+        if (p.x + p.w < 0) pipes.splice(i,1);
+      });
+
+      bird.update(); bird.draw();
+      if (frame % 150 === 0) spawnPipe();
+      ctx.fillStyle = '#fff';
+      ctx.font = '32px "Press Start 2P"';
+      ctx.fillText(score, 20, 50);
+    }
+
+    function startGame() {
+      if (gameState === 'playing') return;
+      gameState = 'playing'; pipes = []; score = 0; frame = 0; collided = false;
+      bird = new Bird();
+      hideAll(); $('pauseBtn').style.display = 'block';
+      loop();
+    }
+
+    function endGame() {
+      if (gameState !== 'dying') return;
       gameState = 'menu';
+      $('finalScore').textContent = score;
       showOverlay('gameoverOverlay');
     }
 
-    bind('startBtn','click', () => {
-      if (gameState==='playing') return;
-      gameState='playing'; pipes=[]; score=0; frame=0; collided=false;
-      bird = new Bird();
-      hideAll(); $('#pauseBtn').style.display='block';
-      loop();
+    // input
+    window.addEventListener('mousedown', () => bird?.flap());
+    window.addEventListener('touchstart', () => bird?.flap(), {passive:true});
+
+    // UI bindings
+    bind('startBtn','click', startGame);
+    bind('pauseBtn','click', ()=>{
+      if (gameState==='playing') {
+        cancelAnimationFrame(rafId);
+        gameState = 'paused';
+        showOverlay('pauseOverlay');
+      }
+    });
+    bind('resumeBtn','click', ()=> { gameState='playing'; hideAll(); loop(); });
+    bind('pauseMenuBtn','click', ()=> showOverlay('menuOverlay'));
+    bind('restartBtn','click', startGame);
+    bind('goMenuBtn','click', ()=> showOverlay('menuOverlay'));
+
+    bind('leaderBtn','click', ()=>{
+      const L = $('leaderList');
+      if (L) {
+        L.innerHTML = '';
+        // example entries
+        ['AAA:100','BBB:80','CCC:60'].forEach(t => {
+          const d = document.createElement('div');
+          d.textContent = t; L.appendChild(d);
+        });
+      }
+      showOverlay('leaderOverlay');
+    });
+    bind('leaderClose','click', ()=> showOverlay('menuOverlay'));
+
+    bind('settingsBtn','click', ()=> showOverlay('settingsOverlay'));
+    bind('settingsCloseBtn','click', ()=> showOverlay('menuOverlay'));
+    bind('soundToggle','click', ()=>{
+      const b = $('soundToggle');
+      b.textContent = b.textContent.includes('On')
+        ? '🔇 Sound: Off'
+        : '🔊 Sound: On';
+    });
+    bind('darkToggle','click', ()=>{
+      document.body.classList.toggle('dark-mode');
+      const b = $('darkToggle');
+      b.textContent = b.textContent.includes('Off')
+        ? '🌙 Dark Mode: On'
+        : '☀️ Light Mode: Off';
+    });
+    bind('skipToggle','click', ()=>{
+      const b = $('skipToggle');
+      b.textContent = b.textContent.includes('Off')
+        ? '🚀 Skip to GO: On'
+        : '🚀 Skip to GO: Off';
     });
 
-    // In Bird.die(), set state to dying THEN call showOverlay('sfxPopup'):
-    //   gameState='dying'; showOverlay('sfxPopup'); … endGame() …
+    bind('hubBtn','click', ()=> window.location.href='https://app.masonnet.org/flappybirdhub');
+    bind('pc-authBtn','click', ()=> showOverlay('loginOverlay'));
+    bind('loginCancel','click', ()=> showOverlay('menuOverlay'));
+    bind('loginSubmit','click', ()=> showOverlay('menuOverlay'));
+    bind('pc-searchBtn','click', ()=> showOverlay('searchOverlay'));
+    bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
+    bind('searchSubmit','click', ()=> showOverlay('menuOverlay'));
 
-    // Bind all your other buttons here (leaderBtn, settingsBtn, profileCard, etc.)
-    // e.g. bind('leaderBtn','click', ()=> showOverlay('leaderOverlay') );
+    bind('profileCard','click', e => {
+      e.stopPropagation();
+      $('profileCard').classList.toggle('expanded');
+    });
+    document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
 
-    // Initial view
+    // final init
     showOverlay('menuOverlay');
   });
   </script>
