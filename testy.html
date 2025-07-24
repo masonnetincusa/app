@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Flappy Bird Recreated – Leak-Proof</title>
+  <title>Flappy Bird Recreated – Live Leaderboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
@@ -41,7 +41,6 @@
     #menuOverlay img {
       width:100%; max-width:280px; margin-bottom:20px;
     }
-    /* profile card */
     #profileCard {
       position:absolute; top:20px; right:20px;
       width:64px; height:64px; background:rgba(0,0,0,0.7);
@@ -61,7 +60,6 @@
     }
     #profileCard.expanded #pc-options { display:flex }
     #pc-options button { margin:6px 0; padding:8px; font-size:14px }
-    /* canvas & pause */
     #canvas {
       position:absolute; top:0; left:0;
       width:100%; height:100%; background:#000;
@@ -100,7 +98,7 @@
     </div>
   </div>
 
-  <!-- OVERLAYS -->
+  <!-- LOGIN OVERLAY -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -112,6 +110,7 @@
     </div>
   </div>
 
+  <!-- SEARCH OVERLAY -->
   <div id="searchOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Search Profiles</h2>
@@ -122,6 +121,7 @@
     </div>
   </div>
 
+  <!-- LEADERBOARD OVERLAY -->
   <div id="leaderOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <h2>Global Top 10</h2>
@@ -130,6 +130,7 @@
     </div>
   </div>
 
+  <!-- SETTINGS OVERLAY -->
   <div id="settingsOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <button id="soundToggle">🔊 Sound: On</button>
@@ -139,6 +140,7 @@
     </div>
   </div>
 
+  <!-- PAUSE OVERLAY -->
   <div id="pauseOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <h2>Paused</h2>
@@ -147,6 +149,7 @@
     </div>
   </div>
 
+  <!-- GAME OVER OVERLAY -->
   <div id="gameoverOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <h2>Game Over</h2>
@@ -156,6 +159,7 @@
     </div>
   </div>
 
+  <!-- NEW HIGH SCORE OVERLAY -->
   <div id="nameOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <h2>🎉 New High Score!</h2>
@@ -166,12 +170,17 @@
     </div>
   </div>
 
+  <!-- SFX POP-UP -->
   <div id="sfxPopup" class="overlay hidden">
     <div class="panel"><p>Playing sound effects…</p></div>
   </div>
 
   <canvas id="canvas"></canvas>
   <button id="pauseBtn">Pause</button>
+
+  <!-- FIREBASE SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -181,30 +190,24 @@
       'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
     ];
 
-    function hideAll() {
-      overlays.forEach(id => $(id)?.classList.add('hidden'));
-    }
-
     let gameState = 'menu'; // 'menu' | 'playing' | 'dying'
     let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
     const gravity = .25, flapPower = -6, speed = 2;
 
-    // guarded showOverlay
+    // hide/show overlays
+    function hideAll() {
+      overlays.forEach(id => $(id)?.classList.add('hidden'));
+    }
     function showOverlay(id) {
-      // block these until dying
-      if ((id==='sfxPopup'||id==='nameOverlay') && gameState!=='dying') {
-        return;
-      }
+      if ((id==='sfxPopup'||id==='nameOverlay') && gameState!=='dying') return;
       hideAll();
       if (id) {
         $(id)?.classList.remove('hidden');
-        const c = $('canvas'), p = $('pauseBtn');
-        if (c) c.style.display = 'none';
-        if (p) p.style.display = 'none';
+        $('canvas')?.style.setProperty('display','none');
+        $('pauseBtn')?.style.setProperty('display','none');
       } else {
-        const c = $('canvas'), p = $('pauseBtn');
-        if (c) c.style.display = 'block';
-        if (p) p.style.display = 'block';
+        $('canvas')?.style.setProperty('display','block');
+        $('pauseBtn')?.style.setProperty('display','block');
       }
     }
 
@@ -213,19 +216,28 @@
       if (el) el.addEventListener(ev, fn);
     }
 
-    // Canvas init
+    // Firebase init
+    firebase.initializeApp({
+      apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+      authDomain:"masonnet-app-official.firebaseapp.com",
+      databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId: "masonnet-app-official"
+    });
+    const db    = firebase.database();
+    const lbRef = db.ref("leaderboard");
+
+    // Canvas
     const canvas = $('canvas'), ctx = canvas.getContext('2d');
     function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', resize); resize();
 
-    // Bird & game loop
+    // Bird class
     class Bird {
       constructor() {
         this.x = 50; this.y = canvas.height * 0.4;
         this.vy = 0; this.w = 34; this.h = 24;
       }
-      flap() { this.vy = flapPower }
+      flap() { this.vy = flapPower; }
       update() {
         this.vy += gravity; this.y += this.vy;
         if (this.y < 0) this.y = 0;
@@ -235,12 +247,12 @@
         ctx.fillStyle = 'yellow';
         ctx.fillRect(this.x, this.y, this.w, this.h);
       }
-      collides(pipe) {
+      collides(p) {
         return !(
-          this.x + this.w < pipe.x ||
-          this.x > pipe.x + pipe.w ||
-          this.y + this.h < pipe.top ||
-          this.y > pipe.bottom
+          this.x + this.w < p.x ||
+          this.x > p.x + p.w ||
+          this.y + this.h < p.top ||
+          this.y > p.bottom
         );
       }
       die() {
@@ -258,7 +270,7 @@
     function spawnPipe() {
       const gap = 120;
       const top = 20 + Math.random() * (canvas.height - gap - 40);
-      pipes.push({ x: canvas.width, w: 60, top, bottom: top + gap, passed: false });
+      pipes.push({ x: canvas.width, w:60, top, bottom: top+gap, passed:false });
     }
 
     function loop() {
@@ -266,7 +278,7 @@
       rafId = requestAnimationFrame(loop);
       frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      pipes.forEach((p, i) => {
+      pipes.forEach((p,i) => {
         p.x -= speed;
         ctx.fillStyle = 'green';
         ctx.fillRect(p.x, 0, p.w, p.top);
@@ -300,16 +312,16 @@
       showOverlay('gameoverOverlay');
     }
 
-    // input
-    window.addEventListener('mousedown', () => bird?.flap());
-    window.addEventListener('touchstart', () => bird?.flap(), {passive:true});
+    // Input
+    window.addEventListener('mousedown', ()=> bird?.flap());
+    window.addEventListener('touchstart', ()=> bird?.flap(), {passive:true});
 
     // UI bindings
     bind('startBtn','click', startGame);
-    bind('pauseBtn','click', ()=>{
+    bind('pauseBtn','click', ()=> {
       if (gameState==='playing') {
         cancelAnimationFrame(rafId);
-        gameState = 'paused';
+        gameState='paused';
         showOverlay('pauseOverlay');
       }
     });
@@ -318,17 +330,22 @@
     bind('restartBtn','click', startGame);
     bind('goMenuBtn','click', ()=> showOverlay('menuOverlay'));
 
-    bind('leaderBtn','click', ()=>{
-      const L = $('leaderList');
-      if (L) {
-        L.innerHTML = '';
-        // example entries
-        ['AAA:100','BBB:80','CCC:60'].forEach(t => {
-          const d = document.createElement('div');
-          d.textContent = t; L.appendChild(d);
-        });
-      }
-      showOverlay('leaderOverlay');
+    bind('leaderBtn','click', () => {
+      const list = $('leaderList');
+      if (!list) return;
+      list.innerHTML = '';
+      lbRef.orderByChild('score').limitToLast(10).once('value', snap => {
+        const data = snap.val() || {};
+        Object.values(data)
+          .sort((a,b) => b.score - a.score)
+          .slice(0,10)
+          .forEach(p => {
+            const d = document.createElement('div');
+            d.textContent = `${p.name}: ${p.score}`;
+            list.appendChild(d);
+          });
+        showOverlay('leaderOverlay');
+      });
     });
     bind('leaderClose','click', ()=> showOverlay('menuOverlay'));
 
@@ -368,7 +385,7 @@
     });
     document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
 
-    // final init
+    // initial state
     showOverlay('menuOverlay');
   });
   </script>
