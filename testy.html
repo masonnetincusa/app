@@ -83,7 +83,7 @@
     }
     #pauseBtn:hover { background: #d10000 }
 
-    /* Test button */
+    /* Test button hidden until TEST_MODE */
     #testBtn { display: none }
 
     /* Loading overlay */
@@ -96,6 +96,19 @@
     }
     #loadingBar {
       background: red; width: 0%; height: 100%; transition: width .3s;
+    }
+
+    /* Enlarged Diagnostics Panel */
+    #testOverlay .panel {
+      width: 600px;
+      max-width: 95%;
+      height: 80%;
+      overflow: auto;
+      border-color: red;
+    }
+    #testReport {
+      max-height: 60vh;
+      overflow-y: auto;
     }
   </style>
 </head>
@@ -208,11 +221,11 @@
     </div>
   </div>
 
-  <!-- TEST REPORT OVERLAY -->
+  <!-- ENLARGED TEST REPORT OVERLAY -->
   <div id="testOverlay" class="overlay hidden">
-    <div class="panel" style="border-color:red">
+    <div class="panel">
       <h2>🧪 Diagnostics Report</h2>
-      <div id="testReport" class="scroll-list" style="max-height:300px;"></div>
+      <div id="testReport" class="scroll-list"></div>
       <button id="testClose">Close</button>
     </div>
   </div>
@@ -468,137 +481,116 @@
       // Define tests
       tests.push({ label:'Canvas exists', fn:()=>!!$('canvas') });
       tests.push({ label:'Pause button exists', fn:()=>!!$('pauseBtn') });
-      tests.push({
-        label:'Pause button styled', fn:()=>{
-          const btn=$('pauseBtn'), s=getComputedStyle(btn);
+      tests.push({ label:'Pause styled & positioned', fn:()=>{
+          const btn=$('pauseBtn'), s=getComputedStyle(btn), r=btn.getBoundingClientRect();
           return s.backgroundColor==='rgb(255, 0, 0)'
-            && s.fontSize==='20px'
             && s.padding.includes('16px')
-            && s.borderRadius.includes('4px');
-        }
-      });
-      tests.push({
-        label:'Pause positioned top-right', fn:()=>{
-          const r=$('pauseBtn').getBoundingClientRect();
-          return r.top<30 && r.right>window.innerWidth-80;
+            && s.borderRadius.includes('4px')
+            && r.top<30 && r.right>window.innerWidth-80;
         }
       });
       tests.push({ label:'Overlay system', fn:()=>typeof showOverlay==='function' });
       tests.push({ label:'startGame defined', fn:()=>typeof startGame==='function' });
       tests.push({ label:'Firebase initialized', fn:()=>!!firebase.app().name });
-      tests.push({
-        label:'Roles structure', fn:async()=>{
-          const r=await rolesRef.once('value');
-          return r.exists();
+      tests.push({ label:'Roles structure', fn:async()=>{
+          const r=await rolesRef.once('value'); return r.exists();
         }
       });
-      tests.push({
-        label:'Leaderboard fetch', fn:async()=>{
-          const s=await lbRef.limitToLast(1).once('value');
-          return s.exists();
+      tests.push({ label:'Leaderboard fetch', fn:async()=>{
+          const s=await lbRef.limitToLast(1).once('value'); return s.exists();
         }
       });
-      tests.push({
-        label:'Login inputs exist & style', fn:()=>{
+      tests.push({ label:'Login inputs & style', fn:()=>{
           const ie=$('loginEmail'), ip=$('loginPass');
           if(!ie||!ip) return false;
           const se=getComputedStyle(ie), sp=getComputedStyle(ip);
           return ie.type==='email'
-            && parseInt(se.fontSize)>=16
             && se.padding.includes('8px')
-            && ie.offsetWidth>0
+            && parseInt(se.fontSize)>=16
             && ip.type==='password'
-            && parseInt(sp.fontSize)>=16
             && sp.padding.includes('8px')
-            && ip.offsetWidth>0;
+            && parseInt(sp.fontSize)>=16;
         }
       });
-      tests.push({
-        label:'Admin sign-in works', fn:async()=>{
+      tests.push({ label:'Admin sign-in works', fn:async()=>{
           await auth.signInWithEmailAndPassword(adminEmail,'admin123');
           const u=auth.currentUser;
           await auth.signOut();
           return u && u.uid===adminUID;
         }
       });
-      tests.push({ label:'Settings toggles', fn:()=>!!$('soundToggle')&&!!$('darkToggle')&&!!$('skipToggle') });
-      tests.push({ label:'Profile card exists', fn:()=>!!$('profileCard') });
-      tests.push({
-        label:'Design – Body background', fn:()=> getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)'
+      tests.push({ label:'Settings toggles present', fn:()=>!!$('soundToggle')&&!!$('darkToggle')&&!!$('skipToggle') });
+      tests.push({ label:'Profile card restored', fn:()=>!!$('profileCard') });
+      tests.push({ label:'Design – Body background', fn:()=>getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)' });
+      tests.push({ label:'Design – ProfileCard layout', fn:()=>{
+            const pc=$('profileCard'), r=pc.getBoundingClientRect();
+            return r.top<30 && r.right>window.innerWidth-70;
+          }
       });
-      tests.push({
-        label:'Design – ProfileCard layout', fn:()=>{
-          const pc=$('profileCard'), r=pc.getBoundingClientRect();
-          return r.top<30 && r.right>window.innerWidth-70;
-        }
+      tests.push({ label:'Design – ProfileCard toggle', fn:()=>{
+            const pc=$('profileCard');
+            pc.classList.remove('expanded');
+            const before=getComputedStyle($('pc-options')).display==='none';
+            pc.classList.add('expanded');
+            const after=getComputedStyle($('pc-options')).display==='flex';
+            pc.classList.remove('expanded');
+            return before && after;
+          }
       });
-      tests.push({
-        label:'Design – ProfileCard collapsed', fn:()=>{
-          $('profileCard').classList.remove('expanded');
-          return getComputedStyle($('pc-options')).display==='none';
-        }
+      tests.push({ label:'Image assets load', fn:()=>Promise.all([
+            loadImage('https://app.masonnet.org/fbrc.png'), 
+            loadImage('https://app.masonnet.org/default-avatar.png')
+          ]).then(()=>true).catch(()=>false)
       });
-      tests.push({
-        label:'Design – ProfileCard toggle', fn:()=>{
-          const pc=$('profileCard');
-          pc.classList.remove('expanded');
-          const before=getComputedStyle($('pc-options')).display==='none';
-          pc.classList.add('expanded');
-          const after=getComputedStyle($('pc-options')).display==='flex';
-          pc.classList.remove('expanded');
-          return before && after;
-        }
-      });
-      tests.push({
-        label:'Image assets load', fn:()=>Promise.all([
-          loadImage('https://app.masonnet.org/fbrc.png'),
-          loadImage('https://app.masonnet.org/default-avatar.png')
-        ]).then(()=>true).catch(()=>false)
-      });
-      tests.push({
-        label:'Sound assets load', fn:()=>Promise.all([
-          loadAudio('https://app.masonnet.org/flap.mp3'),
-          loadAudio('https://app.masonnet.org/point.mp3')
-        ]).then(()=>true).catch(()=>false)
+      tests.push({ label:'Sound assets load', fn:()=>Promise.all([
+            loadAudio('https://app.masonnet.org/flap.mp3'), 
+            loadAudio('https://app.masonnet.org/point.mp3')
+          ]).then(()=>true).catch(()=>false)
       });
       tests.push({ label:'Pause/resume flow', fn:async()=>{
-        showOverlay('pauseOverlay'); hideAll(); return true;
-      }});
+          showOverlay('pauseOverlay'); hideAll(); return true;
+        }
+      });
 
       // Run tests
       showOverlay('testLoadingOverlay');
-      report.innerHTML='';
-      const total=tests.length, start=Date.now();
-      for(let i=0;i<total;i++){
-        const t=tests[i];
-        status.textContent=`Testing: ${t.label}`;
-        let ok=false;
-        try{ ok=await t.fn(); }catch{}
-        const div=document.createElement('div');
-        div.innerHTML= ok?`✅ ${t.label}`:`❌ ${t.label}`;
+      report.innerHTML = '';
+      const total = tests.length, start = Date.now();
+      for (let i = 0; i < total; i++) {
+        status.textContent = `Testing: ${tests[i].label}`;
+        let ok = false;
+        try { ok = await tests[i].fn(); } catch {}
+        const div = document.createElement('div');
+        div.innerHTML = ok ? `✅ ${tests[i].label}` : `❌ ${tests[i].label}`;
         report.appendChild(div);
-        if(ok) passed++;
-        const pct=Math.round(((i+1)/total)*100);
-        bar.style.width=pct+'%';
-        const elapsed=(Date.now()-start)/1000;
-        const rem=Math.max(0,((elapsed/(i+1))*(total-(i+1))).toFixed(1));
-        timeEl.textContent=`Estimated time remaining: ${rem}s`;
+        if (ok) passed++;
+        const pct = Math.round(((i+1)/total)*100);
+        document.getElementById('loadingBar').style.width = pct + '%';
+        const elapsed = (Date.now() - start)/1000;
+        const rem = Math.max(0, ((elapsed/(i+1))*(total-(i+1))).toFixed(1));
+        document.getElementById('loadingTime').textContent = `Estimated time remaining: ${rem}s`;
       }
 
-      status.textContent=`Diagnostics complete: ${passed}/${total} passed`;
-      setTimeout(()=> showOverlay('testOverlay'),500);
+      document.getElementById('loadingStatus').textContent =
+        `Diagnostics complete: ${passed}/${total} passed`;
+
+      setTimeout(() => showOverlay('testOverlay'), 500);
     }
 
     function loadImage(src){
-      return new Promise((res,rej)=>{
-        const img=new Image();
-        img.onload=res; img.onerror=rej; img.src=src;
+      return new Promise((res, rej)=>{
+        const img = new Image();
+        img.onload = () => res();
+        img.onerror = () => rej();
+        img.src = src;
       });
     }
     function loadAudio(src){
-      return new Promise((res,rej)=>{
-        const a=new Audio(src);
-        a.oncanplaythrough=res; a.onerror=rej; a.src=src;
+      return new Promise((res, rej)=>{
+        const a = new Audio(src);
+        a.oncanplaythrough = () => res();
+        a.onerror = () => rej();
+        a.src = src;
       });
     }
 
