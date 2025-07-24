@@ -6,13 +6,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
-    * { box-sizing:border-box; margin:0; padding:0 }
+    * { box-sizing: border-box; margin:0; padding:0 }
     html, body {
       width:100%; height:100%; overflow:hidden;
       background:#000; color:#fff; font-family:Arial,sans-serif;
     }
     button, input { font-family:inherit }
     .hidden { display:none !important }
+
     .overlay {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
@@ -31,16 +32,36 @@
       cursor:pointer; border-radius:4px;
     }
     .panel button:hover { background:#d10000 }
+
+    /* UPDATED SCROLL LIST FOR LEADERBOARD */
     .scroll-list {
-      max-height:160px; overflow-y:auto; background:#222;
-      padding:8px; border-radius:4px; margin:12px 0;
-      font-family:'Press Start 2P',monospace; font-size:14px;
+      max-height:200px;
+      overflow-y:auto;
+      background:#222;
+      padding:8px;
+      border-radius:4px;
+      margin:12px 0;
+      font-family:'Press Start 2P',monospace;
+      font-size:14px;
+      color:#fff;
+      text-align:left;
     }
-    .scroll-list div { padding:6px 0; border-bottom:1px solid #333 }
+    .scroll-list div {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:8px 0;
+      border-bottom:1px solid #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     #menuOverlay .panel { border-color:red }
     #menuOverlay img {
       width:100%; max-width:280px; margin-bottom:20px;
     }
+
     #profileCard {
       position:absolute; top:20px; right:20px;
       width:64px; height:64px; background:rgba(0,0,0,0.7);
@@ -60,6 +81,7 @@
     }
     #profileCard.expanded #pc-options { display:flex }
     #pc-options button { margin:6px 0; padding:8px; font-size:14px }
+
     #canvas {
       position:absolute; top:0; left:0;
       width:100%; height:100%; background:#000;
@@ -98,7 +120,7 @@
     </div>
   </div>
 
-  <!-- LOGIN OVERLAY -->
+  <!-- OVERLAYS -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -110,7 +132,6 @@
     </div>
   </div>
 
-  <!-- SEARCH OVERLAY -->
   <div id="searchOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Search Profiles</h2>
@@ -130,7 +151,6 @@
     </div>
   </div>
 
-  <!-- SETTINGS OVERLAY -->
   <div id="settingsOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <button id="soundToggle">🔊 Sound: On</button>
@@ -140,7 +160,6 @@
     </div>
   </div>
 
-  <!-- PAUSE OVERLAY -->
   <div id="pauseOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <h2>Paused</h2>
@@ -149,7 +168,6 @@
     </div>
   </div>
 
-  <!-- GAME OVER OVERLAY -->
   <div id="gameoverOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <h2>Game Over</h2>
@@ -159,7 +177,6 @@
     </div>
   </div>
 
-  <!-- NEW HIGH SCORE OVERLAY -->
   <div id="nameOverlay" class="overlay hidden">
     <div class="panel" style="border-color:red">
       <h2>🎉 New High Score!</h2>
@@ -170,7 +187,6 @@
     </div>
   </div>
 
-  <!-- SFX POP-UP -->
   <div id="sfxPopup" class="overlay hidden">
     <div class="panel"><p>Playing sound effects…</p></div>
   </div>
@@ -190,11 +206,10 @@
       'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay','sfxPopup'
     ];
 
-    let gameState = 'menu'; // 'menu' | 'playing' | 'dying'
+    let gameState = 'menu';
     let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
     const gravity = .25, flapPower = -6, speed = 2;
 
-    // hide/show overlays
     function hideAll() {
       overlays.forEach(id => $(id)?.classList.add('hidden'));
     }
@@ -216,7 +231,7 @@
       if (el) el.addEventListener(ev, fn);
     }
 
-    // Firebase init
+    // Initialize Firebase
     firebase.initializeApp({
       apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain:"masonnet-app-official.firebaseapp.com",
@@ -226,122 +241,115 @@
     const db    = firebase.database();
     const lbRef = db.ref("leaderboard");
 
-    // Canvas
+    // Canvas setup
     const canvas = $('canvas'), ctx = canvas.getContext('2d');
-    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    // Bird class
     class Bird {
       constructor() {
-        this.x = 50; this.y = canvas.height * 0.4;
-        this.vy = 0; this.w = 34; this.h = 24;
+        this.x=50; this.y=canvas.height*0.4;
+        this.vy=0; this.w=34; this.h=24;
       }
-      flap() { this.vy = flapPower; }
-      update() {
-        this.vy += gravity; this.y += this.vy;
-        if (this.y < 0) this.y = 0;
-        if (this.y + this.h > canvas.height) this.die();
+      flap(){ this.vy=flapPower; }
+      update(){
+        this.vy+=gravity; this.y+=this.vy;
+        if(this.y<0) this.y=0;
+        if(this.y+this.h>canvas.height) this.die();
       }
-      draw() {
-        ctx.fillStyle = 'yellow';
-        ctx.fillRect(this.x, this.y, this.w, this.h);
+      draw(){
+        ctx.fillStyle='yellow';
+        ctx.fillRect(this.x,this.y,this.w,this.h);
       }
-      collides(p) {
-        return !(
-          this.x + this.w < p.x ||
-          this.x > p.x + p.w ||
-          this.y + this.h < p.top ||
-          this.y > p.bottom
-        );
+      collides(p){
+        return !(this.x+this.w<p.x||
+                 this.x>p.x+p.w||
+                 this.y+this.h<p.top||
+                 this.y>p.bottom);
       }
-      die() {
-        if (gameState!=='playing' || collided) return;
-        collided = true; gameState = 'dying';
-        cancelAnimationFrame(rafId);
+      die(){
+        if(gameState!=='playing'||collided) return;
+        collided=true; gameState='dying'; cancelAnimationFrame(rafId);
         showOverlay('sfxPopup');
-        setTimeout(() => {
-          showOverlay(); // hide popup
+        setTimeout(()=>{
+          showOverlay();
           endGame();
-        }, 800);
+        },800);
       }
     }
 
-    function spawnPipe() {
-      const gap = 120;
-      const top = 20 + Math.random() * (canvas.height - gap - 40);
-      pipes.push({ x: canvas.width, w:60, top, bottom: top+gap, passed:false });
+    function spawnPipe(){
+      const gap=120;
+      const top=20+Math.random()*(canvas.height-gap-40);
+      pipes.push({x:canvas.width,w:60,top,bottom:top+gap,passed:false});
     }
 
-    function loop() {
-      if (gameState !== 'playing') return;
-      rafId = requestAnimationFrame(loop);
+    function loop(){
+      if(gameState!=='playing') return;
+      rafId=requestAnimationFrame(loop);
       frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
-
-      pipes.forEach((p,i) => {
-        p.x -= speed;
-        ctx.fillStyle = 'green';
-        ctx.fillRect(p.x, 0, p.w, p.top);
-        ctx.fillRect(p.x, p.bottom, p.w, canvas.height - p.bottom);
-        if (!p.passed && bird.x > p.x + p.w) {
-          p.passed = true; score++;
+      pipes.forEach((p,i)=>{
+        p.x-=speed;
+        ctx.fillStyle='green';
+        ctx.fillRect(p.x,0,p.w,p.top);
+        ctx.fillRect(p.x,p.bottom,p.w,canvas.height-p.bottom);
+        if(!p.passed&&bird.x>p.x+p.w){
+          p.passed=true; score++;
         }
-        if (bird.collides(p)) bird.die();
-        if (p.x + p.w < 0) pipes.splice(i,1);
+        if(bird.collides(p)) bird.die();
+        if(p.x+p.w<0) pipes.splice(i,1);
       });
-
       bird.update(); bird.draw();
-      if (frame % 150 === 0) spawnPipe();
-      ctx.fillStyle = '#fff';
-      ctx.font = '32px "Press Start 2P"';
-      ctx.fillText(score, 20, 50);
+      if(frame%150===0) spawnPipe();
+      ctx.fillStyle='#fff';
+      ctx.font='32px "Press Start 2P"';
+      ctx.fillText(score,20,50);
     }
 
-    function startGame() {
-      if (gameState === 'playing') return;
-      gameState = 'playing'; pipes = []; score = 0; frame = 0; collided = false;
-      bird = new Bird();
-      hideAll(); $('pauseBtn').style.display = 'block';
-      loop();
+    function startGame(){
+      if(gameState==='playing') return;
+      gameState='playing'; pipes=[]; score=0; frame=0; collided=false;
+      bird=new Bird(); hideAll(); $('pauseBtn').style.display='block'; loop();
+    }
+    function endGame(){
+      if(gameState!=='dying') return;
+      gameState='menu'; $('finalScore').textContent=score; showOverlay('gameoverOverlay');
     }
 
-    function endGame() {
-      if (gameState !== 'dying') return;
-      gameState = 'menu';
-      $('finalScore').textContent = score;
-      showOverlay('gameoverOverlay');
-    }
-
-    // Input
+    // input handlers
     window.addEventListener('mousedown', ()=> bird?.flap());
     window.addEventListener('touchstart', ()=> bird?.flap(), {passive:true});
 
-    // UI bindings
+    // binding UI
     bind('startBtn','click', startGame);
-    bind('pauseBtn','click', ()=> {
-      if (gameState==='playing') {
+    bind('pauseBtn','click', ()=>{
+      if(gameState==='playing'){
         cancelAnimationFrame(rafId);
         gameState='paused';
         showOverlay('pauseOverlay');
       }
     });
-    bind('resumeBtn','click', ()=> { gameState='playing'; hideAll(); loop(); });
+    bind('resumeBtn','click', ()=>{ gameState='playing'; hideAll(); loop(); });
     bind('pauseMenuBtn','click', ()=> showOverlay('menuOverlay'));
     bind('restartBtn','click', startGame);
     bind('goMenuBtn','click', ()=> showOverlay('menuOverlay'));
 
-    bind('leaderBtn','click', () => {
-      const list = $('leaderList');
-      if (!list) return;
-      list.innerHTML = '';
-      lbRef.orderByChild('score').limitToLast(10).once('value', snap => {
-        const data = snap.val() || {};
-        Object.values(data)
-          .sort((a,b) => b.score - a.score)
+    bind('leaderBtn','click', ()=>{
+      const list=$('leaderList');
+      if(!list)return;
+      list.innerHTML='';
+      lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
+        Object.values(snap.val()||{})
+          .sort((a,b)=>b.score-a.score)
           .slice(0,10)
-          .forEach(p => {
-            const d = document.createElement('div');
-            d.textContent = `${p.name}: ${p.score}`;
+          .forEach(p=>{
+            const d=document.createElement('div');
+            d.textContent=`${p.name}`;
+            const span=document.createElement('span');
+            span.textContent=`${p.score}`;
+            // flex container: name left, score right
+            d.textContent=''; d.append(span);
+            d.insertBefore(document.createTextNode(p.name), span);
             list.appendChild(d);
           });
         showOverlay('leaderOverlay');
@@ -352,23 +360,17 @@
     bind('settingsBtn','click', ()=> showOverlay('settingsOverlay'));
     bind('settingsCloseBtn','click', ()=> showOverlay('menuOverlay'));
     bind('soundToggle','click', ()=>{
-      const b = $('soundToggle');
-      b.textContent = b.textContent.includes('On')
-        ? '🔇 Sound: Off'
-        : '🔊 Sound: On';
+      const b=$('soundToggle');
+      b.textContent=b.textContent.includes('On')?'🔇 Sound: Off':'🔊 Sound: On';
     });
     bind('darkToggle','click', ()=>{
       document.body.classList.toggle('dark-mode');
-      const b = $('darkToggle');
-      b.textContent = b.textContent.includes('Off')
-        ? '🌙 Dark Mode: On'
-        : '☀️ Light Mode: Off';
+      const b=$('darkToggle');
+      b.textContent=b.textContent.includes('Off')?'🌙 Dark Mode: On':'☀️ Light Mode: Off';
     });
     bind('skipToggle','click', ()=>{
-      const b = $('skipToggle');
-      b.textContent = b.textContent.includes('Off')
-        ? '🚀 Skip to GO: On'
-        : '🚀 Skip to GO: Off';
+      const b=$('skipToggle');
+      b.textContent=b.textContent.includes('Off')?'🚀 Skip to GO: On':'🚀 Skip to GO: Off';
     });
 
     bind('hubBtn','click', ()=> window.location.href='https://app.masonnet.org/flappybirdhub');
@@ -379,13 +381,13 @@
     bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
     bind('searchSubmit','click', ()=> showOverlay('menuOverlay'));
 
-    bind('profileCard','click', e => {
+    bind('profileCard','click', e=>{
       e.stopPropagation();
       $('profileCard').classList.toggle('expanded');
     });
     document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
 
-    // initial state
+    // show initial menu
     showOverlay('menuOverlay');
   });
   </script>
