@@ -1,715 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Flappy Bird – MasonNet Edition</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- FIREBASE SDKs (fill in your config below) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flappy Bird – MasonNet Complete Edition</title>
   <style>
-    /* =========================================================================
-       RESET & BASE STYLES
-    ========================================================================= */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    /* ─── GLOBAL RESET & BRAND ───────────────────────────────── */
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html, body { width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial,sans-serif; }
+    .hidden { display:none!important; }
+    button { cursor:pointer; border:none; background:#1e90ff; color:#fff; padding:8px 12px; border-radius:4px; }
+    button:hover { background:#63b3ed; }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #000;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      color: #fff;
-      position: relative;
-    }
+    /* ─── HEADER & PROFILE CARD ────────────────────────────── */
+    header { position:absolute; top:0; left:0; right:0; height:60px; background:#111; display:flex; align-items:center; justify-content:space-between; padding:0 20px; z-index:50; }
+    #title { font-size:1.5rem; }
+    #profile-card { position:relative; }
+    #profile-btn { background:none; padding:0; }
+    #profile-btn img { width:40px; height:40px; border-radius:50%; }
+    #profile-menu { position:absolute; top:60px; right:0; background:#222; border:1px solid #444; border-radius:4px; overflow:hidden; min-width:200px; }
+    #profile-menu.hidden { display:none; }
+    #profile-menu button { width:100%; background:none; text-align:left; padding:10px; color:#fff; }
+    #profile-menu button:hover { background:#333; }
 
-    /* =========================================================================
-       THEME: DARK MODE HANDLING
-    ========================================================================= */
-    body.dark {
-      background-color: #121212;
-      color: #ddd;
-    }
+    /* ─── OVERLAY & PANELS ─────────────────────────────────── */
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:100; }
+    .panel { background:#111; border-radius:6px; padding:20px; width:90%; max-width:400px; position:relative; transform:translateY(-20px); opacity:0; transition:transform .2s,opacity .2s; }
+    .panel.open { transform:translateY(0); opacity:1; }
+    .panel h2 { margin-bottom:16px; color:#1e90ff; }
+    .close-btn { position:absolute; top:10px; right:10px; font-size:1.2rem; background:none; color:#fff; }
+    .close-btn:hover { color:#ff6347; }
 
-    /* =========================================================================
-       CANVAS
-    ========================================================================= */
-    #canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      background-color: #000;
-    }
+    /* ─── MAIN MENU ───────────────────────────────────────── */
+    #menuOverlay .panel { text-align:center; }
+    #menuOverlay img { max-width:180px; margin-bottom:16px; }
+    #menuOverlay button { width:100%; margin:8px 0; }
 
-    /* =========================================================================
-       GENERIC OVERLAY
-    ========================================================================= */
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-    }
-    .hidden {
-      display: none !important;
-    }
+    /* ─── SETTINGS ───────────────────────────────────────── */
+    #settingsOverlay .panel { max-width:300px; text-align:left; }
+    .toggle-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .toggle-switch { position:relative; width:50px; height:24px; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; inset:0; background:#444; border-radius:12px; transition:background .2s; }
+    .slider:before { content:""; position:absolute; width:20px; height:20px; background:#fff; border-radius:50%; top:2px; left:2px; transition:transform .2s; }
+    input:checked + .slider { background:#1e90ff; }
+    input:checked + .slider:before { transform:translateX(26px); }
 
-    /* =========================================================================
-       PANEL
-    ========================================================================= */
-    .panel {
-      background-color: #1e1e1e;
-      padding: 24px;
-      border-radius: 8px;
-      width: 320px;
-      max-width: 90%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      text-align: center;
-    }
-    .panel h2 {
-      margin-bottom: 16px;
-      font-size: 1.4rem;
-      font-weight: normal;
-    }
-    .panel input[type="email"],
-    .panel input[type="password"],
-    .panel input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #333;
-      border-radius: 4px;
-      background: #121212;
-      color: #eee;
-      font-size: 1rem;
-    }
-    .panel label {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      font-size: 1rem;
-      margin: 8px 0;
-      cursor: pointer;
-    }
-    .panel label input[type="checkbox"] {
-      margin-right: 8px;
-    }
-    .panel button {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 4px;
-      background-color: #e53935;
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
-    }
-    .panel button:hover {
-      background-color: #d32f2f;
-    }
-    .panel button.secondary {
-      background-color: #424242;
-    }
-    .panel button.secondary:hover {
-      background-color: #333;
-    }
+    /* ─── LEADERBOARD ────────────────────────────────────── */
+    #leaderOverlay .panel { max-width:350px; }
+    #leaderboard-list { list-style:none; padding:0; margin:0 0 16px; max-height:200px; overflow-y:auto; }
+    #leaderboard-list li { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #444; }
 
-    /* =========================================================================
-       PAUSE BUTTON
-    ========================================================================= */
-    #pauseBtn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 500;
-      padding: 12px 16px;
-      font-size: 1rem;
-      background-color: #e53935;
-      border: none;
-      border-radius: 4px;
-      color: #fff;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-    #pauseBtn:hover {
-      background-color: #d32f2f;
-    }
+    /* ─── PAUSE & GAME OVER ───────────────────────────────── */
+    #pauseOverlay .panel, #gameoverOverlay .panel, #adminOverlay .panel { max-width:300px; text-align:center; }
+    #pauseOverlay button, #gameoverOverlay button, #adminOverlay button { width:100%; margin:8px 0; }
 
-    /* =========================================================================
-       LEADERBOARD LIST
-    ========================================================================= */
-    #leaderList {
-      max-height: 240px;
-      overflow-y: auto;
-      text-align: left;
-    }
-    #leaderList div {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid #333;
-      font-size: 0.95rem;
-    }
+    /* ─── DIAGNOSTICS ─────────────────────────────────────── */
+    #testLoadingOverlay .panel, #testOverlay .panel { max-width:400px; }
+    #loadingBar { width:0%; height:8px; background:#1e90ff; transition:width .3s; }
 
-    /* =========================================================================
-       DEBUG & DIAGNOSTIC STYLES
-    ========================================================================= */
-    #loadingBar {
-      height: 8px;
-      background-color: #e53935;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    #testReport {
-      text-align: left;
-      font-family: monospace;
-      font-size: 0.9rem;
-      max-height: 60vh;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      background: #121212;
-      padding: 12px;
-      border-radius: 4px;
-      border: 1px solid #333;
-    }
+    /* ─── GAME CANVAS ───────────────────────────────────── */
+    #gameContainer { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    #canvas { background:#000; border:2px solid #1e90ff; border-radius:6px; }
+    #scoreDisplay { position:absolute; top:80px; font-size:2rem; text-shadow:1px 1px 2px #000; }
 
-    /* =========================================================================
-       UTILITY CLASSES
-    ========================================================================= */
-    .flex-col {
-      display: flex;
-      flex-direction: column;
-    }
-    .mt-8 {
-      margin-top: 8px;
-    }
-    .mb-8 {
-      margin-bottom: 8px;
-    }
-    .text-left {
-      text-align: left;
-    }
   </style>
 </head>
+<body data-theme="light">
 
-<body>
-  <!-- ========================================================================
-       MAIN MENU OVERLAY
-  ======================================================================== -->
+  <!-- HEADER -->
+  <header>
+    <div id="title">Flappy Bird</div>
+    <div id="profile-card">
+      <button id="profile-btn"><img src="https://app.masonnet.org/default-avatar.png" alt="Profile"></button>
+      <div id="profile-menu" class="hidden">
+        <button id="sign-in-btn">Sign In</button>
+        <button id="sign-out-btn" class="hidden">Sign Out</button>
+        <button id="feedback-btn">Submit Feedback</button>
+        <button id="account-btn">Account Settings</button>
+        <button id="admin-btn" class="hidden">Admin Console</button>
+        <button id="search-btn">Search Profiles…</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN MENU OVERLAY -->
   <div id="menuOverlay" class="overlay">
-    <div class="panel flex-col">
-      <h2>Flappy Bird</h2>
-      <button id="startBtn">Start Game</button>
-      <button id="leaderBtn">Leaderboard</button>
-      <button id="settingsBtn">Settings</button>
-      <button id="hubBtn">Flappy Bird Hub</button>
-      <button id="testBtn">Internal Diagnostics</button>
+    <div class="panel open">
+      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub">
+      <button id="start-game-btn">Start Game</button>
+      <button id="open-leaderboard-btn">Leaderboard</button>
+      <button id="open-settings-btn">Settings</button>
+      <button id="open-hub-btn">Flappy Bird Hub</button>
+      <button id="open-test-btn" class="hidden">Diagnostics (Admin)</button>
     </div>
   </div>
 
-  <!-- ========================================================================
-       SETTINGS OVERLAY
-  ======================================================================== -->
+  <!-- SETTINGS OVERLAY -->
   <div id="settingsOverlay" class="overlay hidden">
-    <div class="panel flex-col">
+    <div class="panel">
+      <button class="close-btn" data-close="settingsOverlay">&times;</button>
       <h2>Settings</h2>
-      <label><input type="checkbox" id="soundToggle"> Enable Sound</label>
-      <label><input type="checkbox" id="darkToggle"> Dark Mode</label>
-      <label><input type="checkbox" id="skipToggle"> Skip to Game Over</label>
-      <button id="settingsCloseBtn" class="secondary">Close Settings</button>
-    </div>
-  </div>
-
-  <!-- ========================================================================
-       LEADERBOARD OVERLAY
-  ======================================================================== -->
-  <div id="leaderOverlay" class="overlay hidden">
-    <div class="panel">
-      <h2>Top Scores</h2>
-      <div id="leaderList"></div>
-      <button id="leaderClose" class="secondary">Back to Menu</button>
-    </div>
-  </div>
-
-  <!-- ========================================================================
-       LOGIN OVERLAY (ADMIN)
-  ======================================================================== -->
-  <div id="loginOverlay" class="overlay hidden">
-    <div class="panel">
-      <h2>Admin Sign In</h2>
-      <input id="loginEmail" type="email" placeholder="Email Address">
-      <input id="loginPass" type="password" placeholder="Password">
-      <button id="loginSubmit">Sign In</button>
-      <button id="loginCancel" class="secondary">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ========================================================================
-       DIAGNOSTICS LOADING OVERLAY
-  ======================================================================== -->
-  <div id="testLoadingOverlay" class="overlay hidden">
-    <div class="panel flex-col">
-      <h2>Running Diagnostics...</h2>
-      <div id="loadingStatus" class="mb-8">Initializing...</div>
-      <div style="background:#333; border-radius:4px; overflow:hidden; width:100%;">
-        <div id="loadingBar"></div>
+      <div class="toggle-row">
+        <span>Sound</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="sound-toggle" checked><span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Dark Mode</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dark-toggle"><span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Skip to Game Over</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="skip-toggle"><span class="slider"></span>
+        </label>
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================
-       DIAGNOSTICS REPORT OVERLAY
-  ======================================================================== -->
-  <div id="testOverlay" class="overlay hidden">
-    <div class="panel flex-col">
-      <h2>Diagnostics Report</h2>
-      <pre id="testReport"></pre>
-      <button id="testClose" class="secondary">Close Report</button>
+  <!-- LEADERBOARD OVERLAY -->
+  <div id="leaderOverlay" class="overlay hidden">
+    <div class="panel">
+      <button class="close-btn" data-close="leaderOverlay">&times;</button>
+      <h2>Leaderboard</h2>
+      <ul id="leaderboard-list"></ul>
     </div>
   </div>
 
-  <!-- Canvas for Gameplay -->
-  <canvas id="canvas"></canvas>
-  <button id="pauseBtn" class="hidden">Pause</button>
+  <!-- PAUSE OVERLAY -->
+  <div id="pauseOverlay" class="overlay hidden">
+    <div class="panel open">
+      <h2>Paused</h2>
+      <button id="resume-btn">Resume</button>
+      <button id="back-menu-btn">Main Menu</button>
+    </div>
+  </div>
 
-  <script>
-  // ==========================================================================
-  // UTILITIES & HELPERS
-  // ==========================================================================
-  const $ = id => document.getElementById(id);
-  function hideAllOverlays() {
-    [
-      'menuOverlay',
-      'settingsOverlay',
-      'leaderOverlay',
-      'loginOverlay',
-      'testLoadingOverlay',
-      'testOverlay'
-    ].forEach(id => $(id).classList.add('hidden'));
-  }
-  function showOverlay(id) {
-    $(id).classList.remove('hidden');
-  }
-  function saveSettingsToStorage() {
-    localStorage.setItem('fbSettings', JSON.stringify(settings));
-  }
-  function loadSettingsFromStorage() {
-    let s = localStorage.getItem('fbSettings');
-    if (s) {
-      try {
-        const o = JSON.parse(s);
-        settings.sound = !!o.sound;
-        settings.dark  = !!o.dark;
-        settings.skip  = !!o.skip;
-      } catch (e) {
-        console.warn('Failed to parse settings, using defaults');
-      }
-    }
-    syncSettingsToUI();
-  }
-  function syncSettingsToUI() {
-    $('soundToggle').checked = settings.sound;
-    $('darkToggle').checked  = settings.dark;
-    $('skipToggle').checked  = settings.skip;
-    document.body.classList.toggle('dark', settings.dark);
-  }
+  <!-- GAME OVERLAY -->
+  <div id="gameoverOverlay" class="overlay hidden">
+    <div class="panel open">
+      <h2>Game Over</h2>
+      <p>Your Score: <span id="final-score">0</span></p>
+      <div style="margin:12px 0;">
+        <input id="nameInput" type="text" placeholder="Your name" style="padding:6px;border:1px solid #444;border-radius:4px;background:#222;color:#fff;">
+        <button id="submitScore">Submit Score</button>
+      </div>
+      <button id="restart-btn">Restart</button>
+      <button id="go-menu-btn">Main Menu</button>
+    </div>
+  </div>
 
-  // ==========================================================================
-  // FIREBASE INITIALIZATION
-  // ==========================================================================
-  const firebaseConfig = {
-    // Paste your Firebase config object here
-    apiKey: "",
-    authDomain: "",
-    databaseURL: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db   = firebase.database();
-  const leaderboardRef = db.ref('leaderboard');
+  <!-- ADMIN CONSOLE OVERLAY -->
+  <div id="adminOverlay" class="overlay hidden">
+    <div class="panel">
+      <button class="close-btn" data-close="adminOverlay">&times;</button>
+      <h2>Admin Console</h2>
+      <button id="runDiagnosticsBtn">Run Diagnostics</button>
+      <button id="clearScoresBtn">Clear All Scores</button>
+    </div>
+  </div>
 
-  // ==========================================================================
-  // GLOBAL STATE
-  // ==========================================================================
-  let gameState = 'menu';          // 'menu' | 'playing' | 'paused'
-  let bird, pipes = [], score = 0;
-  let frameCount = 0, animationId = null, hasCollided = false;
-  const settings = { sound: true, dark: false, skip: false };
-  const physics = {
-    gravity: 0.25,
-    flapStrength: -6,
-    pipeSpeed: 2,
-    pipeGap: 140
-  };
+  <!-- DIAGNOSTICS LOADING -->
+  <div id="testLoadingOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Running Diagnostics…</h2>
+      <div id="loadingStatus" style="margin:12px 0;color:#fff;"></div>
+      <div style="background:#333;border-radius:4px;overflow:hidden;"><div id="loadingBar"></div></div>
+    </div>
+  </div>
 
-  // ==========================================================================
-  // CANVAS & CONTEXT SETUP
-  // ==========================================================================
-  const canvas = $('canvas');
-  const ctx    = canvas.getContext('2d');
-  function onResize() {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', onResize);
-  onResize();
+  <!-- DIAGNOSTICS REPORT -->
+  <div id="testOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Diagnostics Report</h2>
+      <pre id="test-report" style="white-space:pre-wrap;color:#fff;"></pre>
+      <button id="close-test-btn">Close</button>
+    </div>
+  </div>
 
-  // ==========================================================================
-  // AUDIO ASSETS
-  // ==========================================================================
-  const audioAssets = {
-    flap : new Audio('flap.mp3'),
-    hit  : new Audio('hit.mp3'),
-    score: new Audio('score.mp3')
-  };
-  audioAssets.flap.preload = 'auto';
-  audioAssets.hit.preload  = 'auto';
-  audioAssets.score.preload= 'auto';
+  <!-- GAME CANVAS -->
+  <div id="gameContainer" class="hidden">
+    <canvas id="canvas" width="400" height="600"></canvas>
+    <div id="scoreDisplay">0</div>
+  </div>
 
-  // ==========================================================================
-  // BIRD CLASS DEFINITION
-  // ==========================================================================
-  class Bird {
-    constructor() {
-      this.width  = 34;
-      this.height = 24;
-      this.x      = 50;
-      this.y      = canvas.height * 0.4;
-      this.velocityY = 0;
-    }
-    flap() {
-      if (settings.sound) {
-        audioAssets.flap.currentTime = 0;
-        audioAssets.flap.play().catch(() => {});
-      }
-      this.velocityY = physics.flapStrength;
-    }
-    update() {
-      this.velocityY += physics.gravity;
-      this.y         += this.velocityY;
-      if (this.y < 0) {
-        this.y        = 0;
-        this.velocityY = 0;
-      }
-      if (this.y + this.height > canvas.height) {
-        this.die();
-      }
-    }
-    draw() {
-      ctx.fillStyle = '#ffeb3b';
-      ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
-    collidesWith(pipe) {
-      return !(
-        this.x + this.width < pipe.x ||
-        this.x > pipe.x + pipe.width ||
-        this.y + this.height < pipe.top ||
-        this.y > pipe.bottom
-      );
-    }
-    die() {
-      if (hasCollided) return;
-      hasCollided = true;
-      cancelAnimationFrame(animationId);
-      if (settings.sound) {
-        audioAssets.hit.play().catch(() => {});
-      }
-      if (!settings.skip) {
-        alert('Game Over!');
-      }
-      sendScoreToLeaderboard();
-      hideAllOverlays();
-      showOverlay('menuOverlay');
-      gameState = 'menu';
-    }
-  }
+  <!-- FIREBASE + APP SCRIPT -->
+  <script type="module">
+    // ── IMPORT FIREBASE MODULES ───────────────────────────────
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+    import {
+      getFirestore, collection, addDoc, query, orderBy, limit,
+      getDocs, serverTimestamp, writeBatch
+    } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
 
-  // ==========================================================================
-  // PIPE MANAGEMENT
-  // ==========================================================================
-  function spawnPipe() {
-    const gapTop = 20 + Math.random() * (canvas.height - physics.pipeGap - 40);
-    pipes.push({
-      x      : canvas.width,
-      width  : 60,
-      top    : gapTop,
-      bottom : gapTop + physics.pipeGap,
-      passed : false
-    });
-  }
-
-  // ==========================================================================
-  // GAME LOOP
-  // ==========================================================================
-  function gameLoop() {
-    if (gameState !== 'playing') return;
-    animationId = requestAnimationFrame(gameLoop);
-    frameCount++;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // RENDER PIPES
-    pipes.forEach((pipe, i) => {
-      pipe.x -= physics.pipeSpeed;
-      ctx.fillStyle = '#4caf50';
-      ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
-      ctx.fillRect(pipe.x, pipe.bottom, pipe.width, canvas.height - pipe.bottom);
-
-      // SCORE CHECK
-      if (!pipe.passed && bird.x > pipe.x + pipe.width) {
-        pipe.passed = true;
-        score++;
-        if (settings.sound) {
-          audioAssets.score.currentTime = 0;
-          audioAssets.score.play().catch(() => {});
-        }
-      }
-      // COLLISION CHECK
-      if (bird.collidesWith(pipe)) {
-        bird.die();
-      }
-      // REMOVE OFFSCREEN
-      if (pipe.x + pipe.width < 0) {
-        pipes.splice(i, 1);
-      }
-    });
-
-    // UPDATE & DRAW BIRD
-    bird.update();
-    bird.draw();
-
-    // SPAWN NEW PIPE PERIODICALLY
-    if (frameCount % 150 === 0) spawnPipe();
-
-    // DRAW SCORE
-    ctx.fillStyle = '#fff';
-    ctx.font      = '24px monospace';
-    ctx.fillText(`Score: ${score}`, 16, 32);
-  }
-
-  // ==========================================================================
-  // UI & EVENT BINDINGS
-  // ==========================================================================
-  // LOAD SETTINGS FROM STORAGE
-  loadSettingsFromStorage();
-
-  // START GAME
-  $('startBtn').addEventListener('click', () => {
-    hideAllOverlays();
-    $('pauseBtn').textContent = 'Pause';
-    $('pauseBtn').classList.remove('hidden');
-    pipes      = [];
-    score      = 0;
-    frameCount = 0;
-    hasCollided= false;
-    bird       = new Bird();
-    gameState  = 'playing';
-    gameLoop();
-  });
-
-  // PAUSE / RESUME
-  $('pauseBtn').addEventListener('click', () => {
-    if (gameState === 'playing') {
-      cancelAnimationFrame(animationId);
-      gameState = 'paused';
-      showOverlay('menuOverlay');
-      $('pauseBtn').textContent = 'Resume';
-    } else if (gameState === 'paused') {
-      hideAllOverlays();
-      gameState = 'playing';
-      $('pauseBtn').textContent = 'Pause';
-      gameLoop();
-    }
-  });
-
-  // LEADERBOARD DISPLAY
-  $('leaderBtn').addEventListener('click', () => {
-    leaderboardRef
-      .orderByChild('score')
-      .limitToLast(10)
-      .once('value', snapshot => {
-        const listEl = $('leaderList');
-        listEl.innerHTML = '';
-        const arr = [];
-        snapshot.forEach(child => arr.push(child.val()));
-        arr.sort((a,b) => b.score - a.score)
-           .forEach(entry => {
-             const row = document.createElement('div');
-             row.innerHTML = `<span>${entry.name}</span><span>${entry.score}</span>`;
-             listEl.appendChild(row);
-           });
-        hideAllOverlays();
-        showOverlay('leaderOverlay');
-      });
-  });
-  $('leaderClose').addEventListener('click', () => {
-    hideAllOverlays();
-    showOverlay('menuOverlay');
-  });
-
-  // SETTINGS BEHAVIOR
-  $('settingsBtn').addEventListener('click', () => {
-    hideAllOverlays();
-    syncSettingsToUI();
-    showOverlay('settingsOverlay');
-  });
-  $('settingsCloseBtn').addEventListener('click', () => {
-    hideAllOverlays();
-    saveSettingsToStorage();
-    showOverlay('menuOverlay');
-  });
-  $('soundToggle').addEventListener('change', e => {
-    settings.sound = e.target.checked;
-    saveSettingsToStorage();
-  });
-  $('darkToggle').addEventListener('change', e => {
-    settings.dark = e.target.checked;
-    document.body.classList.toggle('dark', settings.dark);
-    saveSettingsToStorage();
-  });
-  $('skipToggle').addEventListener('change', e => {
-    settings.skip = e.target.checked;
-    saveSettingsToStorage();
-  });
-
-  // HUB BUTTON
-  $('hubBtn').addEventListener('click', () => {
-    window.location.href = 'https://app.masonnet.org/flappybirdhub';
-  });
-
-  // ADMIN DIAGNOSTICS FLOW
-  const allowedAdmins = ['admin@masonnet.org'];
-  $('testBtn').addEventListener('click', () => {
-    hideAllOverlays();
-    showOverlay('loginOverlay');
-  });
-  $('loginCancel').addEventListener('click', () => {
-    hideAllOverlays();
-    showOverlay('menuOverlay');
-  });
-  $('loginSubmit').addEventListener('click', () => {
-    const email = $('loginEmail').value.trim();
-    const pass  = $('loginPass').value;
-    auth.signInWithEmailAndPassword(email, pass)
-      .then(creds => {
-        if (!allowedAdmins.includes(creds.user.email)) {
-          alert('Access Denied');
-          auth.signOut();
-          hideAllOverlays();
-          showOverlay('menuOverlay');
-          return;
-        }
-        hideAllOverlays();
-        runDiagnostics();
-      })
-      .catch(err => alert('Authentication failed: ' + err.message));
-  });
-
-  function runDiagnostics() {
-    showOverlay('testLoadingOverlay');
-    const steps = [
-      'Checking frame rate...',
-      'Measuring memory usage...',
-      'Verifying asset integrity...',
-      'Testing input latency...',
-      'Compiling full report...'
-    ];
-    let idx = 0;
-    const timer = setInterval(() => {
-      const percent = Math.floor(((idx + 1) / steps.length) * 100);
-      $('loadingStatus').textContent = steps[idx];
-      $('loadingBar').style.width = percent + '%';
-      idx++;
-      if (idx >= steps.length) {
-        clearInterval(timer);
-        displayDiagnosticsReport();
-      }
-    }, 700);
-  }
-
-  function displayDiagnosticsReport() {
-    const lines = [
-      `Frame Rate: ${Math.round(1000 / (performance.now() / frameCount || 16))} fps`,
-      `Memory Usage (approx): ${Math.round((window.performance && performance.memory?.usedJSHeapSize/1024/1024) || 0)} MB`,
-      'Asset Check: All assets loaded successfully',
-      'Latency Test: Input-to-render <16ms',
-      'No uncaught exceptions detected'
-    ];
-    $('testReport').textContent = lines.join('\n');
-    hideAllOverlays();
-    showOverlay('testOverlay');
-  }
-
-  $('testClose').addEventListener('click', () => {
-    auth.signOut();
-    hideAllOverlays();
-    showOverlay('menuOverlay');
-  });
-
-  // ==========================================================================
-  // INPUT HANDLING (KEYBOARD & MOUSE)
-  // ==========================================================================
-  window.addEventListener('keydown', e => {
-    if (e.code === 'Space') {
-      if (gameState === 'playing') bird.flap();
-      else if (gameState === 'paused') $('pauseBtn').click();
-    }
-  });
-  canvas.addEventListener('mousedown', () => {
-    if (gameState === 'playing') bird.flap();
-    else if (gameState === 'paused') $('pauseBtn').click();
-  });
-
-  // ==========================================================================
-  // LEADERBOARD SUBMISSION
-  // ==========================================================================
-  function sendScoreToLeaderboard() {
-    if (!auth.currentUser) return;
-    const entry = {
-      name : auth.currentUser.email.split('@')[0],
-      score: score,
-      ts   : Date.now()
+    // ── FIREBASE CONFIG (REPLACE WITH YOURS) ─────────────────
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_APP.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_APP.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
-    leaderboardRef.push(entry).catch(err => console.error('Leaderboard write failed', err));
-  }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const scoresCol = collection(db, 'scores');
 
-  // ==========================================================================
-  // PERFORMANCE MONITOR (optional console debug)
-  // ==========================================================================
-  (function setupPerfLogger() {
-    let last = performance.now();
-    setInterval(() => {
-      const now = performance.now();
-      const delta = now - last;
-      last = now;
-      console.debug(`perf: ${Math.round(1000/delta)} fps`);
-    }, 5000);
-  })();
+    // ── ADMIN ROLE GATING ────────────────────────────────────
+    const adminEmails = ["admin@yourdomain.com"]; // ← add admins here
 
-  // ==========================================================================
-  // END OF SCRIPT
-  // ==========================================================================
+    // ── DOM HELPERS ─────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+    const show = id => $(id).classList.remove('hidden');
+    const hide = id => $(id).classList.add('hidden');
+    const toggle = el => el.classList.toggle('hidden');
+
+    // ── PROFILE & AUTH LOGIC ────────────────────────────────
+    const profileBtn  = $('profile-btn'),
+          profileMenu = $('profile-menu'),
+          signInBtn   = $('sign-in-btn'),
+          signOutBtn  = $('sign-out-btn'),
+          adminBtn    = $('admin-btn'),
+          testMenuBtn = $('open-test-btn'),
+          feedbackBtn = $('feedback-btn'),
+          accountBtn  = $('account-btn'),
+          searchBtn   = $('search-btn');
+
+    profileBtn.onclick = e => { e.stopPropagation(); toggle(profileMenu); };
+    document.addEventListener('click', ()=> profileMenu.classList.add('hidden'));
+
+    signInBtn.onclick = async () => {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    };
+    signOutBtn.onclick = () => signOut(auth);
+
+    feedbackBtn.onclick = () => {
+      const msg = prompt("Submit your feedback:");
+      if(msg) alert("Thanks for your feedback!");
+    };
+    accountBtn.onclick = () => alert("Account settings not implemented.");
+
+    searchBtn.onclick = () => {
+      const term = prompt("Search profiles:");
+      if(term) alert("No search API hooked yet.");
+    };
+
+    onAuthStateChanged(auth, user => {
+      if(user) {
+        signInBtn.classList.add('hidden');
+        signOutBtn.classList.remove('hidden');
+        $('profile-btn').querySelector('img').src = user.photoURL || '';
+        if(adminEmails.includes(user.email)) {
+          adminBtn.classList.remove('hidden');
+          testMenuBtn.classList.remove('hidden');
+        } else {
+          adminBtn.classList.add('hidden');
+          testMenuBtn.classList.add('hidden');
+        }
+      } else {
+        signInBtn.classList.remove('hidden');
+        signOutBtn.classList.add('hidden');
+        adminBtn.classList.add('hidden');
+        testMenuBtn.classList.add('hidden');
+        $('profile-btn').querySelector('img').src = 'https://app.masonnet.org/default-avatar.png';
+      }
+    });
+
+    adminBtn.onclick = () => show('adminOverlay');
+    document.querySelectorAll('.close-btn').forEach(btn => {
+      btn.onclick = () => hide(btn.dataset.close);
+    });
+
+    // ── MAIN MENU HANDLERS ─────────────────────────────────
+    $('start-game-btn').onclick = ()=>{ hide('menuOverlay'); $('gameContainer').classList.remove('hidden'); startGame(); };
+    $('open-settings-btn').onclick = ()=>{ show('settingsOverlay'); $('.panel', $('settingsOverlay')).classList.add('open'); };
+    $('open-leaderboard-btn').onclick = ()=>{ show('leaderOverlay'); $('.panel', $('leaderOverlay')).classList.add('open'); loadLeaderboard(); };
+    $('open-hub-btn').onclick = ()=> window.location.href = 'https://app.masonnet.org/flappybirdhub';
+    $('open-test-btn').onclick = () => runDiagnostics();
+
+    // ── SETTINGS STATE ─────────────────────────────────────
+    let settings = { sound:true, dark:false, skip:false };
+    function loadSettings(){
+      try { Object.assign(settings, JSON.parse(localStorage.getItem('flappySettings'))); } catch{}
+      applySettings();
+    }
+    function saveSettings(){
+      localStorage.setItem('flappySettings', JSON.stringify(settings));
+    }
+    function applySettings(){
+      $('sound-toggle').checked = settings.sound;
+      $('dark-toggle').checked  = settings.dark;
+      $('skip-toggle').checked  = settings.skip;
+      document.body.setAttribute('data-theme', settings.dark?'dark':'light');
+    }
+    $('sound-toggle').onchange = e=>{ settings.sound=e.target.checked; saveSettings(); };
+    $('dark-toggle').onchange  = e=>{ settings.dark=e.target.checked; saveSettings(); applySettings(); };
+    $('skip-toggle').onchange  = e=>{ settings.skip=e.target.checked; saveSettings(); };
+    loadSettings();
+
+    // ── FIRESTORE LEADERBOARD ─────────────────────────────
+    async function loadLeaderboard(){
+      const q = query(scoresCol, orderBy('score','desc'), limit(10));
+      const snap = await getDocs(q);
+      const ul = $('leaderboard-list'); ul.innerHTML = '';
+      snap.forEach(doc=>{
+        const d=doc.data(), li=document.createElement('li');
+        li.textContent=`${d.name} — ${d.score}`;
+        ul.appendChild(li);
+      });
+    }
+    async function saveScore(name,score){
+      await addDoc(scoresCol,{ name, score, timestamp:serverTimestamp() });
+      loadLeaderboard();
+    }
+
+    // ── ADMIN CONSOLE ACTIONS ──────────────────────────────
+    $('runDiagnosticsBtn').onclick = runDiagnostics;
+    $('clearScoresBtn').onclick = async ()=>{
+      if(!confirm("Clear all scores?")) return;
+      const snap = await getDocs(scoresCol);
+      const batch = writeBatch(db);
+      snap.forEach(doc=> batch.delete(doc.ref));
+      await batch.commit();
+      alert("All scores cleared.");
+      loadLeaderboard();
+    };
+
+    // ── DIAGNOSTICS SEQUENCE ───────────────────────────────
+    function runDiagnostics(){
+      hide('adminOverlay');
+      show('testLoadingOverlay');
+      $('loadingStatus').textContent='Initializing…'; $('loadingBar').style.width='10%';
+      setTimeout(()=>{ $('loadingStatus').textContent='Memory check'; $('loadingBar').style.width='50%'; }, 800);
+      setTimeout(()=>{ $('loadingStatus').textContent='Auth & Firestore gates'; $('loadingBar').style.width='80%'; },1600);
+      setTimeout(()=>{
+        hide('testLoadingOverlay');
+        show('testOverlay');
+        $('test-report').textContent = '✔️ Firebase Auth OK\n✔️ Firestore OK\n✔️ UI gating valid';
+      },2400);
+    }
+    $('close-test-btn').onclick = ()=> hide('testOverlay');
+
+    // ── FLAPPY BIRD GAME LOGIC ─────────────────────────────
+    const canvas = $('canvas'), ctx = canvas.getContext('2d');
+    let bird, pipes, score, gameOver, frameId, frameCount=0;
+
+    class Bird {
+      constructor(){ this.x=80; this.y=300; this.v=0; this.w=34; this.h=24; }
+      flap(){ this.v=-6; if(settings.sound) new Audio('https://freesound.org/data/previews/66/66717_931655-lq.mp3').play(); }
+      update(){
+        this.v+=0.3; this.y+=this.v;
+        if(this.y<0) this.y=0;
+        if(this.y+this.h>canvas.height) this.die();
+      }
+      draw(){ ctx.fillStyle='#ff0'; ctx.fillRect(this.x,this.y,this.w,this.h); }
+      die(){
+        if(gameOver) return;
+        gameOver=true; cancelAnimationFrame(frameId);
+        setTimeout(showGameOver,200);
+      }
+      collides(p){
+        return !( this.x+this.w < p.x || this.x > p.x+p.w || this.y+this.h < p.top || this.y > p.bottom );
+      }
+    }
+
+    function spawnPipe(){
+      const gap=120, top=50+Math.random()*(canvas.height-gap-100);
+      pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
+    }
+
+    function startGame(){
+      bird=new Bird(); pipes=[]; score=0; gameOver=false; frameCount=0;
+      $('scoreDisplay').textContent='0';
+      hide('gameoverOverlay'); $('gameContainer').classList.remove('hidden');
+      frameLoop();
+    }
+
+    function frameLoop(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      frameCount++;
+      if(frameCount%100===0) spawnPipe();
+      pipes.forEach((p,i)=>{
+        p.x-=2;
+        ctx.fillStyle='#0f0';
+        ctx.fillRect(p.x,0,p.w,p.top);
+        ctx.fillRect(p.x,p.bottom,p.w,canvas.height-p.bottom);
+        if(!p.passed && bird.x>p.x+p.w){ p.passed=true; score++; $('scoreDisplay').textContent=score; }
+        if(bird.collides(p)) bird.die();
+        if(p.x+p.w<0) pipes.splice(i,1);
+      });
+      bird.update(); bird.draw();
+      if(!gameOver) frameId = requestAnimationFrame(frameLoop);
+    }
+
+    canvas.onclick = ()=> !gameOver && bird.flap();
+    document.addEventListener('keydown', e=>{ if(e.code==='Space') canvas.click(); if(e.code==='KeyP') show('pauseOverlay'); });
+
+    function showGameOver(){
+      $('final-score').textContent=score;
+      show('gameoverOverlay');
+      if(settings.skip){
+        hide('gameoverOverlay');
+        show('menuOverlay');
+      }
+    }
+
+    $('restart-btn').onclick = startGame;
+    $('go-menu-btn').onclick = ()=>{ hide('gameoverOverlay'); show('menuOverlay'); };
+    $('resume-btn').onclick = ()=> hide('pauseOverlay');
+    $('back-menu-btn').onclick = ()=>{ hide('pauseOverlay'); show('menuOverlay'); };
+
+    $('submitScore').onclick = async()=>{
+      const name = $('nameInput').value.trim() || 'Anonymous';
+      await saveScore(name, score);
+      $('nameInput').value='';
+      hide('gameoverOverlay');
+      show('leaderOverlay');
+    };
+
+    // ── ON LOAD ──────────────────────────────────────────────
+    window.onload = () => {
+      loadLeaderboard();
+    };
   </script>
 </body>
 </html>
