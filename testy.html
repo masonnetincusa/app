@@ -8,10 +8,10 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0 }
     html, body {
-      width: 100%; height: 100%; overflow: hidden;
-      background: #000; color: #fff; font-family: Arial, sans-serif;
+      width:100%; height:100%; overflow:hidden;
+      background:#000; color:#fff; font-family:Arial,sans-serif;
     }
-    button, input { font-family: inherit }
+    button, input { font-family:inherit }
 
     /* GLOBAL INPUT STYLES */
     input {
@@ -33,100 +33,90 @@
 
     /* Overlay & Panel */
     .overlay {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100;
+      position: absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.85);
+      display:flex; align-items:center; justify-content:center;
+      z-index:100;
     }
     .panel {
-      background: #111; padding: 20px; border-radius: 8px;
-      width: 320px; max-width: 90%; text-align: center;
-      border: 2px solid transparent;
+      background:#111; padding:20px; border-radius:8px;
+      width:320px; max-width:90%; text-align:center;
+      border:2px solid transparent;
     }
     .panel button {
-      width: 100%; background: red; color: #fff; border: none;
-      font-size: 20px; padding: 16px; margin: 12px 0;
-      cursor: pointer; border-radius: 4px;
+      width:100%; background:red; color:#fff; border:none;
+      font-size:20px; padding:16px; margin:12px 0;
+      cursor:pointer; border-radius:4px;
     }
-    .panel button:hover { background: #d10000 }
+    .panel button:hover { background:#d10000 }
 
-    /* Leaderboard expanded */
+    /* Leaderboard */
     #leaderOverlay .panel {
-      width: 400px; max-width: 95%; border-color: red;
+      width:400px; max-width:95%; border-color:red;
     }
     .scroll-list {
-      max-height: 240px; overflow-y: auto;
-      background: #222; padding: 8px; border-radius: 4px;
-      margin: 12px 0; font-family:'Press Start 2P',monospace;
-      font-size: 14px; color: #fff; text-align: left;
+      max-height:240px; overflow-y:auto;
+      background:#222; padding:8px; border-radius:4px;
+      margin:12px 0; font-family:'Press Start 2P',monospace;
+      font-size:14px; color:#fff; text-align:left;
     }
     .scroll-list div {
-      display: flex; justify-content: space-between;
-      align-items: center; gap: 16px; padding: 8px 0;
-      border-bottom: 1px solid #333;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display:flex; justify-content:space-between;
+      padding:8px 0; border-bottom:1px solid #333;
     }
 
     /* Profile Card */
     #profileCard {
-      position: absolute; top: 20px; right: 20px;
-      width: 64px; height: 64px;
-      background: rgba(0,0,0,0.7);
-      border: 2px solid red; border-radius: 8px;
-      overflow: hidden; cursor: pointer; z-index: 110;
-      transition: width .2s, height .2s;
+      position:absolute; top:20px; right:20px;
+      width:64px; height:64px;
+      background:rgba(0,0,0,0.7);
+      border:2px solid red; border-radius:8px;
+      overflow:hidden; cursor:pointer; z-index:110;
+      transition:width .2s,height .2s;
     }
-    #profileCard.expanded { width: 220px; height: auto }
+    #profileCard.expanded { width:220px; height:auto }
     #pc-collapsed {
-      display: flex; align-items: center; justify-content: center;
-      width: 100%; height: 100%; padding: 8px;
+      display:flex; align-items:center; justify-content:center;
+      width:100%; height:100%; padding:8px;
     }
-    #pc-avatar { width: 48px; height: 48px; border-radius: 50% }
+    #pc-avatar { width:48px; height:48px; border-radius:50% }
     #pc-options {
-      display: none; flex-direction: column;
-      background: rgba(0,0,0,0.85); padding: 8px;
+      display:none; flex-direction:column;
+      background:rgba(0,0,0,0.85); padding:8px;
     }
-    #profileCard.expanded #pc-options { display: flex }
-    #pc-options button { margin: 6px 0; padding: 8px; font-size: 14px }
+    #profileCard.expanded #pc-options { display:flex }
+    #pc-options button { margin:6px 0; padding:8px; font-size:14px }
 
-    /* Pause Button – top-right, panel style */
+    /* Pause Button */
     #pauseBtn {
-      position: absolute; top: 20px; right: 20px;
-      background: red; color: #fff; border: none;
-      padding: 16px; font-size: 20px;
-      cursor: pointer; border-radius: 4px;
-      z-index: 20;
+      position:absolute; top:20px; right:20px;
+      background:red; color:#fff; border:none;
+      padding:16px; font-size:20px;
+      cursor:pointer; border-radius:4px;
+      z-index:20;
     }
-    #pauseBtn:hover { background: #d10000 }
+    #pauseBtn:hover { background:#d10000 }
 
-    /* Test button hidden until TEST_MODE */
-    #testBtn { display: none }
-
-    /* Loading overlay */
-    #testLoadingOverlay .panel { border-color: red }
-    #loadingStatus { margin: 12px 0 }
-    #loadingTime { font-size: 12px; color: #aaa }
+    /* TEST */
+    #testBtn { display:none }
+    #testLoadingOverlay .panel { border-color:red }
+    #loadingStatus { margin:12px 0 }
+    #loadingTime { font-size:12px; color:#aaa }
     #loadingProgress {
-      background: #444; height: 10px; border-radius: 4px; overflow: hidden;
-      margin-top: 8px;
+      background:#444; height:10px; border-radius:4px; overflow:hidden;
+      margin-top:8px;
     }
     #loadingBar {
-      background: red; width: 0%; height: 100%; transition: width .3s;
+      background:red; width:0%; height:100%; transition:width .3s;
     }
 
-    /* Enlarged Diagnostics Panel */
+    /* Enlarged Diagnostics */
     #testOverlay .panel {
-      width: 600px;
-      max-width: 95%;
-      height: 80%;
-      overflow: auto;
-      border-color: red;
+      width:600px; max-width:95%;
+      height:80%; overflow:auto; border-color:red;
     }
-    #testReport {
-      max-height: 60vh;
-      overflow-y: auto;
-    }
+    #testReport { max-height:60vh; overflow-y:auto; }
   </style>
 </head>
 <body>
@@ -134,8 +124,7 @@
   <!-- MAIN MENU -->
   <div id="menuOverlay" class="overlay">
     <div class="panel">
-      <img src="https://app.masonnet.org/fbrc.png"
-           alt="Flappy Bird"
+      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"
            style="width:100%;max-width:280px;margin-bottom:20px;"/>
       <button id="startBtn">Start</button>
       <button id="leaderBtn">Leaderboard</button>
@@ -148,9 +137,7 @@
   <!-- PROFILE CARD -->
   <div id="profileCard">
     <div id="pc-collapsed">
-      <img id="pc-avatar"
-           src="https://app.masonnet.org/default-avatar.png"
-           alt="Avatar"/>
+      <img id="pc-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
     </div>
     <div id="pc-options">
       <button id="pc-authBtn">Sign In</button>
@@ -158,7 +145,7 @@
     </div>
   </div>
 
-  <!-- OVERLAYS -->
+  <!-- SIGN IN OVERLAY -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -170,6 +157,7 @@
     </div>
   </div>
 
+  <!-- SEARCH OVERLAY -->
   <div id="searchOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Search Profiles</h2>
@@ -180,6 +168,7 @@
     </div>
   </div>
 
+  <!-- LEADERBOARD OVERLAY -->
   <div id="leaderOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Global Top 10</h2>
@@ -188,6 +177,7 @@
     </div>
   </div>
 
+  <!-- SETTINGS OVERLAY -->
   <div id="settingsOverlay" class="overlay hidden">
     <div class="panel">
       <button id="soundToggle">🔊 Sound: On</button>
@@ -197,6 +187,7 @@
     </div>
   </div>
 
+  <!-- PAUSE, GAMEOVER, NAME, SFX OVERLAYS -->
   <div id="pauseOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Paused</h2>
@@ -204,7 +195,6 @@
       <button id="pauseMenuBtn">Main Menu</button>
     </div>
   </div>
-
   <div id="gameoverOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Game Over</h2>
@@ -213,7 +203,6 @@
       <button id="goMenuBtn">Main Menu</button>
     </div>
   </div>
-
   <div id="nameOverlay" class="overlay hidden">
     <div class="panel">
       <h2>🎉 New High Score!</h2>
@@ -223,12 +212,11 @@
       <button id="skipNameBtn">Skip</button>
     </div>
   </div>
-
   <div id="sfxPopup" class="overlay hidden">
     <div class="panel"><p>Playing sound effects…</p></div>
   </div>
 
-  <!-- TEST LOADING OVERLAY -->
+  <!-- LOADING & REPORT OVERLAYS -->
   <div id="testLoadingOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Running Diagnostics…</h2>
@@ -237,8 +225,6 @@
       <div id="loadingProgress"><div id="loadingBar"></div></div>
     </div>
   </div>
-
-  <!-- ENLARGED TEST REPORT OVERLAY -->
   <div id="testOverlay" class="overlay hidden">
     <div class="panel">
       <h2>🧪 Diagnostics Report</h2>
@@ -247,11 +233,11 @@
     </div>
   </div>
 
-  <!-- CANVAS & PAUSE BUTTON -->
+  <!-- CANVAS & PAUSE BTN -->
   <canvas id="canvas"></canvas>
   <button id="pauseBtn">Pause</button>
 
-  <!-- FIREBASE SDKs -->
+  <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
@@ -267,134 +253,159 @@
       'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay',
       'sfxPopup','testLoadingOverlay','testOverlay'
     ];
-    let gameState = 'menu', bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
-    const gravity = .25, flapPower = -6, speed = 2;
 
-    // Core UI
-    function hideAll() {
-      overlays.forEach(id => $(id)?.classList.add('hidden'));
+    let gameState='menu', bird, pipes=[], score=0, frame=0, rafId, collided=false;
+    const gravity=.25, flapPower=-6, speed=2;
+
+    function hideAll(){
+      overlays.forEach(id=>$(id)?.classList.add('hidden'));
     }
-    function showOverlay(id) {
-      if ((id==='sfxPopup'||id==='nameOverlay') && gameState!=='dying') return;
+    function showOverlay(id){
+      if((id==='sfxPopup'||id==='nameOverlay')&&gameState!=='dying')return;
       hideAll();
-      if (id) {
+      if(id){
         $(id).classList.remove('hidden');
-        $('canvas').style.display = 'none';
-        $('pauseBtn').style.display = 'none';
+        $('canvas').style.display='none';
+        $('pauseBtn').style.display='none';
       } else {
-        $('canvas').style.display = 'block';
-        $('pauseBtn').style.display = 'block';
+        $('canvas').style.display='block';
+        $('pauseBtn').style.display='block';
       }
     }
-    function bind(id, ev, fn) {
-      const el = $(id);
-      if (el) el.addEventListener(ev, fn);
+    function bind(id,ev,fn){
+      const el=$(id); if(el)el.addEventListener(ev,fn);
     }
 
     // Firebase init
-    const firebaseConfig = {
+    const firebaseConfig={
       apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain:"masonnet-app-official.firebaseapp.com",
       databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
-      projectId: "masonnet-app-official"
+      projectId:"masonnet-app-official"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth      = firebase.auth();
-    const db        = firebase.database();
-    const lbRef     = db.ref("leaderboard");
-    const rolesRef  = db.ref("roles");
-    const adminEmail= 'admin@masonnet.org';
-    const adminUID  = 'Y4ZoHRQaIrVhdvZr15Ebz90Byh62';
-    const userEmail = 'user@masonnet.org';
-    const userUID   = 'YQZhZsoC4OUd7oa11APl3D00gjz2';
+    const auth = firebase.auth();
+    const db   = firebase.database();
+    const lbRef   = db.ref("leaderboard");
+    const rolesRef= db.ref("roles");
+    const adminEmail='admin@masonnet.org', userEmail='user@masonnet.org';
+    const adminUID='Y4ZoHRQaIrVhdvZr15Ebz90Byh62', userUID='YQZhZsoC4OUd7oa11APl3D00gjz2';
 
-    // Canvas & game core
+    // Wire up the profile-card auth button
+    const pcAuthBtn = $('pc-authBtn');
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        pcAuthBtn.textContent='Sign Out';
+        pcAuthBtn.onclick = () => auth.signOut();
+      } else {
+        pcAuthBtn.textContent='Sign In';
+        pcAuthBtn.onclick = () => showOverlay('loginOverlay');
+      }
+    });
+
+    // Login handler
+    bind('loginSubmit','click', async ()=>{
+      const email = $('loginEmail').value;
+      const pass  = $('loginPass').value;
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+        showOverlay('menuOverlay');
+      } catch(err){
+        alert(err.message);
+      }
+    });
+    bind('loginCancel','click', ()=> showOverlay('menuOverlay'));
+
+    // Search overlay handlers
+    bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
+    bind('searchSubmit','click', ()=>{
+      const q = $('searchInput').value.trim();
+      const res = $('searchResults');
+      res.innerHTML = q ? `<div>${q}: 42</div>` : '';
+      showOverlay('searchOverlay');
+    });
+
+    // GAME CANVAS + LOOP
     const canvas = $('canvas'), ctx = canvas.getContext('2d');
-    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-    window.addEventListener('resize', resize); resize();
+    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+    window.addEventListener('resize',resize); resize();
 
     class Bird {
-      constructor() {
-        this.x = 50; this.y = canvas.height * 0.4;
-        this.vy = 0; this.w = 34; this.h = 24;
+      constructor(){
+        this.x=50; this.y=canvas.height*0.4; this.vy=0; this.w=34; this.h=24;
       }
-      flap() { this.vy = flapPower }
-      update() {
-        this.vy += gravity; this.y += this.vy;
-        if (this.y < 0) this.y = 0;
-        if (this.y + this.h > canvas.height) this.die();
+      flap(){ this.vy=flapPower }
+      update(){
+        this.vy+=gravity; this.y+=this.vy;
+        if(this.y<0) this.y=0;
+        if(this.y+this.h>canvas.height) this.die();
       }
-      draw() {
-        ctx.fillStyle = 'yellow';
-        ctx.fillRect(this.x, this.y, this.w, this.h);
+      draw(){
+        ctx.fillStyle='yellow';
+        ctx.fillRect(this.x,this.y,this.w,this.h);
       }
-      collides(p) {
+      collides(p){
         return !(
-          this.x + this.w < p.x ||
-          this.x > p.x + p.w ||
-          this.y + this.h < p.top ||
-          this.y > p.bottom
+          this.x+this.w<p.x ||
+          this.x>p.x+p.w ||
+          this.y+this.h<p.top ||
+          this.y>p.bottom
         );
       }
-      die() {
-        if (gameState!=='playing'||collided) return;
-        collided = true; gameState = 'dying';
+      die(){
+        if(gameState!=='playing'||collided) return;
+        collided=true; gameState='dying';
         cancelAnimationFrame(rafId);
         showOverlay('sfxPopup');
-        setTimeout(()=>{
-          showOverlay(); endGame();
-        }, 800);
+        setTimeout(()=>{ showOverlay(); endGame(); },800);
       }
     }
 
     function spawnPipe(){
-      const gap = 120;
-      const top = 20 + Math.random() * (canvas.height - gap - 40);
-      pipes.push({ x: canvas.width, w:60, top, bottom:top+gap, passed:false });
+      const gap=120;
+      const top=20+Math.random()*(canvas.height-gap-40);
+      pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
     }
 
     function loop(){
-      if (gameState!=='playing') return;
-      rafId = requestAnimationFrame(loop);
+      if(gameState!=='playing') return;
+      rafId=requestAnimationFrame(loop);
       frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
 
       pipes.forEach((p,i)=>{
-        p.x -= speed;
-        ctx.fillStyle = 'green';
-        ctx.fillRect(p.x, 0, p.w, p.top);
-        ctx.fillRect(p.x, p.bottom, p.w, canvas.height - p.bottom);
-        if (!p.passed && bird.x > p.x + p.w) {
-          p.passed = true; score++;
-        }
-        if (bird.collides(p)) bird.die();
-        if (p.x + p.w < 0) pipes.splice(i,1);
+        p.x-=speed;
+        ctx.fillStyle='green';
+        ctx.fillRect(p.x,0,p.w,p.top);
+        ctx.fillRect(p.x,p.bottom,p.w,canvas.height-p.bottom);
+        if(!p.passed&&bird.x>p.x+p.w){ p.passed=true; score++ }
+        if(bird.collides(p)) bird.die();
+        if(p.x+p.w<0) pipes.splice(i,1);
       });
 
       bird.update(); bird.draw();
-      if (frame % 150 === 0) spawnPipe();
-      ctx.fillStyle = '#fff';
-      ctx.font = '32px "Press Start 2P"';
-      ctx.fillText(score, 20, 50);
+      if(frame%150===0) spawnPipe();
+      ctx.fillStyle='#fff';
+      ctx.font='32px "Press Start 2P"';
+      ctx.fillText(score,20,50);
     }
 
     function startGame(){
-      if (gameState==='playing') return;
-      gameState = 'playing'; pipes=[]; score=0; frame=0; collided=false;
-      bird = new Bird(); hideAll(); $('pauseBtn').style.display='block'; loop();
+      if(gameState==='playing') return;
+      gameState='playing'; pipes=[]; score=0; frame=0; collided=false;
+      bird=new Bird(); hideAll(); $('pauseBtn').style.display='block'; loop();
     }
     function endGame(){
-      if (gameState!=='dying') return;
-      gameState = 'menu'; $('finalScore').textContent = score; showOverlay('gameoverOverlay');
+      if(gameState!=='dying') return;
+      gameState='menu'; $('finalScore').textContent=score; showOverlay('gameoverOverlay');
     }
 
-    // Input
-    window.addEventListener('mousedown', ()=> bird?.flap());
-    window.addEventListener('touchstart', ()=> bird?.flap(), {passive:true});
+    window.addEventListener('mousedown',()=>bird?.flap());
+    window.addEventListener('touchstart',()=>bird?.flap(),{passive:true});
 
-    // UI bindings
+    // UI Bindings
     bind('startBtn','click', startGame);
     bind('pauseBtn','click', ()=>{
-      if (gameState==='playing') {
+      if(gameState==='playing'){
         cancelAnimationFrame(rafId);
         gameState='paused';
         showOverlay('pauseOverlay');
@@ -406,15 +417,14 @@
     bind('goMenuBtn','click', ()=> showOverlay('menuOverlay'));
 
     bind('leaderBtn','click', ()=>{
-      const list = $('leaderList'); if (!list) return;
-      list.innerHTML = '';
-      lbRef.orderByChild('score').limitToLast(10).once('value', snap=>{
+      const list=$('leaderList'); list.innerHTML='';
+      lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
         Object.values(snap.val()||{})
           .sort((a,b)=>b.score-a.score)
           .slice(0,10)
           .forEach(p=>{
-            const row = document.createElement('div');
-            row.innerHTML = `<span>${p.name}</span><span>${p.score}</span>`;
+            const row=document.createElement('div');
+            row.innerHTML=`<span>${p.name}</span><span>${p.score}</span>`;
             list.appendChild(row);
           });
         showOverlay('leaderOverlay');
@@ -425,64 +435,42 @@
     bind('settingsBtn','click', ()=> showOverlay('settingsOverlay'));
     bind('settingsCloseBtn','click', ()=> showOverlay('menuOverlay'));
     bind('soundToggle','click', ()=>{
-      const b = $('soundToggle');
+      const b=$('soundToggle');
       b.textContent = b.textContent.includes('On')
         ? '🔇 Sound: Off'
         : '🔊 Sound: On';
     });
     bind('darkToggle','click', ()=>{
       document.body.classList.toggle('dark-mode');
-      const b = $('darkToggle');
+      const b=$('darkToggle');
       b.textContent = b.textContent.includes('Off')
         ? '🌙 Dark Mode: On'
         : '☀️ Light Mode: Off';
     });
     bind('skipToggle','click', ()=>{
-      const b = $('skipToggle');
+      const b=$('skipToggle');
       b.textContent = b.textContent.includes('Off')
         ? '🚀 Skip to GO: On'
         : '🚀 Skip to GO: Off';
     });
 
-    bind('hubBtn','click', ()=> window.location.href='https://app.masonnet.org/flappybirdhub');
-    bind('pc-authBtn','click', ()=> showOverlay('loginOverlay'));
-    bind('loginCancel','click', ()=> showOverlay('menuOverlay'));
-    bind('loginSubmit','click', ()=>{
-      const e = $('loginEmail').value, p = $('loginPass').value;
-      auth.signInWithEmailAndPassword(e,p)
-        .then(()=> showOverlay('menuOverlay'))
-        .catch(()=> alert('Login failed'));
-    });
+    bind('hubBtn','click', ()=> location.href='https://app.masonnet.org/flappybirdhub');
     bind('pc-searchBtn','click', ()=> showOverlay('searchOverlay'));
-    bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
-    bind('searchSubmit','click', ()=>{
-      const q = $('searchInput').value.trim(), res = $('searchResults');
-      res.innerHTML = q ? `<div>${q}: 42</div>` : '';
-      showOverlay('searchOverlay');
-    });
-
-    bind('profileCard','click', e=>{
-      e.stopPropagation();
-      $('profileCard').classList.toggle('expanded');
-    });
-    document.body.addEventListener('click', ()=> $('profileCard').classList.remove('expanded'));
 
     // Show test button
-    if (window.TEST_MODE) {
-      const t = $('testBtn');
-      if (t) t.style.display = 'block';
+    if(window.TEST_MODE){
+      const t=$('testBtn'); if(t) t.style.display='block';
     }
 
     // Diagnostics
     bind('testBtn','click', async ()=>{
       const pwd = prompt('Admin password:');
-      if (!pwd) return;
+      if(!pwd) return;
       try {
         const cred = await auth.signInWithEmailAndPassword(adminEmail,pwd);
-        const uid  = cred.user.uid;
-        const snap = await rolesRef.child(uid).once('value');
-        if (snap.val() !== 'admin') throw new Error('Not admin');
-      } catch {
+        const snap = await rolesRef.child(cred.user.uid).once('value');
+        if(snap.val()!=='admin') throw new Error();
+      } catch{
         return alert('Invalid admin credentials');
       }
       await runDiagnostics();
@@ -493,33 +481,32 @@
     });
 
     async function runDiagnostics(){
-      const report = $('testReport');
-      const status = $('loadingStatus');
-      const timeEl = $('loadingTime');
-      const bar    = $('loadingBar');
-      const tests  = [];
-      let passed   = 0;
+      const report=$('testReport'), status=$('loadingStatus'),
+            timeEl=$('loadingTime'), bar=$('loadingBar');
+      const tests=[]; let passed=0;
 
-      tests.push({ label:'Canvas exists', fn:()=>!!$('canvas') });
-      tests.push({ label:'Pause & style', fn:()=>{
-        const btn = $('pauseBtn'),
-              s   = getComputedStyle(btn),
-              r   = btn.getBoundingClientRect();
+      function add(label,fn){ tests.push({label,fn}); }
+
+      add('Canvas exists', ()=>!!$('canvas'));
+      add('Pause & style', ()=>{
+        const b=$('pauseBtn'), s=getComputedStyle(b), r=b.getBoundingClientRect();
         return s.backgroundColor==='rgb(255, 0, 0)'
-           && s.padding.includes('16px')
-           && s.borderRadius.includes('4px')
-           && r.top<30 && r.right>window.innerWidth-80;
-      }});
-      tests.push({ label:'Overlay system', fn:()=>typeof showOverlay==='function' });
-      tests.push({ label:'startGame defined', fn:()=>typeof startGame==='function' });
-      tests.push({ label:'Firebase initialized', fn:()=>!!firebase.app().name });
-      tests.push({ label:'Roles structure', fn:async()=>{
-        const r=await rolesRef.once('value'); return r.exists();
-      }});
-      tests.push({ label:'Leaderboard fetch', fn:async()=>{
-        const s=await lbRef.limitToLast(1).once('value'); return s.exists();
-      }});
-      tests.push({ label:'Login inputs style', fn:()=>{
+          && s.padding.includes('16px')
+          && s.borderRadius.includes('4px')
+          && r.top<30 && r.right>window.innerWidth-80;
+      });
+      add('Overlay system', ()=>typeof showOverlay==='function');
+      add('startGame defined', ()=>typeof startGame==='function');
+      add('Firebase initialized', ()=>!!firebase.app().name);
+      add('Roles structure', async ()=>{
+        const r=await rolesRef.once('value');
+        return r.exists();
+      });
+      add('Leaderboard fetch', async ()=>{
+        const s=await lbRef.limitToLast(1).once('value');
+        return s.exists();
+      });
+      add('Login inputs style', ()=>{
         const ie=$('loginEmail'), ip=$('loginPass');
         if(!ie||!ip) return false;
         const se=getComputedStyle(ie), sp=getComputedStyle(ip);
@@ -529,79 +516,74 @@
           && ip.type==='password'
           && sp.padding.includes('10px')
           && parseInt(sp.fontSize)>=16;
-      }});
-      tests.push({ label:'Admin sign-in works', fn:async()=>{
+      });
+      add('Admin sign-in works', async ()=>{
         await auth.signInWithEmailAndPassword(adminEmail,'admin123');
         const u=auth.currentUser; await auth.signOut();
         return u && u.uid===adminUID;
-      }});
-      tests.push({ label:'Search input style', fn:()=>{
-        const si=$('searchInput');
-        if(!si) return false;
-        const ss=getComputedStyle(si);
-        return ss.padding.includes('10px')
-          && parseInt(ss.fontSize)>=16;
-      }});
-      tests.push({ label:'Profile card restored', fn:()=>!!$('profileCard') });
-      tests.push({ label:'Design – Body bg', fn:()=>getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)' });
-      tests.push({ label:'Design – ProfileCard toggle', fn:()=>{
+      });
+      add('Search input style', ()=>{
+        const si=$('searchInput'), ss=getComputedStyle(si);
+        return si && ss.padding.includes('10px') && parseInt(ss.fontSize)>=16;
+      });
+      add('Profile card restored', ()=>!!$('profileCard'));
+      add('Design – Body bg', ()=> getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)');
+      add('Design – ProfileCard toggle', ()=>{
         const pc=$('profileCard');
         pc.classList.remove('expanded');
         const before=getComputedStyle($('pc-options')).display==='none';
         pc.classList.add('expanded');
         const after=getComputedStyle($('pc-options')).display==='flex';
         pc.classList.remove('expanded');
-        return before && after;
-      }});
-      tests.push({ label:'Image assets load', fn:()=>Promise.all([
+        return before&&after;
+      });
+      add('Image assets load', ()=>Promise.all([
         loadImage('https://app.masonnet.org/fbrc.png'),
         loadImage('https://app.masonnet.org/default-avatar.png')
-      ]).then(()=>true).catch(()=>false)});
-      tests.push({ label:'Sound assets load', fn:()=>Promise.all([
+      ]).then(()=>true).catch(()=>false));
+      add('Sound assets load', ()=>Promise.all([
         loadAudio('https://app.masonnet.org/flap.mp3'),
         loadAudio('https://app.masonnet.org/point.mp3')
-      ]).then(()=>true).catch(()=>false)});
-      tests.push({ label:'Pause/resume flow', fn:async()=>{
+      ]).then(()=>true).catch(()=>false));
+      add('Pause/resume flow', async ()=>{
         showOverlay('pauseOverlay'); hideAll(); return true;
-      }});
+      });
 
-      // Run tests
       showOverlay('testLoadingOverlay');
-      report.innerHTML = '';
-      const total = tests.length, start = Date.now();
-      for (let i = 0; i < total; i++) {
-        status.textContent = `Testing: ${tests[i].label}`;
-        let ok = false;
-        try { ok = await tests[i].fn(); } catch {}
+      report.innerHTML='';
+      const total=tests.length, start=Date.now();
+      for(let i=0;i<total;i++){
+        status.textContent=`Testing: ${tests[i].label}`;
+        let ok=false;
+        try{ ok=await tests[i].fn(); }catch{}
         const div=document.createElement('div');
-        div.innerHTML = ok ? `✅ ${tests[i].label}` : `❌ ${tests[i].label}`;
+        div.innerHTML= ok?`✅ ${tests[i].label}`:`❌ ${tests[i].label}`;
         report.appendChild(div);
-        if (ok) passed++;
+        if(ok) passed++;
         const pct=Math.round(((i+1)/total)*100);
-        bar.style.width = pct + '%';
+        bar.style.width=pct+'%';
         const elapsed=(Date.now()-start)/1000;
-        const rem = Math.max(0,((elapsed/(i+1))*(total-(i+1))).toFixed(1));
-        timeEl.textContent = `Estimated time remaining: ${rem}s`;
+        const rem=Math.max(0,((elapsed/(i+1))*(total-(i+1))).toFixed(1));
+        timeEl.textContent=`Estimated time remaining: ${rem}s`;
       }
-
-      status.textContent = `Diagnostics complete: ${passed}/${total} passed`;
-      setTimeout(()=> showOverlay('testOverlay'), 500);
+      status.textContent=`Diagnostics complete: ${passed}/${total} passed`;
+      setTimeout(()=>showOverlay('testOverlay'),500);
     }
 
     function loadImage(src){
-      return new Promise((res, rej)=>{
+      return new Promise((res,rej)=>{
         const img=new Image();
         img.onload=res; img.onerror=rej; img.src=src;
       });
     }
     function loadAudio(src){
-      return new Promise((res, rej)=>{
+      return new Promise((res,rej)=>{
         const a=new Audio(src);
         a.oncanplaythrough=res; a.onerror=rej; a.src=src;
       });
     }
 
-    // Initial show
+    // kick off
     showOverlay('menuOverlay');
   });
   </script>
