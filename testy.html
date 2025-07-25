@@ -6,35 +6,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0 }
-    html, body {
+    * { box-sizing: border-box; margin:0; padding:0; }
+    html,body {
       width:100%; height:100%; overflow:hidden;
       background:#000; color:#fff; font-family:Arial,sans-serif;
     }
-    button, input { font-family:inherit }
+    button, input { font-family:inherit; }
+    .hidden { display:none!important; }
 
-    /* GLOBAL INPUT STYLES */
+    /* inputs */
     input {
-      width: calc(100% - 20px);
-      margin: 12px 0;
-      padding: 10px;
-      font-size: 16px;
-      border: 2px solid #555;
-      border-radius: 4px;
-      background: #222;
-      color: #fff;
+      width:calc(100% - 20px); margin:12px 0; padding:10px;
+      font-size:16px; border:2px solid #555; border-radius:4px;
+      background:#222; color:#fff;
     }
-    input:focus {
-      outline: none;
-      border-color: red;
-    }
+    input:focus { outline:none; border-color:red; }
 
-    .hidden { display: none !important }
-
-    /* Overlay & Panel */
+    /* overlays */
     .overlay {
-      position: absolute; top:0; left:0;
-      width:100%; height:100%;
+      position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.85);
       display:flex; align-items:center; justify-content:center;
       z-index:100;
@@ -49,74 +39,69 @@
       font-size:20px; padding:16px; margin:12px 0;
       cursor:pointer; border-radius:4px;
     }
-    .panel button:hover { background:#d10000 }
+    .panel button:hover { background:#d10000; }
 
-    /* Leaderboard */
-    #leaderOverlay .panel {
-      width:400px; max-width:95%; border-color:red;
-    }
+    /* leaderboard */
+    #leaderOverlay .panel { width:400px; max-width:95%; border-color:red; }
     .scroll-list {
       max-height:240px; overflow-y:auto;
       background:#222; padding:8px; border-radius:4px;
       margin:12px 0; font-family:'Press Start 2P',monospace;
-      font-size:14px; color:#fff; text-align:left;
-    }
-    .scroll-list div {
-      display:flex; justify-content:space-between;
-      padding:8px 0; border-bottom:1px solid #333;
+      font-size:14px; text-align:left;
     }
 
-    /* Profile Card */
+    /* profile card */
     #profileCard {
       position:absolute; top:20px; right:20px;
-      width:64px; height:64px;
-      background:rgba(0,0,0,0.7);
+      width:64px; height:64px; background:rgba(0,0,0,0.7);
       border:2px solid red; border-radius:8px;
       overflow:hidden; cursor:pointer; z-index:110;
       transition:width .2s,height .2s;
     }
-    #profileCard.expanded { width:220px; height:auto }
+    #profileCard.expanded { width:220px; height:auto; }
     #pc-collapsed {
       display:flex; align-items:center; justify-content:center;
       width:100%; height:100%; padding:8px;
     }
-    #pc-avatar { width:48px; height:48px; border-radius:50% }
+    #pc-avatar { width:48px; height:48px; border-radius:50%; }
     #pc-options {
       display:none; flex-direction:column;
       background:rgba(0,0,0,0.85); padding:8px;
     }
-    #profileCard.expanded #pc-options { display:flex }
-    #pc-options button { margin:6px 0; padding:8px; font-size:14px }
+    #profileCard.expanded #pc-options { display:flex; }
+    #pc-options button { margin:6px 0; font-size:14px; padding:8px; }
 
-    /* Pause Button */
+    /* pause button */
     #pauseBtn {
       position:absolute; top:20px; right:20px;
       background:red; color:#fff; border:none;
       padding:16px; font-size:20px;
-      cursor:pointer; border-radius:4px;
-      z-index:20;
+      cursor:pointer; border-radius:4px; z-index:20;
     }
-    #pauseBtn:hover { background:#d10000 }
+    #pauseBtn:hover { background:#d10000; }
 
-    /* TEST */
-    #testBtn { display:none }
-    #testLoadingOverlay .panel { border-color:red }
-    #loadingStatus { margin:12px 0 }
-    #loadingTime { font-size:12px; color:#aaa }
+    /* test overlays */
+    #testBtn { display:none; }
+    #testLoadingOverlay .panel { border-color:red; }
+    #loadingStatus { margin:12px 0; font-size:16px; }
+    #loadingTime { font-size:12px; color:#aaa; }
     #loadingProgress {
-      background:#444; height:10px; border-radius:4px; overflow:hidden;
-      margin-top:8px;
+      background:#444; height:10px; border-radius:4px;
+      overflow:hidden; margin-top:8px;
     }
     #loadingBar {
       background:red; width:0%; height:100%; transition:width .3s;
     }
 
-    /* Enlarged Diagnostics */
+    /* enlarged report */
     #testOverlay .panel {
-      width:600px; max-width:95%;
-      height:80%; overflow:auto; border-color:red;
+      width:600px; max-width:95%; height:80%; overflow:auto;
+      border-color:red;
     }
-    #testReport { max-height:60vh; overflow-y:auto; }
+    #testReport {
+      max-height:60vh; overflow-y:auto; background:#222;
+      padding:8px; border-radius:4px; text-align:left;
+    }
   </style>
 </head>
 <body>
@@ -124,8 +109,9 @@
   <!-- MAIN MENU -->
   <div id="menuOverlay" class="overlay">
     <div class="panel">
-      <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"
-           style="width:100%;max-width:280px;margin-bottom:20px;"/>
+      <img src="https://app.masonnet.org/fbrc.png"
+           style="width:100%; max-width:280px; margin-bottom:20px;"
+           alt="Flappy Bird"/>
       <button id="startBtn">Start</button>
       <button id="leaderBtn">Leaderboard</button>
       <button id="settingsBtn">Settings</button>
@@ -137,7 +123,9 @@
   <!-- PROFILE CARD -->
   <div id="profileCard">
     <div id="pc-collapsed">
-      <img id="pc-avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar"/>
+      <img id="pc-avatar"
+           src="https://app.masonnet.org/default-avatar.png"
+           alt="Avatar"/>
     </div>
     <div id="pc-options">
       <button id="pc-authBtn">Sign In</button>
@@ -145,7 +133,7 @@
     </div>
   </div>
 
-  <!-- SIGN IN OVERLAY -->
+  <!-- SIGN IN -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
@@ -157,7 +145,7 @@
     </div>
   </div>
 
-  <!-- SEARCH OVERLAY -->
+  <!-- SEARCH -->
   <div id="searchOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Search Profiles</h2>
@@ -168,7 +156,7 @@
     </div>
   </div>
 
-  <!-- LEADERBOARD OVERLAY -->
+  <!-- LEADERBOARD -->
   <div id="leaderOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Global Top 10</h2>
@@ -177,7 +165,7 @@
     </div>
   </div>
 
-  <!-- SETTINGS OVERLAY -->
+  <!-- SETTINGS -->
   <div id="settingsOverlay" class="overlay hidden">
     <div class="panel">
       <button id="soundToggle">🔊 Sound: On</button>
@@ -187,7 +175,7 @@
     </div>
   </div>
 
-  <!-- PAUSE, GAMEOVER, NAME, SFX OVERLAYS -->
+  <!-- PAUSE/GAMEOVER/NAME/SFX -->
   <div id="pauseOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Paused</h2>
@@ -216,7 +204,7 @@
     <div class="panel"><p>Playing sound effects…</p></div>
   </div>
 
-  <!-- LOADING & REPORT OVERLAYS -->
+  <!-- TEST LOADING & REPORT -->
   <div id="testLoadingOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Running Diagnostics…</h2>
@@ -237,17 +225,17 @@
   <canvas id="canvas"></canvas>
   <button id="pauseBtn">Pause</button>
 
-  <!-- FIREBASE -->
+  <!-- FIREBASE SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 
   <script>
-  // === TEST MODE FLAG ===
+  // TEST_MODE ON
   window.TEST_MODE = true;
 
   document.addEventListener('DOMContentLoaded', () => {
-    const $ = id => document.getElementById(id);
+    const $ = id=>document.getElementById(id);
     const overlays = [
       'menuOverlay','loginOverlay','searchOverlay','leaderOverlay',
       'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay',
@@ -276,65 +264,76 @@
       const el=$(id); if(el)el.addEventListener(ev,fn);
     }
 
-    // Firebase init
-    const firebaseConfig={
-      apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+    // FIREBASE INIT
+    const cfg = {
+      apiKey:"AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain:"masonnet-app-official.firebaseapp.com",
       databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
       projectId:"masonnet-app-official"
     };
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(cfg);
     const auth = firebase.auth();
     const db   = firebase.database();
     const lbRef   = db.ref("leaderboard");
     const rolesRef= db.ref("roles");
-    const adminEmail='admin@masonnet.org', userEmail='user@masonnet.org';
-    const adminUID='Y4ZoHRQaIrVhdvZr15Ebz90Byh62', userUID='YQZhZsoC4OUd7oa11APl3D00gjz2';
+    const adminEmail='admin@masonnet.org', adminUID='Y4ZoHRQaIrVhdvZr15Ebz90Byh62';
+    const userEmail='user@masonnet.org',  userUID='YQZhZsoC4OUd7oa11APl3D00gjz2';
 
-    // Wire up the profile-card auth button
+    // PROFILE-CARD TOGGLE
+    const pc = $('profileCard');
+    pc.addEventListener('click', e=>{
+      e.stopPropagation();
+      pc.classList.toggle('expanded');
+    });
+    document.addEventListener('click', ()=>{
+      if(pc.classList.contains('expanded')){
+        pc.classList.remove('expanded');
+      }
+    });
+
+    // AUTH BUTTON
     const pcAuthBtn = $('pc-authBtn');
     auth.onAuthStateChanged(user=>{
       if(user){
         pcAuthBtn.textContent='Sign Out';
-        pcAuthBtn.onclick = () => auth.signOut();
+        pcAuthBtn.onclick = ()=> auth.signOut();
       } else {
         pcAuthBtn.textContent='Sign In';
-        pcAuthBtn.onclick = () => showOverlay('loginOverlay');
+        pcAuthBtn.onclick = ()=> showOverlay('loginOverlay');
       }
     });
 
-    // Login handler
-    bind('loginSubmit','click', async ()=>{
-      const email = $('loginEmail').value;
-      const pass  = $('loginPass').value;
-      try {
-        await auth.signInWithEmailAndPassword(email, pass);
+    // LOGIN HANDLERS
+    bind('loginSubmit','click',async ()=>{
+      const e=$('loginEmail').value, p=$('loginPass').value;
+      try{
+        await auth.signInWithEmailAndPassword(e,p);
         showOverlay('menuOverlay');
-      } catch(err){
+      }catch(err){
         alert(err.message);
       }
     });
     bind('loginCancel','click', ()=> showOverlay('menuOverlay'));
 
-    // Search overlay handlers
+    // SEARCH HANDLERS
     bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
     bind('searchSubmit','click', ()=>{
-      const q = $('searchInput').value.trim();
-      const res = $('searchResults');
-      res.innerHTML = q ? `<div>${q}: 42</div>` : '';
+      const q=$('searchInput').value.trim(), res=$('searchResults');
+      res.innerHTML = q? `<div>${q}: 42</div>` : '';
       showOverlay('searchOverlay');
     });
 
-    // GAME CANVAS + LOOP
+    // CANVAS & GAME
     const canvas = $('canvas'), ctx = canvas.getContext('2d');
     function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
-    window.addEventListener('resize',resize); resize();
+    window.addEventListener('resize', resize); resize();
 
     class Bird {
       constructor(){
-        this.x=50; this.y=canvas.height*0.4; this.vy=0; this.w=34; this.h=24;
+        this.x=50; this.y=canvas.height*0.4;
+        this.vy=0; this.w=34; this.h=24;
       }
-      flap(){ this.vy=flapPower }
+      flap(){ this.vy=flapPower; }
       update(){
         this.vy+=gravity; this.y+=this.vy;
         if(this.y<0) this.y=0;
@@ -370,19 +369,23 @@
     function loop(){
       if(gameState!=='playing') return;
       rafId=requestAnimationFrame(loop);
-      frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
+      frame++;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
 
       pipes.forEach((p,i)=>{
         p.x-=speed;
         ctx.fillStyle='green';
         ctx.fillRect(p.x,0,p.w,p.top);
         ctx.fillRect(p.x,p.bottom,p.w,canvas.height-p.bottom);
-        if(!p.passed&&bird.x>p.x+p.w){ p.passed=true; score++ }
+        if(!p.passed && bird.x>p.x+p.w){
+          p.passed=true; score++;
+        }
         if(bird.collides(p)) bird.die();
         if(p.x+p.w<0) pipes.splice(i,1);
       });
 
-      bird.update(); bird.draw();
+      bird.update();
+      bird.draw();
       if(frame%150===0) spawnPipe();
       ctx.fillStyle='#fff';
       ctx.font='32px "Press Start 2P"';
@@ -402,7 +405,7 @@
     window.addEventListener('mousedown',()=>bird?.flap());
     window.addEventListener('touchstart',()=>bird?.flap(),{passive:true});
 
-    // UI Bindings
+    // UI BINDINGS
     bind('startBtn','click', startGame);
     bind('pauseBtn','click', ()=>{
       if(gameState==='playing'){
@@ -423,9 +426,9 @@
           .sort((a,b)=>b.score-a.score)
           .slice(0,10)
           .forEach(p=>{
-            const row=document.createElement('div');
-            row.innerHTML=`<span>${p.name}</span><span>${p.score}</span>`;
-            list.appendChild(row);
+            const r=document.createElement('div');
+            r.innerHTML=`<span>${p.name}</span><span>${p.score}</span>`;
+            list.appendChild(r);
           });
         showOverlay('leaderOverlay');
       });
@@ -436,20 +439,20 @@
     bind('settingsCloseBtn','click', ()=> showOverlay('menuOverlay'));
     bind('soundToggle','click', ()=>{
       const b=$('soundToggle');
-      b.textContent = b.textContent.includes('On')
+      b.textContent=b.textContent.includes('On')
         ? '🔇 Sound: Off'
         : '🔊 Sound: On';
     });
     bind('darkToggle','click', ()=>{
       document.body.classList.toggle('dark-mode');
       const b=$('darkToggle');
-      b.textContent = b.textContent.includes('Off')
+      b.textContent=b.textContent.includes('Off')
         ? '🌙 Dark Mode: On'
         : '☀️ Light Mode: Off';
     });
     bind('skipToggle','click', ()=>{
       const b=$('skipToggle');
-      b.textContent = b.textContent.includes('Off')
+      b.textContent=b.textContent.includes('Off')
         ? '🚀 Skip to GO: On'
         : '🚀 Skip to GO: Off';
     });
@@ -457,20 +460,20 @@
     bind('hubBtn','click', ()=> location.href='https://app.masonnet.org/flappybirdhub');
     bind('pc-searchBtn','click', ()=> showOverlay('searchOverlay'));
 
-    // Show test button
+    // TEST BUTTON
     if(window.TEST_MODE){
       const t=$('testBtn'); if(t) t.style.display='block';
     }
 
-    // Diagnostics
+    // DIAGNOSTICS
     bind('testBtn','click', async ()=>{
-      const pwd = prompt('Admin password:');
+      const pwd=prompt('Admin password:');
       if(!pwd) return;
-      try {
-        const cred = await auth.signInWithEmailAndPassword(adminEmail,pwd);
-        const snap = await rolesRef.child(cred.user.uid).once('value');
+      try{
+        const cred=await auth.signInWithEmailAndPassword(adminEmail,pwd);
+        const snap=await rolesRef.child(cred.user.uid).once('value');
         if(snap.val()!=='admin') throw new Error();
-      } catch{
+      }catch{
         return alert('Invalid admin credentials');
       }
       await runDiagnostics();
@@ -481,15 +484,19 @@
     });
 
     async function runDiagnostics(){
-      const report=$('testReport'), status=$('loadingStatus'),
-            timeEl=$('loadingTime'), bar=$('loadingBar');
+      const report=$('testReport'),
+            status=$('loadingStatus'),
+            timeEl=$('loadingTime'),
+            bar=$('loadingBar');
       const tests=[]; let passed=0;
 
       function add(label,fn){ tests.push({label,fn}); }
 
       add('Canvas exists', ()=>!!$('canvas'));
       add('Pause & style', ()=>{
-        const b=$('pauseBtn'), s=getComputedStyle(b), r=b.getBoundingClientRect();
+        const b=$('pauseBtn'),
+              s=getComputedStyle(b),
+              r=b.getBoundingClientRect();
         return s.backgroundColor==='rgb(255, 0, 0)'
           && s.padding.includes('16px')
           && s.borderRadius.includes('4px')
@@ -499,12 +506,10 @@
       add('startGame defined', ()=>typeof startGame==='function');
       add('Firebase initialized', ()=>!!firebase.app().name);
       add('Roles structure', async ()=>{
-        const r=await rolesRef.once('value');
-        return r.exists();
+        const r=await rolesRef.once('value'); return r.exists();
       });
       add('Leaderboard fetch', async ()=>{
-        const s=await lbRef.limitToLast(1).once('value');
-        return s.exists();
+        const s=await lbRef.limitToLast(1).once('value'); return s.exists();
       });
       add('Login inputs style', ()=>{
         const ie=$('loginEmail'), ip=$('loginPass');
@@ -526,17 +531,17 @@
         const si=$('searchInput'), ss=getComputedStyle(si);
         return si && ss.padding.includes('10px') && parseInt(ss.fontSize)>=16;
       });
-      add('Profile card restored', ()=>!!$('profileCard'));
-      add('Design – Body bg', ()=> getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)');
-      add('Design – ProfileCard toggle', ()=>{
+      add('ProfileCard toggle works', ()=>{
         const pc=$('profileCard');
         pc.classList.remove('expanded');
-        const before=getComputedStyle($('pc-options')).display==='none';
-        pc.classList.add('expanded');
-        const after=getComputedStyle($('pc-options')).display==='flex';
-        pc.classList.remove('expanded');
-        return before&&after;
+        if(pc.classList.contains('expanded')) return false;
+        pc.click();
+        const exp = pc.classList.contains('expanded');
+        pc.click();
+        const col = !pc.classList.contains('expanded');
+        return exp && col;
       });
+      add('Design – Body bg', ()=>getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)');
       add('Image assets load', ()=>Promise.all([
         loadImage('https://app.masonnet.org/fbrc.png'),
         loadImage('https://app.masonnet.org/default-avatar.png')
@@ -549,6 +554,7 @@
         showOverlay('pauseOverlay'); hideAll(); return true;
       });
 
+      // run them
       showOverlay('testLoadingOverlay');
       report.innerHTML='';
       const total=tests.length, start=Date.now();
@@ -556,12 +562,12 @@
         status.textContent=`Testing: ${tests[i].label}`;
         let ok=false;
         try{ ok=await tests[i].fn(); }catch{}
-        const div=document.createElement('div');
-        div.innerHTML= ok?`✅ ${tests[i].label}`:`❌ ${tests[i].label}`;
-        report.appendChild(div);
+        const d=document.createElement('div');
+        d.innerHTML= ok?`✅ ${tests[i].label}`:`❌ ${tests[i].label}`;
+        report.appendChild(d);
         if(ok) passed++;
         const pct=Math.round(((i+1)/total)*100);
-        bar.style.width=pct+'%';
+        bar.style.width = pct+'%';
         const elapsed=(Date.now()-start)/1000;
         const rem=Math.max(0,((elapsed/(i+1))*(total-(i+1))).toFixed(1));
         timeEl.textContent=`Estimated time remaining: ${rem}s`;
@@ -583,7 +589,7 @@
       });
     }
 
-    // kick off
+    // start at menu
     showOverlay('menuOverlay');
   });
   </script>
