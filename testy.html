@@ -12,6 +12,23 @@
       background: #000; color: #fff; font-family: Arial, sans-serif;
     }
     button, input { font-family: inherit }
+
+    /* GLOBAL INPUT STYLES */
+    input {
+      width: calc(100% - 20px);
+      margin: 12px 0;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #555;
+      border-radius: 4px;
+      background: #222;
+      color: #fff;
+    }
+    input:focus {
+      outline: none;
+      border-color: red;
+    }
+
     .hidden { display: none !important }
 
     /* Overlay & Panel */
@@ -250,10 +267,10 @@
       'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay',
       'sfxPopup','testLoadingOverlay','testOverlay'
     ];
-
     let gameState = 'menu', bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
     const gravity = .25, flapPower = -6, speed = 2;
 
+    // Core UI
     function hideAll() {
       overlays.forEach(id => $(id)?.classList.add('hidden'));
     }
@@ -291,80 +308,83 @@
     const userEmail = 'user@masonnet.org';
     const userUID   = 'YQZhZsoC4OUd7oa11APl3D00gjz2';
 
-    // Canvas setup
+    // Canvas & game core
     const canvas = $('canvas'), ctx = canvas.getContext('2d');
     function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    // Bird & game loop
     class Bird {
       constructor() {
-        this.x=50; this.y=canvas.height*0.4;
-        this.vy=0; this.w=34; this.h=24;
+        this.x = 50; this.y = canvas.height * 0.4;
+        this.vy = 0; this.w = 34; this.h = 24;
       }
-      flap(){ this.vy=flapPower }
-      update(){
-        this.vy+=gravity; this.y+=this.vy;
-        if(this.y<0) this.y=0;
-        if(this.y+this.h>canvas.height) this.die();
+      flap() { this.vy = flapPower }
+      update() {
+        this.vy += gravity; this.y += this.vy;
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.h > canvas.height) this.die();
       }
-      draw(){
-        ctx.fillStyle='yellow';
-        ctx.fillRect(this.x,this.y,this.w,this.h);
+      draw() {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
       }
-      collides(p){
-        return !(this.x+this.w<p.x||
-                 this.x>p.x+p.w||
-                 this.y+this.h<p.top||
-                 this.y>p.bottom);
+      collides(p) {
+        return !(
+          this.x + this.w < p.x ||
+          this.x > p.x + p.w ||
+          this.y + this.h < p.top ||
+          this.y > p.bottom
+        );
       }
-      die(){
-        if(gameState!=='playing'||collided) return;
-        collided=true; gameState='dying';
+      die() {
+        if (gameState!=='playing'||collided) return;
+        collided = true; gameState = 'dying';
         cancelAnimationFrame(rafId);
         showOverlay('sfxPopup');
         setTimeout(()=>{
           showOverlay(); endGame();
-        },800);
+        }, 800);
       }
     }
 
     function spawnPipe(){
-      const gap=120;
-      const top=20+Math.random()*(canvas.height-gap-40);
-      pipes.push({ x:canvas.width, w:60, top, bottom:top+gap, passed:false });
+      const gap = 120;
+      const top = 20 + Math.random() * (canvas.height - gap - 40);
+      pipes.push({ x: canvas.width, w:60, top, bottom:top+gap, passed:false });
     }
 
     function loop(){
-      if(gameState!=='playing') return;
-      rafId=requestAnimationFrame(loop);
+      if (gameState!=='playing') return;
+      rafId = requestAnimationFrame(loop);
       frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
 
       pipes.forEach((p,i)=>{
-        p.x-=speed;
-        ctx.fillStyle='green';
-        ctx.fillRect(p.x,0,p.w,p.top);
-        ctx.fillRect(p.x,p.bottom,p.w,canvas.height-p.bottom);
-        if(!p.passed&&bird.x>p.x+p.w){ p.passed=true; score++ }
-        if(bird.collides(p)) bird.die();
-        if(p.x+p.w<0) pipes.splice(i,1);
+        p.x -= speed;
+        ctx.fillStyle = 'green';
+        ctx.fillRect(p.x, 0, p.w, p.top);
+        ctx.fillRect(p.x, p.bottom, p.w, canvas.height - p.bottom);
+        if (!p.passed && bird.x > p.x + p.w) {
+          p.passed = true; score++;
+        }
+        if (bird.collides(p)) bird.die();
+        if (p.x + p.w < 0) pipes.splice(i,1);
       });
 
       bird.update(); bird.draw();
-      if(frame%150===0) spawnPipe();
-      ctx.fillStyle='#fff';
-      ctx.font='32px "Press Start 2P"';
-      ctx.fillText(score,20,50);
+      if (frame % 150 === 0) spawnPipe();
+      ctx.fillStyle = '#fff';
+      ctx.font = '32px "Press Start 2P"';
+      ctx.fillText(score, 20, 50);
     }
 
     function startGame(){
-      if(gameState==='playing') return;
-      gameState='playing'; pipes=[]; score=0; frame=0; collided=false;
-      bird=new Bird(); hideAll(); $('pauseBtn').style.display='block'; loop();
+      if (gameState==='playing') return;
+      gameState = 'playing'; pipes=[]; score=0; frame=0; collided=false;
+      bird = new Bird(); hideAll(); $('pauseBtn').style.display='block'; loop();
     }
     function endGame(){
-      if(gameState!=='dying') return;
-      gameState='menu'; $('finalScore').textContent=score; showOverlay('gameoverOverlay');
+      if (gameState!=='dying') return;
+      gameState = 'menu'; $('finalScore').textContent = score; showOverlay('gameoverOverlay');
     }
 
     // Input
@@ -374,7 +394,7 @@
     // UI bindings
     bind('startBtn','click', startGame);
     bind('pauseBtn','click', ()=>{
-      if(gameState==='playing'){
+      if (gameState==='playing') {
         cancelAnimationFrame(rafId);
         gameState='paused';
         showOverlay('pauseOverlay');
@@ -386,14 +406,15 @@
     bind('goMenuBtn','click', ()=> showOverlay('menuOverlay'));
 
     bind('leaderBtn','click', ()=>{
-      const list=$('leaderList'); if(!list) return;
-      list.innerHTML='';
-      lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
+      const list = $('leaderList'); if (!list) return;
+      list.innerHTML = '';
+      lbRef.orderByChild('score').limitToLast(10).once('value', snap=>{
         Object.values(snap.val()||{})
-          .sort((a,b)=>b.score-a.score).slice(0,10)
+          .sort((a,b)=>b.score-a.score)
+          .slice(0,10)
           .forEach(p=>{
-            const row=document.createElement('div');
-            row.innerHTML=`<span>${p.name}</span><span>${p.score}</span>`;
+            const row = document.createElement('div');
+            row.innerHTML = `<span>${p.name}</span><span>${p.score}</span>`;
             list.appendChild(row);
           });
         showOverlay('leaderOverlay');
@@ -404,21 +425,21 @@
     bind('settingsBtn','click', ()=> showOverlay('settingsOverlay'));
     bind('settingsCloseBtn','click', ()=> showOverlay('menuOverlay'));
     bind('soundToggle','click', ()=>{
-      const b=$('soundToggle');
-      b.textContent=b.textContent.includes('On')
+      const b = $('soundToggle');
+      b.textContent = b.textContent.includes('On')
         ? '🔇 Sound: Off'
         : '🔊 Sound: On';
     });
     bind('darkToggle','click', ()=>{
       document.body.classList.toggle('dark-mode');
-      const b=$('darkToggle');
-      b.textContent=b.textContent.includes('Off')
+      const b = $('darkToggle');
+      b.textContent = b.textContent.includes('Off')
         ? '🌙 Dark Mode: On'
         : '☀️ Light Mode: Off';
     });
     bind('skipToggle','click', ()=>{
-      const b=$('skipToggle');
-      b.textContent=b.textContent.includes('Off')
+      const b = $('skipToggle');
+      b.textContent = b.textContent.includes('Off')
         ? '🚀 Skip to GO: On'
         : '🚀 Skip to GO: Off';
     });
@@ -427,7 +448,7 @@
     bind('pc-authBtn','click', ()=> showOverlay('loginOverlay'));
     bind('loginCancel','click', ()=> showOverlay('menuOverlay'));
     bind('loginSubmit','click', ()=>{
-      const e=$('loginEmail').value, p=$('loginPass').value;
+      const e = $('loginEmail').value, p = $('loginPass').value;
       auth.signInWithEmailAndPassword(e,p)
         .then(()=> showOverlay('menuOverlay'))
         .catch(()=> alert('Login failed'));
@@ -435,8 +456,8 @@
     bind('pc-searchBtn','click', ()=> showOverlay('searchOverlay'));
     bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
     bind('searchSubmit','click', ()=>{
-      const q=$('searchInput').value.trim(), res=$('searchResults');
-      res.innerHTML=q?`<div>${q}: 42</div>`:'';
+      const q = $('searchInput').value.trim(), res = $('searchResults');
+      res.innerHTML = q ? `<div>${q}: 42</div>` : '';
       showOverlay('searchOverlay');
     });
 
@@ -448,19 +469,19 @@
 
     // Show test button
     if (window.TEST_MODE) {
-      const t=$('testBtn');
-      if (t) t.style.display='block';
+      const t = $('testBtn');
+      if (t) t.style.display = 'block';
     }
 
     // Diagnostics
     bind('testBtn','click', async ()=>{
-      const pwd=prompt('Admin password:');
-      if(!pwd) return;
+      const pwd = prompt('Admin password:');
+      if (!pwd) return;
       try {
-        const cred=await auth.signInWithEmailAndPassword(adminEmail,pwd);
-        const uid=cred.user.uid;
-        const snap=await rolesRef.child(uid).once('value');
-        if(snap.val()!=='admin') throw new Error('Not admin');
+        const cred = await auth.signInWithEmailAndPassword(adminEmail,pwd);
+        const uid  = cred.user.uid;
+        const snap = await rolesRef.child(uid).once('value');
+        if (snap.val() !== 'admin') throw new Error('Not admin');
       } catch {
         return alert('Invalid admin credentials');
       }
@@ -472,85 +493,77 @@
     });
 
     async function runDiagnostics(){
-      const report=$('testReport');
-      const status=$('loadingStatus');
-      const timeEl=$('loadingTime');
-      const bar=$('loadingBar');
-      const tests=[]; let passed=0;
+      const report = $('testReport');
+      const status = $('loadingStatus');
+      const timeEl = $('loadingTime');
+      const bar    = $('loadingBar');
+      const tests  = [];
+      let passed   = 0;
 
-      // Define tests
       tests.push({ label:'Canvas exists', fn:()=>!!$('canvas') });
-      tests.push({ label:'Pause button exists', fn:()=>!!$('pauseBtn') });
-      tests.push({ label:'Pause styled & positioned', fn:()=>{
-          const btn=$('pauseBtn'), s=getComputedStyle(btn), r=btn.getBoundingClientRect();
-          return s.backgroundColor==='rgb(255, 0, 0)'
-            && s.padding.includes('16px')
-            && s.borderRadius.includes('4px')
-            && r.top<30 && r.right>window.innerWidth-80;
-        }
-      });
+      tests.push({ label:'Pause & style', fn:()=>{
+        const btn = $('pauseBtn'),
+              s   = getComputedStyle(btn),
+              r   = btn.getBoundingClientRect();
+        return s.backgroundColor==='rgb(255, 0, 0)'
+           && s.padding.includes('16px')
+           && s.borderRadius.includes('4px')
+           && r.top<30 && r.right>window.innerWidth-80;
+      }});
       tests.push({ label:'Overlay system', fn:()=>typeof showOverlay==='function' });
       tests.push({ label:'startGame defined', fn:()=>typeof startGame==='function' });
       tests.push({ label:'Firebase initialized', fn:()=>!!firebase.app().name });
       tests.push({ label:'Roles structure', fn:async()=>{
-          const r=await rolesRef.once('value'); return r.exists();
-        }
-      });
+        const r=await rolesRef.once('value'); return r.exists();
+      }});
       tests.push({ label:'Leaderboard fetch', fn:async()=>{
-          const s=await lbRef.limitToLast(1).once('value'); return s.exists();
-        }
-      });
-      tests.push({ label:'Login inputs & style', fn:()=>{
-          const ie=$('loginEmail'), ip=$('loginPass');
-          if(!ie||!ip) return false;
-          const se=getComputedStyle(ie), sp=getComputedStyle(ip);
-          return ie.type==='email'
-            && se.padding.includes('8px')
-            && parseInt(se.fontSize)>=16
-            && ip.type==='password'
-            && sp.padding.includes('8px')
-            && parseInt(sp.fontSize)>=16;
-        }
-      });
+        const s=await lbRef.limitToLast(1).once('value'); return s.exists();
+      }});
+      tests.push({ label:'Login inputs style', fn:()=>{
+        const ie=$('loginEmail'), ip=$('loginPass');
+        if(!ie||!ip) return false;
+        const se=getComputedStyle(ie), sp=getComputedStyle(ip);
+        return ie.type==='email'
+          && se.padding.includes('10px')
+          && parseInt(se.fontSize)>=16
+          && ip.type==='password'
+          && sp.padding.includes('10px')
+          && parseInt(sp.fontSize)>=16;
+      }});
       tests.push({ label:'Admin sign-in works', fn:async()=>{
-          await auth.signInWithEmailAndPassword(adminEmail,'admin123');
-          const u=auth.currentUser;
-          await auth.signOut();
-          return u && u.uid===adminUID;
-        }
-      });
-      tests.push({ label:'Settings toggles present', fn:()=>!!$('soundToggle')&&!!$('darkToggle')&&!!$('skipToggle') });
+        await auth.signInWithEmailAndPassword(adminEmail,'admin123');
+        const u=auth.currentUser; await auth.signOut();
+        return u && u.uid===adminUID;
+      }});
+      tests.push({ label:'Search input style', fn:()=>{
+        const si=$('searchInput');
+        if(!si) return false;
+        const ss=getComputedStyle(si);
+        return ss.padding.includes('10px')
+          && parseInt(ss.fontSize)>=16;
+      }});
       tests.push({ label:'Profile card restored', fn:()=>!!$('profileCard') });
-      tests.push({ label:'Design – Body background', fn:()=>getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)' });
-      tests.push({ label:'Design – ProfileCard layout', fn:()=>{
-            const pc=$('profileCard'), r=pc.getBoundingClientRect();
-            return r.top<30 && r.right>window.innerWidth-70;
-          }
-      });
+      tests.push({ label:'Design – Body bg', fn:()=>getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)' });
       tests.push({ label:'Design – ProfileCard toggle', fn:()=>{
-            const pc=$('profileCard');
-            pc.classList.remove('expanded');
-            const before=getComputedStyle($('pc-options')).display==='none';
-            pc.classList.add('expanded');
-            const after=getComputedStyle($('pc-options')).display==='flex';
-            pc.classList.remove('expanded');
-            return before && after;
-          }
-      });
+        const pc=$('profileCard');
+        pc.classList.remove('expanded');
+        const before=getComputedStyle($('pc-options')).display==='none';
+        pc.classList.add('expanded');
+        const after=getComputedStyle($('pc-options')).display==='flex';
+        pc.classList.remove('expanded');
+        return before && after;
+      }});
       tests.push({ label:'Image assets load', fn:()=>Promise.all([
-            loadImage('https://app.masonnet.org/fbrc.png'), 
-            loadImage('https://app.masonnet.org/default-avatar.png')
-          ]).then(()=>true).catch(()=>false)
-      });
+        loadImage('https://app.masonnet.org/fbrc.png'),
+        loadImage('https://app.masonnet.org/default-avatar.png')
+      ]).then(()=>true).catch(()=>false)});
       tests.push({ label:'Sound assets load', fn:()=>Promise.all([
-            loadAudio('https://app.masonnet.org/flap.mp3'), 
-            loadAudio('https://app.masonnet.org/point.mp3')
-          ]).then(()=>true).catch(()=>false)
-      });
+        loadAudio('https://app.masonnet.org/flap.mp3'),
+        loadAudio('https://app.masonnet.org/point.mp3')
+      ]).then(()=>true).catch(()=>false)});
       tests.push({ label:'Pause/resume flow', fn:async()=>{
-          showOverlay('pauseOverlay'); hideAll(); return true;
-        }
-      });
+        showOverlay('pauseOverlay'); hideAll(); return true;
+      }});
 
       // Run tests
       showOverlay('testLoadingOverlay');
@@ -560,41 +573,35 @@
         status.textContent = `Testing: ${tests[i].label}`;
         let ok = false;
         try { ok = await tests[i].fn(); } catch {}
-        const div = document.createElement('div');
+        const div=document.createElement('div');
         div.innerHTML = ok ? `✅ ${tests[i].label}` : `❌ ${tests[i].label}`;
         report.appendChild(div);
         if (ok) passed++;
-        const pct = Math.round(((i+1)/total)*100);
-        document.getElementById('loadingBar').style.width = pct + '%';
-        const elapsed = (Date.now() - start)/1000;
-        const rem = Math.max(0, ((elapsed/(i+1))*(total-(i+1))).toFixed(1));
-        document.getElementById('loadingTime').textContent = `Estimated time remaining: ${rem}s`;
+        const pct=Math.round(((i+1)/total)*100);
+        bar.style.width = pct + '%';
+        const elapsed=(Date.now()-start)/1000;
+        const rem = Math.max(0,((elapsed/(i+1))*(total-(i+1))).toFixed(1));
+        timeEl.textContent = `Estimated time remaining: ${rem}s`;
       }
 
-      document.getElementById('loadingStatus').textContent =
-        `Diagnostics complete: ${passed}/${total} passed`;
-
-      setTimeout(() => showOverlay('testOverlay'), 500);
+      status.textContent = `Diagnostics complete: ${passed}/${total} passed`;
+      setTimeout(()=> showOverlay('testOverlay'), 500);
     }
 
     function loadImage(src){
       return new Promise((res, rej)=>{
-        const img = new Image();
-        img.onload = () => res();
-        img.onerror = () => rej();
-        img.src = src;
+        const img=new Image();
+        img.onload=res; img.onerror=rej; img.src=src;
       });
     }
     function loadAudio(src){
       return new Promise((res, rej)=>{
-        const a = new Audio(src);
-        a.oncanplaythrough = () => res();
-        a.onerror = () => rej();
-        a.src = src;
+        const a=new Audio(src);
+        a.oncanplaythrough=res; a.onerror=rej; a.src=src;
       });
     }
 
-    // Initial
+    // Initial show
     showOverlay('menuOverlay');
   });
   </script>
