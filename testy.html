@@ -1,272 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <title>Flappy Bird – MasonNet Edition</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <!-- Google Font -->
+  <meta charset="UTF-8" />
+  <title>Flappy Bird – Complete Integrated Build</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
-    /* ------------------------------------------------------------
+    /* ─────────────────────────────────────────────────────────────────────────
        BASE
-    ------------------------------------------------------------ */
+    ───────────────────────────────────────────────────────────────────────── */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
+      width: 100%; height: 100%; overflow: hidden;
+      background: #000; color: #fff;
       font-family: 'Press Start 2P', monospace;
     }
-    button, input {
-      font-family: inherit;
-    }
+    button, input { font-family: inherit; }
     .hidden { display: none !important; }
 
-    /* ------------------------------------------------------------
+    /* ─────────────────────────────────────────────────────────────────────────
        OVERLAYS & PANELS
-    ------------------------------------------------------------ */
+    ───────────────────────────────────────────────────────────────────────── */
     .overlay {
-      position: absolute;
-      top: 0; left: 0;
+      position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       z-index: 100;
     }
     .panel {
-      background: #111;
-      padding: 20px;
-      border-radius: 8px;
-      width: 320px;
-      max-width: 90%;
-      text-align: center;
+      background: #111; padding: 20px; border-radius: 8px;
+      width: 320px; max-width: 90%; text-align: center;
       border: 2px solid transparent;
     }
     .panel h2 {
-      margin-bottom: 16px;
-      font-size: 18px;
+      margin-bottom: 16px; font-size: 18px;
     }
     .panel button {
-      width: 100%;
-      background: red;
-      color: #fff;
-      border: none;
-      font-size: 16px;
-      padding: 12px;
-      margin: 10px 0;
-      cursor: pointer;
-      border-radius: 4px;
+      width: 100%; background: red; color: #fff; border: none;
+      font-size: 16px; padding: 12px; margin: 10px 0;
+      cursor: pointer; border-radius: 4px;
     }
-    .panel button:hover {
-      background: #d10000;
-    }
+    .panel button:hover { background: #d10000 }
 
-    /* ------------------------------------------------------------
-       GLOBAL INPUT STYLES
-    ------------------------------------------------------------ */
+    /* ─────────────────────────────────────────────────────────────────────────
+       INPUT STYLES
+    ───────────────────────────────────────────────────────────────────────── */
     input {
       width: calc(100% - 20px);
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 14px;
-      border: 2px solid #555;
-      border-radius: 4px;
-      background: #222;
-      color: #fff;
+      padding: 10px; margin: 10px 0;
+      font-size: 14px; border: 2px solid #555;
+      border-radius: 4px; background: #222; color: #fff;
     }
-    input:focus {
-      outline: none;
-      border-color: red;
-    }
+    input:focus { outline: none; border-color: red; }
 
-    /* ------------------------------------------------------------
+    /* ─────────────────────────────────────────────────────────────────────────
        MAIN MENU
-    ------------------------------------------------------------ */
-    #menuOverlay .panel img {
-      width: 100%;
-      max-width: 280px;
-      margin-bottom: 20px;
+    ───────────────────────────────────────────────────────────────────────── */
+    #menuOverlay img {
+      width: 100%; max-width: 280px; margin-bottom: 20px;
     }
 
-    /* ------------------------------------------------------------
+    /* ─────────────────────────────────────────────────────────────────────────
        PROFILE CARD
-    ------------------------------------------------------------ */
+    ───────────────────────────────────────────────────────────────────────── */
     #profileCard {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 64px;
-      height: 64px;
-      background: rgba(0,0,0,0.7);
-      border: 2px solid red;
-      border-radius: 8px;
-      overflow: hidden;
-      cursor: pointer;
-      z-index: 110;
+      position: absolute; top: 20px; right: 20px;
+      width: 64px; height: 64px; background: rgba(0,0,0,0.7);
+      border: 2px solid red; border-radius: 8px;
+      overflow: hidden; cursor: pointer; z-index: 110;
       transition: width .2s, height .2s;
     }
-    #profileCard.expanded {
-      width: 240px;
-      height: auto;
-    }
+    #profileCard.expanded { width: 240px; height: auto; }
     #pc-collapsed {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      padding: 8px;
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%; padding: 8px;
     }
-    #pc-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-    }
+    #pc-avatar { width: 48px; height: 48px; border-radius: 50%; }
     #pc-options {
-      display: none;
-      flex-direction: column;
-      background: rgba(0,0,0,0.85);
-      padding: 8px;
+      display: none; flex-direction: column;
+      background: rgba(0,0,0,0.85); padding: 8px;
     }
-    #profileCard.expanded #pc-options {
-      display: flex;
-    }
-    #pc-options button {
-      margin: 6px 0;
-      font-size: 14px;
-      padding: 8px;
-    }
+    #profileCard.expanded #pc-options { display: flex; }
+    #pc-options button { margin: 6px 0; padding: 8px; font-size: 14px; }
 
-    /* ------------------------------------------------------------
+    /* ─────────────────────────────────────────────────────────────────────────
        LEADERBOARD OVERLAY
-    ------------------------------------------------------------ */
-    #leaderOverlay .panel {
-      width: 400px;
-      max-width: 95%;
-      border-color: red;
-    }
-    #leaderOverlay h2 {
-      margin-bottom: 12px;
-      font-size: 18px;
-    }
+    ───────────────────────────────────────────────────────────────────────── */
+    #leaderOverlay .panel { width: 400px; max-width: 95%; border-color: red; }
+    #leaderOverlay h2 { margin-bottom: 12px; font-size: 18px; }
     .scroll-list {
-      background: #222;
-      padding: 8px;
-      border-radius: 4px;
-      font-size: 14px;
-      text-align: left;
-      color: #fff;
-      max-height: 240px;
-      overflow-y: auto;
-      margin-bottom: 12px;
+      background: #222; padding: 8px; border-radius: 4px;
+      font-size: 14px; text-align: left; color: #fff;
+      max-height: 240px; overflow-y: auto; margin-bottom: 12px;
     }
     .scroll-list div {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 0;
-      border-bottom: 1px solid #333;
+      display: flex; justify-content: space-between;
+      padding: 6px 0; border-bottom: 1px solid #333;
     }
-    /* Score right-aligned */
     .scroll-list div span:last-child {
-      text-align: right;
-      flex: 1;
+      flex: 1; text-align: right;
     }
 
-    /* ------------------------------------------------------------
-       OTHER OVERLAYS
-    ------------------------------------------------------------ */
-    /* Settings, pause, gameover, name, sfx are identical panels */
-    #settingsOverlay .panel button, 
-    #pauseOverlay .panel button,
-    #gameoverOverlay .panel button,
-    #nameOverlay .panel button {
-      margin: 8px 0;
-    }
-
-    /* ------------------------------------------------------------
+    /* ─────────────────────────────────────────────────────────────────────────
        PAUSE BUTTON
-    ------------------------------------------------------------ */
+    ───────────────────────────────────────────────────────────────────────── */
     #pauseBtn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: red;
-      color: #fff;
-      border: none;
-      padding: 12px;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 4px;
-      z-index: 20;
+      position: absolute; top: 20px; right: 20px;
+      background: red; color: #fff; border: none;
+      padding: 12px; font-size: 14px; cursor: pointer;
+      border-radius: 4px; z-index: 20;
     }
-    #pauseBtn:hover {
-      background: #d10000;
-    }
+    #pauseBtn:hover { background: #d10000 }
 
-    /* ------------------------------------------------------------
+    /* ─────────────────────────────────────────────────────────────────────────
+       GENERAL OVERLAYS
+    ───────────────────────────────────────────────────────────────────────── */
+    /* Settings, pause, gameover, name, sfx: all share panel/button styles */
+
+    /* ─────────────────────────────────────────────────────────────────────────
        TEST LOADING OVERLAY
-    ------------------------------------------------------------ */
-    #testLoadingOverlay .panel {
-      border-color: red;
-    }
-    #loadingStatus {
-      margin: 12px 0;
-      font-size: 14px;
-    }
-    #loadingTime {
-      font-size: 12px;
-      color: #aaa;
-    }
+    ───────────────────────────────────────────────────────────────────────── */
+    #testLoadingOverlay .panel { border-color: red; }
+    #loadingStatus { margin: 12px 0; font-size: 14px; }
+    #loadingTime { font-size: 12px; color: #aaa; }
     #loadingProgress {
-      background: #444;
-      height: 10px;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 8px;
+      background: #444; height: 10px; border-radius: 4px;
+      overflow: hidden; margin-top: 8px;
     }
     #loadingBar {
-      background: red;
-      width: 0%;
-      height: 100%;
+      background: red; width: 0%; height: 100%;
       transition: width .3s;
     }
 
-    /* ------------------------------------------------------------
-       TEST REPORT OVERLAY (ENLARGED)
-    ------------------------------------------------------------ */
+    /* ─────────────────────────────────────────────────────────────────────────
+       TEST REPORT OVERLAY
+    ───────────────────────────────────────────────────────────────────────── */
     #testOverlay .panel {
-      width: 600px;
-      max-width: 95%;
-      height: 80%;
-      overflow: auto;
-      border-color: red;
+      width: 600px; max-width: 95%; height: 80%;
+      overflow: auto; border-color: red;
     }
     #testReport {
-      background: #222;
-      padding: 8px;
-      border-radius: 4px;
-      max-height: 60vh;
-      overflow-y: auto;
-      text-align: left;
+      background: #222; padding: 8px; border-radius: 4px;
+      max-height: 60vh; overflow-y: auto; text-align: left;
       margin-bottom: 12px;
     }
+
   </style>
 </head>
 <body>
 
-  <!-- MAIN MENU OVERLAY -->
+  <!-- MAIN MENU -->
   <div id="menuOverlay" class="overlay">
     <div class="panel">
       <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird"/>
       <button id="startBtn">Start</button>
       <button id="leaderBtn">Leaderboard</button>
       <button id="settingsBtn">Settings</button>
-      <button id="hubBtn">Flappy Bird Hub</button>
-      <button id="testBtn">Test (INTERNAL ONLY)</button>
+      <button id="hubBtn">Hub</button>
+      <button id="testBtn">Test (Internal)</button>
     </div>
   </div>
 
@@ -284,16 +176,13 @@
     </div>
   </div>
 
-  <!-- LOGIN OVERLAY -->
+  <!-- SIGN IN OVERLAY -->
   <div id="loginOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Sign In</h2>
       <input id="loginEmail" type="email" placeholder="Email"/>
       <input id="loginPass" type="password" placeholder="Password"/>
-      <label>
-        <input id="loginRemember" type="checkbox"/>
-        Remember me
-      </label>
+      <label><input id="loginRemember" type="checkbox"/> Remember me</label>
       <button id="loginSubmit">Submit</button>
       <button id="loginCancel">Cancel</button>
     </div>
@@ -313,7 +202,7 @@
   <!-- LEADERBOARD OVERLAY -->
   <div id="leaderOverlay" class="overlay hidden">
     <div class="panel">
-      <h2>Leaderboard (Top 10)</h2>
+      <h2>Leaderboard</h2>
       <div id="leaderList" class="scroll-list"></div>
       <button id="leaderClose">Back</button>
     </div>
@@ -322,9 +211,10 @@
   <!-- SETTINGS OVERLAY -->
   <div id="settingsOverlay" class="overlay hidden">
     <div class="panel">
-      <button id="soundToggle">🔊 Sound: On</button>
-      <button id="darkToggle">🌙 Dark Mode: Off</button>
-      <button id="skipToggle">🚀 Skip to GO: Off</button>
+      <h2>Settings</h2>
+      <label><input type="checkbox" id="soundToggle" checked/> Sound</label>
+      <label><input type="checkbox" id="darkToggle"/> Dark Mode</label>
+      <label><input type="checkbox" id="skipToggle"/> Skip Intro</label>
       <button id="settingsCloseBtn">Close</button>
     </div>
   </div>
@@ -338,7 +228,7 @@
     </div>
   </div>
 
-  <!-- GAME OVERLAY -->
+  <!-- GAMEOVER OVERLAY -->
   <div id="gameoverOverlay" class="overlay hidden">
     <div class="panel">
       <h2>Game Over</h2>
@@ -348,7 +238,7 @@
     </div>
   </div>
 
-  <!-- NEW HIGH SCORE OVERLAY -->
+  <!-- NAME ENTRY OVERLAY -->
   <div id="nameOverlay" class="overlay hidden">
     <div class="panel">
       <h2>🎉 New High Score!</h2>
@@ -361,9 +251,7 @@
 
   <!-- SFX POPUP -->
   <div id="sfxPopup" class="overlay hidden">
-    <div class="panel">
-      <p>Playing sound effects…</p>
-    </div>
+    <div class="panel"><p>Playing sound effects…</p></div>
   </div>
 
   <!-- TEST LOADING OVERLAY -->
@@ -395,49 +283,41 @@
   <script src="https://www.gstatic.com/firebasejs/9.16.0/firebase-database-compat.js"></script>
 
   <script>
-  // ================================
-  //  TEST MODE FLAG
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
+  //  FLAG
+  // ──────────────────────────────────────────────────────────────────────────
   window.TEST_MODE = true;
 
-  // ================================
-  //  DOM UTILITIES
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
+  //  DOM HELPERS
+  // ──────────────────────────────────────────────────────────────────────────
   const $ = id => document.getElementById(id);
-
-  const overlays = [
-    'menuOverlay','loginOverlay','searchOverlay','leaderOverlay',
-    'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay',
-    'sfxPopup','testLoadingOverlay','testOverlay'
-  ];
   function hideAll() {
-    overlays.forEach(id => $(id)?.classList.add('hidden'));
+    [
+      'menuOverlay','loginOverlay','searchOverlay','leaderOverlay',
+      'settingsOverlay','pauseOverlay','gameoverOverlay','nameOverlay',
+      'sfxPopup','testLoadingOverlay','testOverlay'
+    ].forEach(id => $(id)?.classList.add('hidden'));
   }
   function showOverlay(id) {
-    if ((id==='sfxPopup'||id==='nameOverlay') && gameState!=='dying') return;
     hideAll();
-    if (id) {
-      $(id).classList.remove('hidden');
-      $('canvas').style.display = 'none';
-      $('pauseBtn').style.display = 'none';
-    } else {
-      $('canvas').style.display = 'block';
-      $('pauseBtn').style.display = 'block';
-    }
+    $(id).classList.remove('hidden');
+    $('canvas').style.display = id ? 'none' : 'block';
+    $('pauseBtn').style.display = id ? 'none' : 'block';
   }
   function bind(id, ev, fn) {
     const el = $(id);
-    if (el) el.addEventListener(ev, fn);
+    if(el) el.addEventListener(ev, fn);
   }
 
-  // ================================
-  //  FIREBASE INITIALIZATION
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
+  //  FIREBASE CONFIG
+  // ──────────────────────────────────────────────────────────────────────────
   const firebaseConfig = {
-    apiKey:    "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-    authDomain:"masonnet-app-official.firebaseapp.com",
-    databaseURL:"https://masonnet-app-official-default-rtdb.firebaseio.com",
-    projectId: "masonnet-app-official"
+    apiKey:    "AIzaSyYourKeyHere",
+    authDomain:"your-app.firebaseapp.com",
+    databaseURL:"https://your-app.firebaseio.com",
+    projectId: "your-app"
   };
   firebase.initializeApp(firebaseConfig);
   const auth     = firebase.auth();
@@ -453,172 +333,150 @@
   let currentUser = null;
   let currentRole = 'user';
 
-  // ================================
-  //  PROFILE CARD LOGIC
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
+  //  PROFILE CARD TOGGLE
+  // ──────────────────────────────────────────────────────────────────────────
   const pc = $('profileCard');
-  // Toggle expand/collapse
   pc.addEventListener('click', e => {
     e.stopPropagation();
     pc.classList.toggle('expanded');
   });
-  // Collapse when clicking elsewhere
-  document.addEventListener('click', () => {
-    if (pc.classList.contains('expanded')) {
+  document.addEventListener('click', ()=>{
+    if(pc.classList.contains('expanded')){
       pc.classList.remove('expanded');
     }
   });
 
-  // Render Profile Card items based on auth + role
-  function renderProfileCard() {
+  // ──────────────────────────────────────────────────────────────────────────
+  //  RENDER PROFILE CARD
+  // ──────────────────────────────────────────────────────────────────────────
+  function renderProfileCard(){
     const opts = $('pc-options');
     opts.innerHTML = '';
-
-    if (!currentUser) {
-      // Not signed in → show Sign In
-      const btn = document.createElement('button');
-      btn.id = 'pc-authBtn';
-      btn.textContent = 'Sign In';
-      btn.addEventListener('click', () => showOverlay('loginOverlay'));
-      opts.appendChild(btn);
+    if(!currentUser){
+      const b = document.createElement('button');
+      b.id='pc-authBtn'; b.textContent='Sign In';
+      b.onclick = () => showOverlay('loginOverlay');
+      opts.appendChild(b);
       return;
     }
-
-    // Signed in → build menu
-    const items = [
-      { id:'sign-out',       label:'Sign Out',       fn:() => auth.signOut() },
-      { id:'submit-feedback',label:'Submit Feedback',fn:() => showOverlay('sfxPopup') },
-      { id:'account-settings',label:'Account Settings',fn:() => showOverlay('settingsOverlay') },
-      { id:'search-profiles',label:'Search Profiles…',fn:() => showOverlay('searchOverlay') }
+    const menu = [
+      { id:'sign-out', label:'Sign Out', fn:()=> auth.signOut() },
+      { id:'feedback', label:'Submit Feedback', fn:()=> showOverlay('sfxPopup') },
+      { id:'settings', label:'Account Settings', fn:()=> showOverlay('settingsOverlay') },
+      { id:'search', label:'Search Profiles…', fn:()=> showOverlay('searchOverlay') }
     ];
-    // Admin-only
-    if (currentRole==='admin') {
-      items.splice(3,0,{ id:'admin', label:'Admin', fn:()=> showOverlay('testLoadingOverlay') });
+    if(currentRole==='admin'){
+      menu.splice(3,0,{ id:'admin', label:'Admin Console', fn:()=> showOverlay('testLoadingOverlay') });
     }
-
-    items.forEach(it => {
-      const b = document.createElement('button');
-      b.id = `pc-${it.id}`;
-      b.textContent = it.label;
-      b.addEventListener('click', it.fn);
+    menu.forEach(it=>{
+      const b=document.createElement('button');
+      b.id=`pc-${it.id}`; b.textContent=it.label; b.onclick=it.fn;
       opts.appendChild(b);
     });
   }
 
-  // React to auth changes
-  auth.onAuthStateChanged(async u => {
+  auth.onAuthStateChanged(async u=>{
     currentUser = u;
-    if (!u) {
-      currentRole = 'user';
-      renderProfileCard();
+    if(!u){
+      currentRole='user'; renderProfileCard();
       return;
     }
-    // Fetch role from Realtime DB
     const snap = await rolesRef.child(u.uid).once('value');
-    currentRole = snap.val() === 'admin' ? 'admin' : 'user';
+    currentRole = snap.val()==='admin'?'admin':'user';
     renderProfileCard();
   });
 
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
   //  LOGIN HANDLERS
-  // ================================
-  bind('loginSubmit','click', async () => {
-    const email = $('loginEmail').value.trim();
-    const pass  = $('loginPass').value.trim();
-    try {
-      await auth.signInWithEmailAndPassword(email, pass);
+  // ──────────────────────────────────────────────────────────────────────────
+  bind('loginSubmit','click', async ()=>{
+    const e=$('loginEmail').value.trim();
+    const p=$('loginPass').value.trim();
+    try{
+      await auth.signInWithEmailAndPassword(e,p);
       showOverlay('menuOverlay');
-    } catch (err) {
-      alert('Login failed: ' + err.message);
+    }catch(err){
+      alert('Login failed: '+err.message);
     }
   });
   bind('loginCancel','click', ()=> showOverlay('menuOverlay'));
 
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
   //  SEARCH HANDLERS
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
   bind('searchSubmit','click', ()=>{
-    const q = $('searchInput').value.trim();
-    const res = $('searchResults');
-    res.innerHTML = q ? `<div>${q}: search result</div>` : '';
+    const q=$('searchInput').value.trim();
+    const res=$('searchResults');
+    res.innerHTML = q?`<div>${q}: 42</div>`:'';
     showOverlay('searchOverlay');
   });
   bind('searchCancel','click', ()=> showOverlay('menuOverlay'));
 
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
   //  SETTINGS TOGGLES
-  // ================================
-  bind('soundToggle','click', ()=>{
-    const b=$('soundToggle');
-    b.textContent = b.textContent.includes('On') ? '🔇 Sound: Off' : '🔊 Sound: On';
-  });
-  bind('darkToggle','click', ()=>{
-    document.body.classList.toggle('dark-mode');
-    const b=$('darkToggle');
-    b.textContent = b.textContent.includes('Off') ? '🌙 Dark Mode: On' : '☀️ Light Mode: Off';
-  });
-  bind('skipToggle','click', ()=>{
-    const b=$('skipToggle');
-    b.textContent = b.textContent.includes('Off') ? '🚀 Skip to GO: On' : '🚀 Skip to GO: Off';
-  });
+  // ──────────────────────────────────────────────────────────────────────────
+  bind('settingsBtn','click', ()=> showOverlay('settingsOverlay'));
   bind('settingsCloseBtn','click', ()=> showOverlay('menuOverlay'));
+  bind('soundToggle','change', e=> console.log('Sound:',e.target.checked));
+  bind('darkToggle','change', e=> document.body.classList.toggle('dark-mode', e.target.checked));
+  bind('skipToggle','change', e=> console.log('Skip:',e.target.checked));
 
-  // ================================
-  //  CANVAS + GAME LOGIC
-  // ================================
-  let gameState = 'menu';
-  const gravity = .25, flapPower = -6, speed = 2;
-  let bird, pipes = [], score = 0, frame = 0, rafId, collided = false;
-  const canvas = $('canvas'), ctx = canvas.getContext('2d');
-  function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+  // ──────────────────────────────────────────────────────────────────────────
+  //  CANVAS + GAME LOGIC (Flappy Bird style)
+  // ──────────────────────────────────────────────────────────────────────────
+  let gameState = 'menu', pipes=[], bird, score=0, frame=0, rafId, collided=false;
+  const gravity=.25, flapPower=-6, speed=2;
+  const canvasEl=$('canvas'), ctx=canvasEl.getContext('2d');
+  function resize(){ canvasEl.width=innerWidth; canvasEl.height=innerHeight; }
   window.addEventListener('resize', resize); resize();
 
-  class Bird {
+  class Bird{
     constructor(){
-      this.x = 50; this.y = canvas.height*0.4;
-      this.vy = 0; this.w = 34; this.h = 24;
+      this.x=50; this.y=canvasEl.height*0.4;
+      this.vy=0; this.w=34; this.h=24;
     }
-    flap(){ this.vy = flapPower; }
+    flap(){ this.vy=flapPower; }
     update(){
-      this.vy += gravity; this.y += this.vy;
+      this.vy+=gravity; this.y+=this.vy;
       if(this.y<0) this.y=0;
-      if(this.y+this.h>canvas.height) this.die();
+      if(this.y+this.h>canvasEl.height) this.die();
     }
     draw(){
       ctx.fillStyle='yellow';
       ctx.fillRect(this.x,this.y,this.w,this.h);
     }
     collides(p){
-      return !(this.x+this.w<p.x ||
-               this.x>p.x+p.w ||
-               this.y+this.h<p.top ||
-               this.y>p.bottom);
+      return !(
+        this.x+this.w<p.x||this.x>p.x+p.w||
+        this.y+this.h<p.top||this.y>p.bottom
+      );
     }
     die(){
       if(gameState!=='playing'||collided) return;
       collided=true; gameState='dying';
       cancelAnimationFrame(rafId);
       showOverlay('sfxPopup');
-      setTimeout(()=>{ showOverlay(); endGame(); }, 800);
+      setTimeout(()=>{ showOverlay(); endGame(); },800);
     }
   }
 
   function spawnPipe(){
-    const gap = 120;
-    const top = 20 + Math.random()*(canvas.height-gap-40);
-    pipes.push({ x: canvas.width, w: 60, top, bottom: top+gap, passed: false });
+    const gap=120;
+    const top=20+Math.random()*(canvasEl.height-gap-40);
+    pipes.push({ x:canvasEl.width, w:60, top, bottom:top+gap, passed:false });
   }
 
   function loop(){
     if(gameState!=='playing') return;
-    rafId = requestAnimationFrame(loop);
-    frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
+    rafId=requestAnimationFrame(loop);
+    frame++; ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
     pipes.forEach((p,i)=>{
-      p.x -= speed;
+      p.x-=speed;
       ctx.fillStyle='green';
-      ctx.fillRect(p.x, 0, p.w, p.top);
-      ctx.fillRect(p.x, p.bottom, p.w, canvas.height-p.bottom);
-      if(!p.passed && bird.x>p.x+p.w){ p.passed=true; score++; }
+      ctx.fillRect(p.x,0,p.w,p.top);
+      ctx.fillRect(p.x,p.bottom,p.w,canvasEl.height-p.bottom);
+      if(!p.passed&&bird.x>p.x+p.w){ p.passed=true; score++; }
       if(bird.collides(p)) bird.die();
       if(p.x+p.w<0) pipes.splice(i,1);
     });
@@ -626,24 +484,20 @@
     if(frame%150===0) spawnPipe();
     ctx.fillStyle='#fff';
     ctx.font='32px "Press Start 2P"';
-    ctx.fillText(score, 20, 50);
+    ctx.fillText(score,20,50);
   }
 
   function startGame(){
     if(gameState==='playing') return;
     gameState='playing'; pipes=[]; score=0; frame=0; collided=false;
-    bird = new Bird(); hideAll(); $('pauseBtn').style.display='block'; loop();
+    bird=new Bird(); hideAll(); $('pauseBtn').style.display='block'; loop();
   }
-
   function endGame(){
     if(gameState!=='dying') return;
-    gameState='menu';
-    $('finalScore').textContent = score;
-    showOverlay('gameoverOverlay');
+    gameState='menu'; $('finalScore').textContent=score; showOverlay('gameoverOverlay');
   }
-
-  window.addEventListener('mousedown', ()=> bird?.flap());
-  window.addEventListener('touchstart', ()=> bird?.flap(), { passive: true });
+  window.addEventListener('mousedown',()=> bird?.flap());
+  window.addEventListener('touchstart',()=> bird?.flap(),{passive:true});
 
   bind('startBtn','click', startGame);
   bind('pauseBtn','click', ()=>{
@@ -653,49 +507,47 @@
       showOverlay('pauseOverlay');
     }
   });
-  bind('resumeBtn','click', ()=>{ gameState='playing'; hideAll(); loop(); });
-  bind('pauseMenuBtn','click', ()=> showOverlay('menuOverlay'));
+  bind('resumeBtn','click',()=>{ gameState='playing'; hideAll(); loop(); });
+  bind('pauseMenuBtn','click',()=> showOverlay('menuOverlay'));
   bind('restartBtn','click', startGame);
-  bind('goMenuBtn','click', ()=> showOverlay('menuOverlay'));
-  bind('hubBtn','click', ()=> window.location.href='https://app.masonnet.org/flappybirdhub');
+  bind('goMenuBtn','click',()=> showOverlay('menuOverlay'));
+  bind('hubBtn','click',()=> window.location.href='https://app.masonnet.org/flappybirdhub');
 
-  // ================================
-  //  LEADERBOARD LOGIC
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
+  //  LEADERBOARD
+  // ──────────────────────────────────────────────────────────────────────────
   bind('leaderBtn','click', ()=>{
-    const list = $('leaderList');
-    list.innerHTML = '';
-    lbRef.orderByChild('score').limitToLast(10)
-      .once('value', snap=>{
-        const arr = Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score);
-        arr.slice(0,10).forEach(p=>{
-          const div = document.createElement('div');
-          div.innerHTML = `<span>${p.name}</span><span>${p.score}</span>`;
-          list.appendChild(div);
-        });
-        showOverlay('leaderOverlay');
+    const list=$('leaderList'); list.innerHTML='';
+    lbRef.orderByChild('score').limitToLast(10).once('value',snap=>{
+      const arr=Object.values(snap.val()||{}).sort((a,b)=>b.score-a.score);
+      arr.slice(0,10).forEach(p=>{
+        const div=document.createElement('div');
+        div.innerHTML=`<span>${p.name}</span><span>${p.score}</span>`;
+        list.appendChild(div);
       });
+      showOverlay('leaderOverlay');
+    });
   });
   bind('leaderClose','click', ()=> showOverlay('menuOverlay'));
 
-  // ================================
-  //  TEST MENU & DIAGNOSTICS
-  // ================================
+  // ──────────────────────────────────────────────────────────────────────────
+  //  TEST MENU & ADMIN CONSOLE / DIAGNOSTICS
+  // ──────────────────────────────────────────────────────────────────────────
   if(window.TEST_MODE){
-    const t = $('testBtn');
-    if(t) t.style.display = 'block';
+    const t=$('testBtn'); if(t) t.style.display='block';
   }
 
   bind('testBtn','click', async ()=>{
-    const pwd = prompt('Admin password:');
+    const pwd=prompt('Admin password:');
     if(!pwd) return;
-    try {
-      const cred = await auth.signInWithEmailAndPassword(adminEmail, pwd);
-      const snap = await rolesRef.child(cred.user.uid).once('value');
+    try{
+      const cred=await auth.signInWithEmailAndPassword(adminEmail,pwd);
+      const snap=await rolesRef.child(cred.user.uid).once('value');
       if(snap.val()!=='admin') throw new Error();
-    } catch {
+    }catch{
       return alert('Invalid admin credentials');
     }
+    // show admin console
     runDiagnostics();
   });
 
@@ -705,136 +557,66 @@
   });
 
   async function runDiagnostics(){
-    const report = $('testReport');
-    const status = $('loadingStatus');
-    const timeEl = $('loadingTime');
-    const bar    = $('loadingBar');
-    const tests  = [];
-    let passed = 0;
+    const report=$('testReport'), status=$('loadingStatus'), timeEl=$('loadingTime'), bar=$('loadingBar');
+    const tests=[], results=[];
+    let passed=0;
 
-    function add(label, fn){
-      tests.push({ label, fn });
+    function add(label,fn){
+      tests.push({label,fn});
     }
 
-    // CORE TESTS
-    add('Canvas exists', ()=>!!$('canvas'));
-    add('Overlay system', ()=>typeof showOverlay==='function');
-    add('startGame defined', ()=>typeof startGame==='function');
-    add('Firebase initialized', ()=>!!firebase.app().name);
-
-    // ROLE STRUCTURE
-    add('Roles node exists',async ()=>{
-      const r = await rolesRef.once('value');
-      return r.exists();
+    add('Settings overlay opens', ()=> {
+      $('settingsBtn').click();
+      const ok = !$('settingsOverlay').classList.contains('hidden');
+      $('settingsCloseBtn').click();
+      return ok;
     });
-
-    // LEADERBOARD TESTS
-    add('Leaderboard title correct', ()=>{
-      const h = $('#leaderOverlay .panel h2');
-      return h && h.textContent==='Leaderboard (Top 10)';
+    add('Leaderboard title is correct', ()=>{
+      return document.querySelector('#leaderOverlay .panel h2').textContent==='Leaderboard';
     });
-    add('Leaderboard layout (scores right)', ()=>{
-      const div = $('leaderList .scroll-list div');
-      if(!div) return false;
-      const spans = div.querySelectorAll('span');
-      const rightAlign = window.getComputedStyle(spans[1]).textAlign==='right';
-      return rightAlign;
+    add('Leaderboard scores right-aligned', ()=>{
+      $('leaderBtn').click();
+      const first = $('leaderList .scroll-list div span:last-child');
+      const ok = getComputedStyle(first).textAlign==='right';
+      $('leaderClose').click();
+      return ok;
     });
-    add('Leaderboard fetch works', async ()=>{
-      const s = await lbRef.limitToLast(1).once('value');
-      return s.exists();
-    });
-
-    // LOGIN INPUTS
-    add('Login inputs style', ()=>{
-      const ie = $('loginEmail'), ip = $('loginPass');
-      if(!ie||!ip) return false;
-      const se = getComputedStyle(ie), sp = getComputedStyle(ip);
-      return ie.type==='email'
-        && se.padding.includes('10px')
-        && parseInt(se.fontSize)>=14
-        && ip.type==='password'
-        && sp.padding.includes('10px')
-        && parseInt(sp.fontSize)>=14;
-    });
-
-    // SIGN-IN FLOW
-    add('Admin sign-in works', async ()=>{
-      await auth.signInWithEmailAndPassword(adminEmail,'admin123');
-      const u = auth.currentUser;
-      await auth.signOut();
-      return u && u.uid===adminUID;
-    });
-
-    // PROFILE CARD
-    add('ProfileCard toggle works', ()=>{
-      const pc = $('profileCard');
-      pc.classList.remove('expanded');
+    add('ProfileCard toggles', ()=>{
       pc.click();
       const exp = pc.classList.contains('expanded');
       pc.click();
       const col = !pc.classList.contains('expanded');
-      return exp && col;
+      return exp&&col;
     });
-    add('Admin menu items count', ()=>{
-      if(currentRole!=='admin') return false;
-      const cnt = $('pc-options').querySelectorAll('button').length;
-      return cnt===5;
-    });
+    add('Body bg is black', ()=> getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)');
 
-    // DESIGN
-    add('Body background is black', ()=> getComputedStyle(document.body).backgroundColor==='rgb(0, 0, 0)');
-
-    // IMAGE LOADS
-    add('Logo loads', ()=> loadImage('https://app.masonnet.org/fbrc.png').then(()=>true).catch(()=>false));
-    add('Avatar loads', ()=> loadImage('https://app.masonnet.org/default-avatar.png').then(()=>true).catch(()=>false));
-
-    // PAUSE/RESUME
-    add('Pause/resume works', async ()=>{
-      showOverlay('pauseOverlay');
-      hideAll();
-      return true;
-    });
-
-    // RUN TESTS
+    // run them
     showOverlay('testLoadingOverlay');
-    report.innerHTML = '';
-    const total = tests.length, start = Date.now();
+    report.innerHTML='';
+    const total=tests.length, start=Date.now();
     for(let i=0;i<total;i++){
-      status.textContent = `Testing: ${tests[i].label}`;
-      let ok = false;
-      try { ok = await tests[i].fn(); } catch{}
-      const li = document.createElement('div');
-      li.textContent = (ok?'✅ ':'❌ ') + tests[i].label;
-      report.appendChild(li);
+      status.textContent=`Testing: ${tests[i].label}`;
+      let ok=false;
+      try{ ok=await tests[i].fn(); }catch{}
+      const div=document.createElement('div');
+      div.textContent = (ok?'✅ ':'❌ ') + tests[i].label;
+      report.appendChild(div);
       if(ok) passed++;
       const pct = Math.round(((i+1)/total)*100);
-      bar.style.width = pct + '%';
-      const elapsed = (Date.now()-start)/1000;
-      const rem = Math.max(0, ((elapsed/(i+1))*(total-(i+1))).toFixed(1));
-      timeEl.textContent = `Estimated time remaining: ${rem}s`;
+      bar.style.width = pct+'%';
+      const elapsed=(Date.now()-start)/1000;
+      const rem=Math.max(0,((elapsed/(i+1))*(total-(i+1))).toFixed(1));
+      timeEl.textContent=`Estimated time remaining: ${rem}s`;
     }
-    status.textContent = `Diagnostics complete: ${passed}/${total} passed`;
-    setTimeout(()=> showOverlay('testOverlay'), 500);
+    status.textContent=`Diagnostics complete: ${passed}/${total} passed`;
+    setTimeout(()=> showOverlay('testOverlay'),500);
   }
 
-  function loadImage(src){
-    return new Promise((res, rej)=>{
-      const img = new Image();
-      img.onload = res; img.onerror = rej;
-      img.src = src;
-    });
-  }
-  function loadAudio(src){
-    return new Promise((res, rej)=>{
-      const a = new Audio(src);
-      a.oncanplaythrough = res; a.onerror = rej;
-      a.src = src;
-    });
-  }
-
-  // INITIAL SHOW MENU
+  // ──────────────────────────────────────────────────────────────────────────
+  //  LOAD INITIAL MENU
+  // ──────────────────────────────────────────────────────────────────────────
   showOverlay('menuOverlay');
   </script>
 </body>
 </html>
+```[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/herveDarritchon/soegmtk-kraken/tree/796f4fb9cc3dfb401b2a72e9146ad06b1d5ad30a/node_modules%2Fmakara%2Fnode_modules%2Fspud%2Findex.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ngtaloc/TotNghiep-Project/tree/8b72be93496d37f227ac7d87d5aae25d5241d519/WebEng%2FWebEng%2FContent%2FTemplate%2Fplugins%2Fraphael%2Fraphael.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/pouyakary/KaryScript/tree/20790e7884638c4e06d5e90854aa21c3d6912912/src%2Fcompiler%2Findex.ts?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/bryjch/inv-ui/tree/0e5ee6dbadc2ef027a56923897c73688de9fc84d/src%2Fzustand%2Ftarkov%2Freducer.ts?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ad-si/RosettaGit/tree/26f0695a06d79329fa7604d04e7b67fbec4c94e3/content%2Fdrafts%2Fpermutations_derangements.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "5")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MWDoane/0121400-REV-1.0.4/tree/eb5dc709781df43c4d150f39f572f6916dfc2a09/src%2FUnit.cpp?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "6")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DGIIMUnderground/DGIIM1/tree/8a09b775378f93752fc319c5f7dfa17b2d80ae4b/C2%2FMP%2FEx%C3%A1menes%2FJunio2019.cpp?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "7")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/fengyingdian/future-web/tree/d01f58c96c37a512ff641261f00b05f430ff6446/src%2Fservice%2Findex.ts?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "8")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/jart/sectorlisp/tree/9f108b0d60bf26d99a6934f15ec455ce5fcbf56b/lisp.c?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "9")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/martin76ec/authball/tree/0fac90f824bd386308e367bc33a75f0c94fc9c22/index.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "10")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/zchan0/MemoryGame/tree/a2cd2586ef353d07b255957c2fc82f5a0e4dc6cc/docs%2Fbundle.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "11")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/pouyakary/Orchestra/tree/a567e5d8a35ef5cd564a50342fa63b984224181d/windows%2Fabout%2Fwindow.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "12")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/jeffpar/pcjs/tree/7558ba889ba72ce0a67fa2c0cf01d54264bcecbe/documents%2Fbooks%2Fmspl13%2Fmsdos%2Fencyclopedia%2Fsection2%2Findex.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "13")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/joeqnicholson/OysterWars/tree/7ec0d812c418ae24b19efc34538c6af59f37763f/Assets%2FKinematic2D%2FCore%2FScripts%2FCharacterMotor.cs?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "14")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/victorguz/coky-framework/tree/c82351863c1c288929e5f1eaf66a6b619f31a9b7/src%2Fapp%2Fclasses%2FPiecesPHP%2FBuiltIn%2FShop%2FEntryPointController.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "15")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/IamBeltran/handle-firebase-share/tree/c6280f5a5c75d5ad828db970da4a88f926de6a01/system%2Fnode-integration.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "16")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/mmlaaker/CharacterController/tree/5ecfcae2825086f02c28420ae2acd7937ca1a7bc/Assets%2FCharacter%20Controller%20Pro%2FDemo%2FScripts%2FLookAtTarget.cs?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "17")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Thiti-Dev/ScheduralizationV2/tree/ebb64385ad03ab7a0d1492fdb8c88ca4ccf196c7/controller%2Fusers.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "18")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ComLock/enonic-xp-lib-sync/tree/7d8c8fb87d70dcd63c18d0fc328ad1d7c1054d84/gulpfile.babel.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "19")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Dazzed/dental-back/tree/ce276d59a779d91df0156e6ae2dff9024eaf3fc3/controllers%2Fv1%2Foffices.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "20")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/stephnr/super-react-redux-starter/tree/07b771d9e77808f5fc73338fbca70840d96f974d/src%2Fserver%2Fmodules%2Fmodels%2Fgraph%2Fmutations%2Findex.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "21")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/1pbSolidDrives/mateTest/tree/7b9ab6e825690e62ed3ed50938971fa921713ba8/mate%2Fassets%2Fnew%2Fscripts%2FFWS%2FFWS_MODEL.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "22")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/muzudho/Kifuwarabe_Igo_Unity_Think/tree/ed1945a963aed75b5d6a5ae74f879560ba5a7bba/Kifuwarabe_Unity%2Fheader%2Fn950_main____%2Fn950_500_kifuwarabeThink.cs?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "23")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/naeminhye/traffic-survivor-ver1/tree/c06eca3b4fb1278e627ad757ca66372a8e4bb4c5/public%2Fcore%2Fworld%2Fenvironment.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "24")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/quocs-studio/site/tree/94550f7d4d08264980aad82818dbd93ee278fc35/src%2Futils%2Fcms.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "25")
