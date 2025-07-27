@@ -2,153 +2,224 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Game with Branded Menu + Firebase</title>
+  <title>Main Menu + Profile + Diagnostics</title>
   <style>
-    /* Reset & Base */
+    /* ─── GLOBAL RESET & BASE ────────────────────────────────────── */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; overflow: hidden; }
+    body { background: #000; color: #fff; font-family: Arial, sans-serif; overflow: hidden; }
 
-    /* Dark mode */
-    body.dark-mode { background: #222; color: #eee; }
-    body.dark-mode canvas { background: #000; }
-
-    /* Header & Navigation */
-    #main-header {
-      position: absolute;
-      top: 0; left: 0; width: 100%;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 16px;
-      background: rgba(255,255,255,0.9);
-      z-index: 1000;
-    }
-    body.dark-mode #main-header {
-      background: rgba(0,0,0,0.8);
-    }
-
-    /* Title Image */
-    #title-img {
-      max-height: 60px;
-      width: auto;
-    }
-
-    /* Nav Buttons */
-    .nav-btn {
-      background: #e03a3e; /* Branded red */
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      padding: 12px 24px;
-      margin-left: 8px;
-      cursor: pointer;
-      min-height: 44px;
-      max-width: 180px;
-      white-space: nowrap;
-    }
-    .nav-btn:hover { opacity: 0.9; }
-
-    /* Profile Card */
+    /* ─── PROFILE CARD ───────────────────────────────────────────── */
     #profile-card {
-      display: none;
-      align-items: center;
-      margin-left: 16px;
+      position: absolute;
+      top: 20px; right: 20px;
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: #111;
+      cursor: pointer;
+      overflow: hidden;
+      z-index: 50;
+      transition: width .2s, height .2s;
+    }
+    #profile-card.expanded {
+      width: 180px;
+      height: auto;
+      padding: 10px;
     }
     #profile-card img {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      margin-right: 8px;
-    }
-    #profile-card button {
-      margin-left: 8px;
-      background: transparent;
-      color: inherit;
-      border: 1px solid currentColor;
-      border-radius: 4px;
-      padding: 4px 8px;
-      cursor: pointer;
-    }
-
-    /* Canvas */
-    #game-canvas {
-      display: block;
-      background: #ddd;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    /* Settings Overlay */
-    .overlay {
-      position: absolute;
-      top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1001;
+      object-fit: cover;
+      display: block;
+      border-radius: 12px;
     }
-    .overlay.hidden { display: none; }
-    #settings-panel {
-      background: #fff;
-      padding: 24px;
+    #profile-menu {
+      display: none;
+      margin-top: 10px;
+      list-style: none;
+    }
+    #profile-menu li {
+      margin: 8px 0;
+    }
+    #profile-menu button {
+      width: 100%;
+      background: #222;
+      border: none;
+      color: #fff;
+      padding: 8px;
       border-radius: 8px;
-      width: 300px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background .2s;
     }
-    #settings-panel label {
+    #profile-menu button:hover {
+      background: #333;
+    }
+
+    /* ─── CURVED MENU CONTAINER ─────────────────────────────────── */
+    #menu-container {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #111;
+      border: 2px solid red;
+      border-radius: 20px;
+      padding: 30px 40px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      margin-bottom: 12px;
+      z-index: 10;
     }
-    #settings-panel input[type="checkbox"] {
-      margin-right: 8px;
-    }
-    #close-settings {
-      margin-top: 16px;
-      background: #e03a3e;
+
+    /* ─── MENU BUTTONS ──────────────────────────────────────────── */
+    .menu-btn {
+      width: 200px;
+      margin: 8px 0;
+      padding: 12px 0;
+      background: #222;
       color: #fff;
       border: none;
-      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 16px;
       cursor: pointer;
-      border-radius: 4px;
+      transition: background .2s;
+    }
+    .menu-btn:hover {
+      background: #333;
+    }
+
+    /* ─── BRANDING TEXT ─────────────────────────────────────────── */
+    #branding-text {
+      font-family: monospace;
+      font-size: 12px;
+      color: #fff;
+      margin-top: 16px;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    /* ─── PASSWORD MODAL ────────────────────────────────────────── */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 20;
+    }
+    .modal-content {
+      background: #222;
+      margin: 15% auto;
+      padding: 20px;
+      width: 320px;
+      border: 2px solid red;
+      border-radius: 12px;
+      color: #fff;
+      text-align: center;
+      position: relative;
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 8px;
+      margin: 12px 0;
+      border: 1px solid #444;
+      border-radius: 6px;
+      background: #111;
+      color: #fff;
+    }
+    .modal-content .error {
+      color: #f33;
+      font-size: 13px;
+    }
+    .modal-content .close {
+      position: absolute;
+      top: 8px; right: 12px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    /* ─── DIAGNOSTICS OVERLAY ───────────────────────────────────── */
+    #diagnostics-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 40px;
+      overflow-y: auto;
+      z-index: 30;
+    }
+    #diagnostics-overlay h2 {
+      margin-bottom: 20px;
+      font-family: monospace;
+    }
+    #diagnostics-list {
+      list-style: none;
+      padding: 0;
+      font-family: monospace;
+    }
+    #diagnostics-list li {
+      margin: 8px 0;
+    }
+    #closeDiagnostics {
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: red;
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
-
 <body>
-  <!-- Header with Title, Nav, Profile -->
-  <header id="main-header">
-    <img id="title-img" src="https://app.masonnet.org/fbrc.png" alt="Game Title" />
+  <!-- PROFILE CARD -->
+  <div id="profile-card">
+    <img src="https://app.masonnet.org/default-avatar.png" alt="Avatar">
+    <ul id="profile-menu">
+      <li><button id="accountBtn">Account Settings</button></li>
+      <li><button id="signOutBtn">Sign Out</button></li>
+    </ul>
+  </div>
 
-    <div>
-      <button class="nav-btn" id="start-btn">Start Game</button>
-      <button class="nav-btn" id="settings-btn">Settings</button>
-    </div>
-
-    <div id="profile-card">
-      <img id="avatar" src="" alt="Avatar" />
-      <span id="display-name"></span>
-      <button id="logout-btn">Logout</button>
-    </div>
-  </header>
-
-  <!-- Game Canvas -->
-  <canvas id="game-canvas"></canvas>
-
-  <!-- Settings Overlay -->
-  <div id="settings-overlay" class="overlay hidden">
-    <div id="settings-panel">
-      <h2>Settings</h2>
-      <label><input type="checkbox" id="toggle-sound" checked /> Sound</label>
-      <label><input type="checkbox" id="toggle-dark" /> Dark Mode</label>
-      <label><input type="checkbox" id="toggle-skip" /> Skip to Game Over</label>
-      <button id="close-settings">Close</button>
+  <!-- MAIN MENU -->
+  <div id="menu-container">
+    <img id="title-img" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub">
+    <button class="menu-btn" id="startBtn">Start</button>
+    <button class="menu-btn" id="leaderboardBtn">Leaderboard</button>
+    <button class="menu-btn" id="settingsBtn">Settings</button>
+    <button class="menu-btn" id="hubBtn">Flappy Bird Hub</button>
+    <button class="menu-btn" id="testBtn">Test</button>
+    <div id="branding-text">
+      MASONNET INTERNAL TESTING<br>
+      masonnet.org
     </div>
   </div>
 
-  <!-- Firebase App & Auth -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <!-- PASSWORD MODAL -->
+  <div id="password-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <p>Enter admin password:</p>
+      <input type="password" id="adminPassword" placeholder="Password">
+      <button id="submitPassword" class="menu-btn">Submit</button>
+      <p id="passwordError" class="error"></p>
+    </div>
+  </div>
+
+  <!-- DIAGNOSTICS OVERLAY -->
+  <div id="diagnostics-overlay">
+    <h2>Diagnostics Report</h2>
+    <ul id="diagnostics-list"></ul>
+    <button id="closeDiagnostics">Close</button>
+  </div>
 
   <script>
-    // Your Firebase configuration
+    // ── FIREBASE CONFIG (remembered for all snippets) ────────────
     const firebaseConfig = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -159,105 +230,97 @@
       appId: "1:783919367562:web:b7bb809332a4e873f3b473",
       measurementId: "G-X1YKV5VK7J"
     };
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    // DOM Elements
+    // ── PROFILE CARD TOGGLE ──────────────────────────────────────
     const profileCard = document.getElementById('profile-card');
-    const avatarImg   = document.getElementById('avatar');
-    const displayName = document.getElementById('display-name');
-    const logoutBtn   = document.getElementById('logout-btn');
-    const startBtn    = document.getElementById('start-btn');
-    const settingsBtn = document.getElementById('settings-btn');
-    const settingsOv  = document.getElementById('settings-overlay');
-    const closeSetBtn = document.getElementById('close-settings');
-    const darkToggle  = document.getElementById('toggle-dark');
-    const skipToggle  = document.getElementById('toggle-skip');
+    const profileMenu = document.getElementById('profile-menu');
+    profileCard.addEventListener('click', e => {
+      e.stopPropagation();
+      profileCard.classList.toggle('expanded');
+      profileMenu.style.display = profileCard.classList.contains('expanded') ? 'block' : 'none';
+    });
+    document.body.addEventListener('click', () => {
+      profileCard.classList.remove('expanded');
+      profileMenu.style.display = 'none';
+    });
 
-    let gameRunning = false;
+    // ── MENU BUTTON HANDLERS ────────────────────────────────────
+    document.getElementById('startBtn').onclick       = () => console.log('Start game');
+    document.getElementById('leaderboardBtn').onclick = () => console.log('Open leaderboard');
+    document.getElementById('settingsBtn').onclick    = () => console.log('Open settings');
+    document.getElementById('hubBtn').onclick         = () => window.location.href = 'https://app.masonnet.org/flappybirdhub';
 
-    // Auth state listener
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        avatarImg.src          = user.photoURL || 'https://app.masonnet.org/default-avatar.png';
-        displayName.textContent = user.displayName || 'Player';
-        profileCard.style.display = 'flex';
+    // ── TEST (diagnostics) ─────────────────────────────────────
+    const modal      = document.getElementById('password-modal');
+    const closeModal = document.querySelector('.modal-content .close');
+    const testBtn    = document.getElementById('testBtn');
+    const submitPwd  = document.getElementById('submitPassword');
+    const pwdField   = document.getElementById('adminPassword');
+    const pwdError   = document.getElementById('passwordError');
+
+    testBtn.addEventListener('click', () => {
+      pwdField.value = '';
+      pwdError.textContent = '';
+      modal.style.display = 'block';
+    });
+    closeModal.addEventListener('click', () => modal.style.display = 'none');
+    submitPwd.addEventListener('click', () => {
+      if (pwdField.value === 'admin123') {
+        modal.style.display = 'none';
+        launchDiagnostics();
       } else {
-        profileCard.style.display = 'none';
+        pwdError.textContent = 'Access denied';
       }
     });
 
-    // Logout
-    logoutBtn.addEventListener('click', () => auth.signOut());
+    // ── DIAGNOSTICS OVERLAY ─────────────────────────────────────
+    const overlay   = document.getElementById('diagnostics-overlay');
+    const listEl    = document.getElementById('diagnostics-list');
+    const closeDiag = document.getElementById('closeDiagnostics');
+    closeDiag.addEventListener('click', () => overlay.style.display = 'none');
 
-    // Settings overlay controls
-    settingsBtn.addEventListener('click', () => {
-      if (!gameRunning) settingsOv.classList.remove('hidden');
-    });
-    closeSetBtn.addEventListener('click', () => settingsOv.classList.add('hidden'));
-
-    darkToggle.addEventListener('change', () => {
-      document.body.classList.toggle('dark-mode', darkToggle.checked);
-    });
-
-    // Start Game
-    startBtn.addEventListener('click', () => {
-      gameRunning = true;
-      document.getElementById('main-header').style.display = 'none';
-      settingsOv.classList.add('hidden');
-      startGame();
-    });
-
-    // Minimal Canvas Game Loop
-    const canvas = document.getElementById('game-canvas');
-    const ctx    = canvas.getContext('2d');
-    resizeCanvas();
-
-    let x = canvas.width / 2;
-    let y = canvas.height / 2;
-    let dx = 2, dy = 1.5;
-
-    function startGame() {
-      function loop() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Simple bouncing ball
-        ctx.beginPath();
-        ctx.arc(x, y, 20, 0, Math.PI * 2);
-        ctx.fillStyle = '#e03a3e';
-        ctx.fill();
-
-        x += dx; y += dy;
-        if (x < 20 || x > canvas.width - 20) dx *= -1;
-        if (y < 20 || y > canvas.height - 20) dy *= -1;
-
-        // Skip-to-game-over example
-        if (skipToggle.checked && x > canvas.width - 40) {
-          cancelAnimationFrame(frameId);
-          gameOver();
-          return;
+    const tests = [
+      { name: 'Canvas Element Present',    fn: () => Promise.resolve(!!document.getElementById('gameCanvas')) },
+      { name: 'Menu Buttons Present',      fn: () => Promise.resolve(
+          ['startBtn','leaderboardBtn','settingsBtn','hubBtn','testBtn']
+            .every(id => !!document.getElementById(id)))
+      },
+      { name: 'Firebase Connection',       fn: () =>
+          db.collection('_masonnet_test').limit(1).get().then(() => true).catch(() => false)
+      },
+      { name: 'Firestore Read/Write',      fn: () => {
+          const ref = db.collection('_masonnet_test').doc('_ping');
+          return ref.set({ ts: firebase.firestore.FieldValue.serverTimestamp() })
+            .then(() => ref.delete().then(() => true))
+            .catch(() => false);
         }
-
-        frameId = requestAnimationFrame(loop);
+      },
+      { name: 'Diagnostics Overlay Works', fn: () => {
+          overlay.style.display = 'block';
+          overlay.style.display = 'none';
+          return Promise.resolve(true);
+        }
       }
-      let frameId = requestAnimationFrame(loop);
-    }
+    ];
 
-    function gameOver() {
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#fff';
-      ctx.font = '48px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2);
-      setTimeout(() => location.reload(), 2000);
-    }
+    function launchDiagnostics() {
+      listEl.innerHTML = '';
+      overlay.style.display = 'block';
+      tests.forEach(test => {
+        const item   = document.createElement('li');
+        const status = document.createElement('span');
+        status.textContent = 'RUNNING...';
+        item.textContent   = test.name + ': ';
+        item.appendChild(status);
+        listEl.appendChild(item);
 
-    // Resize handling
-    window.addEventListener('resize', resizeCanvas);
-    function resizeCanvas() {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
+        test.fn().then(passed => {
+          status.textContent = passed ? 'PASS' : 'FAIL';
+          status.style.color = passed ? 'lime' : 'red';
+        });
+      });
     }
   </script>
 </body>
