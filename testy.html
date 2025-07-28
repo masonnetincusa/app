@@ -1,137 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Flappy Bird Hub</title>
   <style>
-    /* Reset & base */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    /* Base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
+      background-color: #000000;
+      color: #ffffff;
       font-family: Arial, sans-serif;
-      background: #f0f0f0;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    .hidden { display: none; }
+    .overlay {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 50;
     }
 
-    /* Profile card in top-right */
-    .profile-card {
+    /* Menu Container */
+    #menu {
       position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 56px;
-      height: 56px;
-      background: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .profile-card img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    /* Main menu container vertically & horizontally centered */
-    #menu-container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 260px;
+      top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      text-align: center;
+      z-index: 10;
     }
-
-    /* Title image */
-    #title-image {
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 16px;
-    }
-
-    /* Buttons: solid red, white text, sentence case */
-    .menu-button {
+    #logo {
+      margin-bottom: 24px;
       width: 240px;
-      height: 44px;
+      height: auto;
+    }
+    .menu-btn {
+      display: block;
+      width: 240px; height: 44px;
+      margin: 12px auto;
       background-color: #FF0000;
-      color: #FFFFFF;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      text-transform: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .menu-btn:active { opacity: 0.8; }
+
+    /* Profile Card */
+    #profile-card {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background-image: url("https://app.masonnet.org/default-avatar.png");
+      background-size: cover;
+      cursor: pointer;
+      z-index: 20;
+    }
+    #profile-card.expanded {
+      width: 200px; height: auto;
+      padding: 12px;
+      background-color: #1A1A1A;
+      border-radius: 8px;
+    }
+    #profile-card .options {
+      margin-top: 12px;
+      display: none;
+      flex-direction: column;
+    }
+    #profile-card.expanded .options {
+      display: flex;
+    }
+    #profile-card .options button {
+      margin: 6px 0;
+      padding: 8px;
+      background: #FF0000;
+      color: #fff;
       border: none;
       border-radius: 4px;
-      font-size: 16px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-transform: none;
-    }
-    .menu-button:active {
-      opacity: 0.85;
     }
 
-    /* Footer at bottom-right */
-    footer {
+    /* Canvas */
+    #gameCanvas {
       position: absolute;
-      bottom: 8px;
-      right: 16px;
-      font-size: 10px;
-      color: #666666;
-      line-height: 1.2;
-      text-align: right;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #70c5ce;
+      z-index: 5;
+    }
+
+    /* Settings & Leaderboard */
+    .panel {
+      background: #1A1A1A;
+      padding: 24px;
+      border-radius: 8px;
+      color: #fff;
+      width: 320px;
+      max-width: 90%;
+    }
+    .panel h2 {
+      margin-bottom: 12px;
+      font-size: 20px;
+      text-align: center;
+    }
+    .panel label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 0;
+    }
+    .panel input[type="checkbox"] {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+    .panel button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 10px;
+      background: #FF0000;
+      border: none;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: center;
     }
   </style>
 </head>
+
 <body>
-  <!-- Profile card (no longer a button) -->
-  <div class="profile-card">
-    <img src="https://app.masonnet.org/default-avatar.png" alt="User Avatar"/>
+  <!-- Profile Card -->
+  <div id="profile-card">
+    <div class="options">
+      <button id="view-profile">View Profile</button>
+      <button id="logout">Log Out</button>
+    </div>
   </div>
 
-  <!-- Centered main menu -->
-  <div id="menu-container">
-    <img
-      id="title-image"
-      src="https://app.masonnet.org/fbrc.png"
-      alt="Flappy Bird Hub Logo"
-    />
-    <button id="start-btn" class="menu-button">Start</button>
-    <button id="options-btn" class="menu-button">Options</button>
-    <button id="quit-btn" class="menu-button">Quit</button>
+  <!-- Main Menu -->
+  <div id="menu">
+    <img id="logo" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub Logo"/>
+    <button id="start-btn" class="menu-btn">Start</button>
+    <button id="leaderboard-btn" class="menu-btn">Leaderboard</button>
+    <button id="settings-btn" class="menu-btn">Settings</button>
+    <button id="hub-btn" class="menu-btn">Flappy Bird Hub</button>
+    <button id="test-btn" class="menu-btn">Test</button>
   </div>
 
-  <!-- Branded footer -->
-  <footer>
-    MASONNET INTERNAL TESTING<br/>
-    masonnet.org
-  </footer>
+  <!-- Settings Overlay -->
+  <div id="settings-overlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Settings</h2>
+      <label>
+        Sound
+        <input type="checkbox" id="toggle-sound" checked />
+      </label>
+      <label>
+        Dark Mode
+        <input type="checkbox" id="toggle-dark" />
+      </label>
+      <label>
+        Skip to Game Over
+        <input type="checkbox" id="toggle-skip" />
+      </label>
+      <button id="close-settings">Close</button>
+    </div>
+  </div>
+
+  <!-- Leaderboard Overlay -->
+  <div id="leaderboard-overlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Leaderboard</h2>
+      <table>
+        <thead>
+          <tr><th>Rank</th><th>Player</th><th>Score</th></tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+      <button id="close-leaderboard">Close</button>
+    </div>
+  </div>
+
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="288" height="512" class="hidden"></canvas>
 
   <script>
-    // Main menu button handlers
-    document.getElementById('start-btn').addEventListener('click', () => {
-      // TODO: Hook into game-launch logic
-      console.log('Start clicked');
+    /*-------------------------
+      UI: Menu & Overlays
+    -------------------------*/
+    const menu        = document.getElementById('menu');
+    const canvas      = document.getElementById('gameCanvas');
+    const profileCard = document.getElementById('profile-card');
+    const settingsOv  = document.getElementById('settings-overlay');
+    const leaderOv    = document.getElementById('leaderboard-overlay');
+
+    // Profile Card Toggle
+    profileCard.addEventListener('click', () => {
+      profileCard.classList.toggle('expanded');
     });
 
-    document.getElementById('options-btn').addEventListener('click', () => {
-      // TODO: Show options overlay
-      console.log('Options clicked');
+    // Menu Buttons
+    document.getElementById('start-btn').onclick = () => {
+      menu.classList.add('hidden');
+      canvas.classList.remove('hidden');
+      startGame();
+    };
+    document.getElementById('leaderboard-btn').onclick = () => {
+      leaderOv.classList.remove('hidden');
+    };
+    document.getElementById('settings-btn').onclick = () => {
+      settingsOv.classList.remove('hidden');
+    };
+    document.getElementById('hub-btn').onclick = () => {
+      window.location.href = 'https://app.masonnet.org/flappybirdhub';
+    };
+    document.getElementById('test-btn').onclick = () => {
+      console.log('Test button clicked');
+      alert('Test passed!');
+    };
+
+    // Close Overlays
+    document.getElementById('close-settings').onclick = () => {
+      settingsOv.classList.add('hidden');
+    };
+    document.getElementById('close-leaderboard').onclick = () => {
+      leaderOv.classList.add('hidden');
+    };
+
+    /*-------------------------
+      Settings Toggles State
+    -------------------------*/
+    let soundOn = true;
+    let darkMode = false;
+    let skipToGameOver = false;
+
+    document.getElementById('toggle-sound').onchange = e => {
+      soundOn = e.target.checked;
+    };
+    document.getElementById('toggle-dark').onchange = e => {
+      darkMode = e.target.checked;
+      document.body.style.backgroundColor = darkMode ? '#1A1A1A' : '#000000';
+    };
+    document.getElementById('toggle-skip').onchange = e => {
+      skipToGameOver = e.target.checked;
+    };
+
+    /*-------------------------
+      Leaderboard Data (stub)
+    -------------------------*/
+    const dummyScores = [
+      {rank: 1, name: 'Alice', score: 42},
+      {rank: 2, name: 'Bob',   score: 38},
+      {rank: 3, name: 'Eve',   score: 31},
+    ];
+    function populateLeaderboard() {
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '';
+      dummyScores.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.rank}</td><td>${row.name}</td><td>${row.score}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    populateLeaderboard();
+
+    /*-------------------------
+      Flappy Bird Game Logic
+    -------------------------*/
+    const ctx = canvas.getContext('2d');
+    const WIDTH  = canvas.width;
+    const HEIGHT = canvas.height;
+
+    // Images
+    const birdImg = new Image();
+    birdImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bird.png';
+    const pipeNorthImg = new Image();
+    pipeNorthImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeNorth.png';
+    const pipeSouthImg = new Image();
+    pipeSouthImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeSouth.png';
+    const bgImg = new Image();
+    bgImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bg.png';
+    const fgImg = new Image();
+    fgImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/fg.png';
+
+    // Game vars
+    let bird = { x: 50, y: 150, width: 34, height: 24, gravity: 1.5, lift: -25, velocity: 0 };
+    let pipes = [];
+    let frame = 0, score = 0, gameOver = false;
+
+    // Controls
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && !gameOver) bird.velocity = bird.lift;
+      if (e.code === 'Enter' && gameOver) resetGame();
     });
 
-    document.getElementById('quit-btn').addEventListener('click', () => {
-      // TODO: Confirm and exit
-      console.log('Quit clicked');
-      window.close();
-    });
+    // Start the game loop
+    function startGame() {
+      gameOver = false;
+      score = 0;
+      pipes = [];
+      bird.y = 150;
+      bird.velocity = 0;
+      frame = 0;
+      loop();
+    }
+
+    function loop() {
+      ctx.drawImage(bgImg, 0, 0);
+      pipes.forEach((p, i) => {
+        ctx.drawImage(pipeNorthImg, p.x, p.y);
+        ctx.drawImage(pipeSouthImg, p.x, p.y + p.gap + pipeNorthImg.height);
+        p.x--;
+
+        // off-screen
+        if (p.x < -pipeNorthImg.width) pipes.splice(i, 1);
+
+        // score
+        if (p.x === 50) score++;
+
+        // collision
+        if (
+          bird.x + bird.width > p.x &&
+          bird.x < p.x + pipeNorthImg.width &&
+          (bird.y < p.y + pipeNorthImg.height ||
+            bird.y + bird.height > p.y + p.gap + pipeNorthImg.height) ||
+          bird.y + bird.height >= HEIGHT - fgImg.height
+        ) {
+          if (!skipToGameOver) return endGame();
+        }
+      });
+
+      // add pipes every 150 frames
+      if (frame % 150 === 0) {
+        const gap = 100;
+        const y = Math.floor(Math.random() * (pipeNorthImg.height)) - pipeNorthImg.height;
+        pipes.push({ x: WIDTH, y, gap });
+      }
+
+      // draw foreground & bird
+      ctx.drawImage(fgImg, 0, HEIGHT - fgImg.height);
+      ctx.drawImage(birdImg, bird.x, bird.y);
+
+      // physics
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      // score display
+      ctx.fillStyle = '#000';
+      ctx.font = '20px Arial';
+      ctx.fillText(`Score: ${score}`, 10, HEIGHT - 20);
+
+      if (!gameOver) {
+        frame++;
+        requestAnimationFrame(loop);
+      }
+    }
+
+    function endGame() {
+      gameOver = true;
+      ctx.fillStyle = 'red';
+      ctx.font = '30px Arial';
+      ctx.fillText('Game Over', WIDTH / 2 - 80, HEIGHT / 2);
+      if (soundOn) {
+        const dieSnd = new Audio('https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/audio/die.wav');
+        dieSnd.play();
+      }
+    }
+
+    function resetGame() {
+      startGame();
+    }
   </script>
 </body>
 </html>
