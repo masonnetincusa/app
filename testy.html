@@ -1,364 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flappy Bird Hub</title>
-  <link rel="icon" href="https://app.masonnet.org/fbrc.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird Hub – Leaderboard</title>
   <style>
-    /* Reset & Base */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #87ceeb; font-family: sans-serif; overflow: hidden; }
-    body.dark-mode { background: #333; color: #eee; }
-
-    /* Canvas */
-    #gameCanvas { display: block; margin: 0 auto; background: #70c5ce; }
-
-    /* Overlays & Panels */
-    .overlay, #settingsPanel, #adminConsole { 
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255,255,255,0.95);
-      border-radius: 8px; padding: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      display: none; width: 300px; max-width: 90%;
+    /* Overlay backdrop */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000;
     }
-    .overlay.dark-mode, #settingsPanel.dark-mode, #adminConsole.dark-mode {
-      background: rgba(50,50,50,0.9);
-      color: #eee;
-    }
-    .overlay header, #settingsPanel header, #adminConsole header {
-      font-size: 1.2em; margin-bottom: 10px;
-    }
-    .overlay button, #settingsPanel input[type="checkbox"] {
-      margin: 8px 0;
-    }
-    .hidden { display: none !important; }
+    .hidden { display: none; }
 
-    /* Buttons & Inputs */
-    .btn { padding: 8px 12px; border: none; background: #ffcc00; border-radius: 4px; cursor: pointer; }
-    .btn.dark-mode { background: #ffaa00; color: #222; }
+    /* Modal window */
+    .modal {
+      background: #fff;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
 
-    /* Debug text container */
-    #debugLog { 
-      position: fixed; bottom: 10px; left: 10px;
-      background: rgba(0,0,0,0.7); color: #0f0;
-      font-family: monospace; padding: 10px; max-height: 150px; overflow-y: auto;
-      font-size: 0.85em; display: none;
+    .modal-header,
+    .modal-footer {
+      padding: 12px 16px;
+      background: #f5f5f5;
+      display: flex; align-items: center;
+    }
+    .modal-header { justify-content: space-between; }
+    .logo { height: 32px; }
+    .close-btn {
+      background: none; border: none;
+      font-size: 24px; line-height: 1;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .leaderboard-list {
+      list-style: none;
+      margin: 0; padding: 0;
+    }
+    .leaderboard-list li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .leaderboard-list li img {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      margin-right: 12px;
+    }
+    .leaderboard-list .username {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .btn-brand {
+      background-color: #1a73e8;
+      color: #fff;
+      padding: 8px 16px;
+      border: none; border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn-link {
+      color: #1a73e8;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <!-- Logo -->
-  <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub" style="position:absolute; top:10px; left:10px; width:50px;"/>
-
-  <!-- Canvas -->
-  <canvas id="gameCanvas" width="320" height="480"></canvas>
-
-  <!-- Settings Panel -->
-  <div id="settingsPanel" class="overlay">
-    <header>Settings</header>
-    <label>
-      <input type="checkbox" id="soundToggle"> Sound
-    </label><br/>
-    <label>
-      <input type="checkbox" id="darkModeToggle"> Dark Mode
-    </label><br/>
-    <label>
-      <input type="checkbox" id="skipGameOverToggle"> Skip Game Over
-    </label><br/>
-    <button id="closeSettings" class="btn">Close</button>
-  </div>
-
-  <!-- Profile Card Overlay -->
-  <div id="profileOverlay" class="overlay">
-    <header>Profile</header>
-    <img id="avatarImg" src="https://app.masonnet.org/default-avatar.png" alt="Avatar" width="80" style="border-radius:50%;"/><br/>
-    <div id="usernameDisplay">Guest</div><br/>
-    <button id="closeProfile" class="btn">Close</button>
-  </div>
+  <!-- Leaderboard Trigger -->
+  <button id="open-leaderboard-btn" class="btn-brand">
+    Show Leaderboard
+  </button>
 
   <!-- Leaderboard Overlay -->
-  <div id="leaderboardOverlay" class="overlay">
-    <header>Leaderboard</header>
-    <ol id="leaderboardList"></ol>
-    <button id="closeLeaderboard" class="btn">Close</button>
+  <div id="leaderboard-overlay" class="overlay hidden">
+    <div class="modal">
+      <header class="modal-header">
+        <img src="https://app.masonnet.org/fbrc.png"
+             alt="Flappy Bird Hub"
+             class="logo">
+        <button id="close-leaderboard-btn" class="close-btn">&times;</button>
+      </header>
+      <section class="modal-body">
+        <ul id="leaderboard-list" class="leaderboard-list">
+          <!-- JS will inject entries here -->
+        </ul>
+      </section>
+      <footer class="modal-footer">
+        <a href="https://app.masonnet.org/flappybirdhub"
+           class="btn-link">Back to Hub</a>
+      </footer>
+    </div>
   </div>
 
-  <!-- Admin Console Overlay -->
-  <div id="adminConsole">
-    <header>Admin Console</header>
-    <button id="resetScores" class="btn">Reset Leaderboard</button>
-    <button id="closeAdmin" class="btn">Close</button>
-  </div>
+  <script type="module">
+    // Firebase JS SDK v9.6.10
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+    import {
+      getDatabase,
+      ref,
+      query,
+      orderByChild,
+      limitToLast,
+      get
+    } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js';
 
-  <!-- Debug Log -->
-  <div id="debugLog"></div>
-
-  <script>
-  (function() {
-    // -- State & Config --
-    const canvas = document.getElementById('gameCanvas');
-    const ctx    = canvas.getContext('2d');
-    let frames    = 0, score = 0, bestScore = 0, gameOver = false;
-    const pipes   = [];
-    const bird    = { x: 50, y: 150, w: 34, h: 24, vy: 0 };
-    const gravity = 0.5, jumpStrength = -8;
-    let settings = {
-      sound: JSON.parse(localStorage.getItem('sound')) || false,
-      darkMode: JSON.parse(localStorage.getItem('darkMode')) || false,
-      skipGameOver: JSON.parse(localStorage.getItem('skipGameOver')) || false,
-      isAdmin: JSON.parse(localStorage.getItem('isAdmin')) || false
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+      authDomain: "masonnet-app-official.firebaseapp.com",
+      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId: "masonnet-app-official",
+      storageBucket: "masonnet-app-official.firebasestorage.app",
+      messagingSenderId: "783919367562",
+      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+      measurementId: "G-X1YKV5VK7J"
     };
 
-    // -- DOM Elements --
-    const settingsPanel      = document.getElementById('settingsPanel');
-    const soundToggle        = document.getElementById('soundToggle');
-    const darkModeToggle     = document.getElementById('darkModeToggle');
-    const skipGameOverToggle = document.getElementById('skipGameOverToggle');
-    const closeSettings      = document.getElementById('closeSettings');
-    const profileOverlay     = document.getElementById('profileOverlay');
-    const avatarImg          = document.getElementById('avatarImg');
-    const usernameDisplay    = document.getElementById('usernameDisplay');
-    const closeProfile       = document.getElementById('closeProfile');
-    const leaderboardOverlay = document.getElementById('leaderboardOverlay');
-    const leaderboardList    = document.getElementById('leaderboardList');
-    const closeLeaderboard   = document.getElementById('closeLeaderboard');
-    const adminConsole       = document.getElementById('adminConsole');
-    const resetScores        = document.getElementById('resetScores');
-    const closeAdmin         = document.getElementById('closeAdmin');
-    const debugLog           = document.getElementById('debugLog');
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    // -- Utility Functions --
-    function hideAllOverlays() {
-      document.querySelectorAll('.overlay, #adminConsole').forEach(el => el.classList.add('hidden'));
-    }
-    function toggleDebug(show) {
-      debugLog.style.display = show ? 'block' : 'none';
-    }
-    function logDebug(msg) {
-      if (settings.isAdmin) {
-        const p = document.createElement('div');
-        p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        debugLog.appendChild(p);
-        debugLog.scrollTop = debugLog.scrollHeight;
-      }
-    }
-    function saveSettings() {
-      localStorage.setItem('sound', settings.sound);
-      localStorage.setItem('darkMode', settings.darkMode);
-      localStorage.setItem('skipGameOver', settings.skipGameOver);
-      localStorage.setItem('isAdmin', settings.isAdmin);
-    }
-    function playSound(src) {
-      if (!settings.sound) return;
-      const s = new Audio(src);
-      s.play();
-    }
+    // DOM elements
+    const overlay    = document.getElementById('leaderboard-overlay');
+    const openBtn    = document.getElementById('open-leaderboard-btn');
+    const closeBtn   = document.getElementById('close-leaderboard-btn');
+    const listEl     = document.getElementById('leaderboard-list');
 
-    // -- Event Listeners & Binding --
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize toggles & theme
-      soundToggle.checked        = settings.sound;
-      darkModeToggle.checked     = settings.darkMode;
-      skipGameOverToggle.checked = settings.skipGameOver;
-      document.body.classList.toggle('dark-mode', settings.darkMode);
-      settingsPanel.classList.toggle('dark-mode', settings.darkMode);
-
-      // Hide everything on load
-      hideAllOverlays();
-      toggleDebug(false);
-
-      // Key bindings
-      document.addEventListener('keydown', e => {
-        if (e.code === 'Space') {
-          if (gameOver) startGame();
-          else flap();
-        }
-        if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
-          settings.isAdmin = !settings.isAdmin;
-          saveSettings();
-          toggleDebug(settings.isAdmin);
-          adminConsole.classList.toggle('hidden', !settings.isAdmin);
-        }
-        if (e.code === 'KeyS') settingsPanel.classList.remove('hidden');
-        if (e.code === 'KeyL') leaderboardOverlay.classList.remove('hidden');
-        if (e.code === 'KeyP') profileOverlay.classList.remove('hidden');
-      });
-
-      // Settings toggles
-      soundToggle .addEventListener('change', () => { settings.sound = soundToggle.checked; saveSettings(); });
-      darkModeToggle.addEventListener('change', () => {
-        settings.darkMode = darkModeToggle.checked;
-        document.body.classList.toggle('dark-mode', settings.darkMode);
-        settingsPanel.classList.toggle('dark-mode', settings.darkMode);
-        saveSettings();
-      });
-      skipGameOverToggle.addEventListener('change', () => { 
-        settings.skipGameOver = skipGameOverToggle.checked; 
-        saveSettings(); 
-      });
-
-      // Overlay close buttons
-      closeSettings .addEventListener('click', () => settingsPanel.classList.add('hidden'));
-      closeProfile  .addEventListener('click', () => profileOverlay.classList.add('hidden'));
-      closeLeaderboard.addEventListener('click', () => leaderboardOverlay.classList.add('hidden'));
-      closeAdmin    .addEventListener('click', () => adminConsole.classList.add('hidden'));
-
-      // Admin actions
-      resetScores   .addEventListener('click', resetLeaderboard);
-
-      // Fetch profile & leaderboard
-      loadProfile();
-      loadLeaderboard();
-
-      // Start initial game state
-      drawStartScreen();
+    // Show overlay and load data
+    openBtn.addEventListener('click', async () => {
+      listEl.innerHTML = '<li>Loading…</li>';
+      overlay.classList.remove('hidden');
+      await loadLeaderboard();
     });
 
-    // -- Game Functions --
-    function startGame() {
-      frames = 0; score = 0; gameOver = false;
-      bird.y = 150; bird.vy = 0; pipes.length = 0;
-      requestAnimationFrame(loop);
-    }
+    // Hide overlay
+    closeBtn.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+    });
 
-    function flap() {
-      bird.vy = jumpStrength;
-      playSound('assets/flap.wav');
-      logDebug('Bird flapped');
-    }
+    // Fetch and render leaderboard
+    async function loadLeaderboard() {
+      try {
+        const scoresRef = ref(db, 'scores');
+        const topQuery  = query(scoresRef, orderByChild('score'), limitToLast(10));
+        const snap      = await get(topQuery);
+        const dataArr   = snap.exists() ? Object.values(snap.val()) : [];
 
-    function loop() {
-      update();
-      draw();
-      if (!gameOver || settings.skipGameOver) {
-        requestAnimationFrame(loop);
-      } else {
-        drawGameOver();
-        submitScore(score);
+        // Fallback entries
+        const fallback = [
+          { username: 'Player1', score: 500 },
+          { username: 'Player2', score: 400 },
+          { username: 'Player3', score: 300 }
+        ];
+        const entries = dataArr.length ? dataArr : fallback;
+
+        // Sort descending
+        entries.sort((a, b) => b.score - a.score);
+
+        // Render list items
+        listEl.innerHTML = entries.map((e, i) => `
+          <li>
+            <img src="${e.avatarUrl || 'https://app.masonnet.org/default-avatar.png'}"
+                 alt="${e.username}">
+            <span class="username">${i + 1}. ${e.username}</span>
+            <span>${e.score}</span>
+          </li>
+        `).join('');
+      } catch (err) {
+        console.error('Leaderboard load error:', err);
+        listEl.innerHTML = '<li>Error loading leaderboard.</li>';
       }
     }
-
-    function update() {
-      frames++;
-      bird.vy += gravity;
-      bird.y += bird.vy;
-      if (bird.y + bird.h > canvas.height) gameOver = !settings.skipGameOver;
-
-      // Pipe generation
-      if (frames % 90 === 0) {
-        const gap = 120;
-        const topH = Math.random() * (canvas.height - gap - 80) + 40;
-        pipes.push({ x: canvas.width, y: 0, w: 52, h: topH });
-        pipes.push({ x: canvas.width, y: topH + gap, w: 52, h: canvas.height });
-      }
-
-      // Move & collision
-      pipes.forEach(pipe => {
-        pipe.x -= 2;
-        if (!pipe.passed && pipe.x + pipe.w < bird.x) {
-          score++; pipe.passed = true; playSound('assets/point.wav');
-        }
-        if (phoneCollide(bird, pipe)) gameOver = !settings.skipGameOver;
-      });
-      // Cull offscreen pipes
-      while (pipes[0] && pipes[0].x + pipes[0].w < 0) pipes.shift();
-    }
-
-    function draw() {
-      // Background
-      ctx.fillStyle = bodyIsDark() ? '#444' : '#70c5ce';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Pipes
-      ctx.fillStyle = '#228B22';
-      pipes.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
-
-      // Bird
-      ctx.fillStyle = '#ff0';
-      ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
-
-      // Score
-      ctx.fillStyle = bodyIsDark() ? '#fff' : '#000';
-      ctx.font = '24px sans-serif';
-      ctx.fillText(score, canvas.width / 2 - 10, 50);
-    }
-
-    function drawStartScreen() {
-      ctx.fillStyle = '#000';
-      ctx.font = '20px sans-serif';
-      ctx.fillText('Press SPACE to Start', 40, canvas.height / 2);
-    }
-
-    function drawGameOver() {
-      ctx.fillStyle = '#000';
-      ctx.font = '20px sans-serif';
-      ctx.fillText('Game Over', 100, canvas.height / 2 - 20);
-      ctx.fillText('Press SPACE to Restart', 40, canvas.height / 2 + 10);
-    }
-
-    function phoneCollide(b, p) {
-      return b.x < p.x + p.w &&
-             b.x + b.w > p.x &&
-             b.y < p.y + p.h &&
-             b.y + b.h > p.y;
-    }
-
-    function bodyIsDark() {
-      return document.body.classList.contains('dark-mode');
-    }
-
-    // -- Leaderboard & Firebase Integration --
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-  authDomain: "masonnet-app-official.firebaseapp.com",
-  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-  projectId: "masonnet-app-official",
-  storageBucket: "masonnet-app-official.firebasestorage.app",
-  messagingSenderId: "783919367562",
-  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-  measurementId: "G-X1YKV5VK7J"
-};
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('leaderboard');
-
-    function submitScore(points) {
-      const name = usernameDisplay.textContent || 'Guest';
-      db.push({ name, score: points });
-      logDebug(`Submitted ${points} for ${name}`);
-    }
-
-    function loadLeaderboard() {
-      db.orderByChild('score').limitToLast(10).on('value', snapshot => {
-        const data = snapshot.val() || {};
-        const list = Object.values(data).sort((a,b) => b.score - a.score);
-        leaderboardList.innerHTML = list
-          .map(entry => `<li>${entry.name}: ${entry.score}</li>`)
-          .join('');
-      });
-    }
-
-    function resetLeaderboard() {
-      if (!settings.isAdmin) return;
-      db.remove();
-      logDebug('Leaderboard reset by admin');
-      loadLeaderboard();
-    }
-
-    // -- Profile Loading (stub for real auth) --
-    function loadProfile() {
-      // Dummy: replace with real auth fetch
-      const user = { name: 'Guest', avatar: 'https://app.masonnet.org/default-avatar.png' };
-      usernameDisplay.textContent = user.name;
-      avatarImg.src = user.avatar;
-    }
-  })();
   </script>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 </body>
 </html>
