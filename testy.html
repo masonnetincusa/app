@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flappy Bird Hub</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Flappy Bird Hub – MasonNet</title>
   <style>
-    /* Base */
+    /* Reset & Base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: #000000;
+      background: #000000;
       color: #ffffff;
       font-family: Arial, sans-serif;
       height: 100vh;
@@ -19,12 +19,49 @@
     .overlay {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0,0,0,0.8);
       display: flex; align-items: center; justify-content: center;
       z-index: 50;
     }
 
-    /* Menu Container */
+    /* Profile Card */
+    #profile-card {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 56px; height: 56px;
+      background: url("https://app.masonnet.org/default-avatar.png") center/cover no-repeat;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 20;
+      transition: width .2s, height .2s, padding .2s;
+    }
+    #profile-card.expanded {
+      width: 200px;
+      padding: 12px;
+      background: #1A1A1A;
+      height: auto;
+      border-radius: 8px;
+    }
+    #profile-card .options {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    #profile-card.expanded .options {
+      display: flex;
+    }
+    #profile-card .options button {
+      background: #FF0000;
+      color: #fff;
+      border: none;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Main Menu */
     #menu {
       position: absolute;
       top: 50%; left: 50%;
@@ -33,58 +70,22 @@
       z-index: 10;
     }
     #logo {
-      margin-bottom: 24px;
       width: 240px;
-      height: auto;
+      margin-bottom: 24px;
     }
     .menu-btn {
-      display: block;
-      width: 240px; height: 44px;
-      margin: 12px auto;
-      background-color: #FF0000;
+      width: 240px;
+      height: 44px;
+      background: #FF0000;
       border: none;
       color: #fff;
       font-size: 16px;
+      margin: 12px 0;
+      cursor: pointer;
+      border-radius: 4px;
       text-transform: none;
-      cursor: pointer;
-      border-radius: 4px;
     }
-    .menu-btn:active { opacity: 0.8; }
-
-    /* Profile Card */
-    #profile-card {
-      position: absolute;
-      top: 16px; right: 16px;
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      background-image: url("https://app.masonnet.org/default-avatar.png");
-      background-size: cover;
-      cursor: pointer;
-      z-index: 20;
-    }
-    #profile-card.expanded {
-      width: 200px; height: auto;
-      padding: 12px;
-      background-color: #1A1A1A;
-      border-radius: 8px;
-    }
-    #profile-card .options {
-      margin-top: 12px;
-      display: none;
-      flex-direction: column;
-    }
-    #profile-card.expanded .options {
-      display: flex;
-    }
-    #profile-card .options button {
-      margin: 6px 0;
-      padding: 8px;
-      background: #FF0000;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+    .menu-btn:active { opacity: .85; }
 
     /* Canvas */
     #gameCanvas {
@@ -92,34 +93,31 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       background: #70c5ce;
+      border: 2px solid #FF0000;
+      border-radius: 4px;
       z-index: 5;
     }
 
-    /* Settings & Leaderboard */
-    .panel {
+    /* Settings Panel */
+    #settings-overlay .panel,
+    #leaderboard-overlay .panel {
       background: #1A1A1A;
-      padding: 24px;
+      padding: 20px;
       border-radius: 8px;
-      color: #fff;
       width: 320px;
       max-width: 90%;
+      color: #fff;
     }
-    .panel h2 {
-      margin-bottom: 12px;
-      font-size: 20px;
-      text-align: center;
-    }
-    .panel label {
+    #settings-overlay label {
       display: flex;
-      align-items: center;
       justify-content: space-between;
       margin: 12px 0;
     }
-    .panel input[type="checkbox"] {
+    #settings-overlay input[type="checkbox"] {
       transform: scale(1.2);
       cursor: pointer;
     }
-    .panel button {
+    #settings-overlay button {
       margin-top: 16px;
       width: 100%;
       padding: 10px;
@@ -128,32 +126,47 @@
       color: #fff;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 14px;
     }
-    table {
+
+    /* Leaderboard Table */
+    #leaderboard-overlay table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
     }
-    th, td {
+    #leaderboard-overlay th,
+    #leaderboard-overlay td {
       border: 1px solid #333;
       padding: 8px;
       text-align: center;
+      font-size: 14px;
+    }
+
+    /* Footer */
+    footer {
+      position: absolute;
+      bottom: 8px; right: 16px;
+      font-size: 10px;
+      color: #555;
+      text-align: right;
+      line-height: 1.2;
     }
   </style>
 </head>
-
 <body>
+
   <!-- Profile Card -->
   <div id="profile-card">
     <div class="options">
-      <button id="view-profile">View Profile</button>
-      <button id="logout">Log Out</button>
+      <button id="view-profile">View profile</button>
+      <button id="logout">Log out</button>
     </div>
   </div>
 
   <!-- Main Menu -->
   <div id="menu">
-    <img id="logo" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub Logo"/>
+    <img id="logo" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub"/>
     <button id="start-btn" class="menu-btn">Start</button>
     <button id="leaderboard-btn" class="menu-btn">Leaderboard</button>
     <button id="settings-btn" class="menu-btn">Settings</button>
@@ -165,18 +178,9 @@
   <div id="settings-overlay" class="overlay hidden">
     <div class="panel">
       <h2>Settings</h2>
-      <label>
-        Sound
-        <input type="checkbox" id="toggle-sound" checked />
-      </label>
-      <label>
-        Dark Mode
-        <input type="checkbox" id="toggle-dark" />
-      </label>
-      <label>
-        Skip to Game Over
-        <input type="checkbox" id="toggle-skip" />
-      </label>
+      <label>Sound <input type="checkbox" id="toggle-sound" checked/></label>
+      <label>Dark mode <input type="checkbox" id="toggle-dark"/></label>
+      <label>Skip to game over <input type="checkbox" id="toggle-skip"/></label>
       <button id="close-settings">Close</button>
     </div>
   </div>
@@ -189,9 +193,7 @@
         <thead>
           <tr><th>Rank</th><th>Player</th><th>Score</th></tr>
         </thead>
-        <tbody id="leaderboard-body">
-          <!-- Dynamically populated -->
-        </tbody>
+        <tbody id="leaderboard-body"></tbody>
       </table>
       <button id="close-leaderboard">Close</button>
     </div>
@@ -200,192 +202,173 @@
   <!-- Game Canvas -->
   <canvas id="gameCanvas" width="288" height="512" class="hidden"></canvas>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script>
-    /*-------------------------
-      UI: Menu & Overlays
-    -------------------------*/
-    const menu        = document.getElementById('menu');
-    const canvas      = document.getElementById('gameCanvas');
-    const profileCard = document.getElementById('profile-card');
-    const settingsOv  = document.getElementById('settings-overlay');
-    const leaderOv    = document.getElementById('leaderboard-overlay');
+    // Firebase config (remembered)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+      authDomain: "masonnet-app-official.firebaseapp.com",
+      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId: "masonnet-app-official",
+      storageBucket: "masonnet-app-official.firebasestorage.app",
+      messagingSenderId: "783919367562",
+      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+      measurementId: "G-X1YKV5VK7J"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    // Profile Card Toggle
+    // UI Elements
+    const menu       = document.getElementById('menu');
+    const canvas     = document.getElementById('gameCanvas');
+    const profileCard= document.getElementById('profile-card');
+    const settingsOv = document.getElementById('settings-overlay');
+    const leaderOv   = document.getElementById('leaderboard-overlay');
+
+    // Profile card toggle
     profileCard.addEventListener('click', () => {
       profileCard.classList.toggle('expanded');
     });
+    document.body.addEventListener('click', e => {
+      if (!profileCard.contains(e.target)) {
+        profileCard.classList.remove('expanded');
+      }
+    });
 
-    // Menu Buttons
+    // Menu button handlers
     document.getElementById('start-btn').onclick = () => {
       menu.classList.add('hidden');
       canvas.classList.remove('hidden');
       startGame();
     };
-    document.getElementById('leaderboard-btn').onclick = () => {
-      leaderOv.classList.remove('hidden');
-    };
     document.getElementById('settings-btn').onclick = () => {
       settingsOv.classList.remove('hidden');
+    };
+    document.getElementById('close-settings').onclick = () => {
+      settingsOv.classList.add('hidden');
+    };
+    document.getElementById('leaderboard-btn').onclick = showLeaderboard;
+    document.getElementById('close-leaderboard').onclick = () => {
+      leaderOv.classList.add('hidden');
+      document.getElementById('leaderboard-body').innerHTML = '';
     };
     document.getElementById('hub-btn').onclick = () => {
       window.location.href = 'https://app.masonnet.org/flappybirdhub';
     };
     document.getElementById('test-btn').onclick = () => {
-      console.log('Test button clicked');
       alert('Test passed!');
     };
 
-    // Close Overlays
-    document.getElementById('close-settings').onclick = () => {
-      settingsOv.classList.add('hidden');
-    };
-    document.getElementById('close-leaderboard').onclick = () => {
-      leaderOv.classList.add('hidden');
-    };
-
-    /*-------------------------
-      Settings Toggles State
-    -------------------------*/
-    let soundOn = true;
-    let darkMode = false;
-    let skipToGameOver = false;
-
-    document.getElementById('toggle-sound').onchange = e => {
-      soundOn = e.target.checked;
-    };
+    // Settings toggles
+    let soundOn = true, darkMode = false, skipToGameOver = false;
+    document.getElementById('toggle-sound').onchange = e => soundOn = e.target.checked;
     document.getElementById('toggle-dark').onchange = e => {
       darkMode = e.target.checked;
-      document.body.style.backgroundColor = darkMode ? '#1A1A1A' : '#000000';
+      document.body.style.background = darkMode ? '#1A1A1A' : '#000000';
     };
-    document.getElementById('toggle-skip').onchange = e => {
-      skipToGameOver = e.target.checked;
-    };
+    document.getElementById('toggle-skip').onchange = e => skipToGameOver = e.target.checked;
 
-    /*-------------------------
-      Leaderboard Data (stub)
-    -------------------------*/
-    const dummyScores = [
-      {rank: 1, name: 'Alice', score: 42},
-      {rank: 2, name: 'Bob',   score: 38},
-      {rank: 3, name: 'Eve',   score: 31},
-    ];
-    function populateLeaderboard() {
+    // Leaderboard (Firebase)
+    function showLeaderboard() {
+      leaderOv.classList.remove('hidden');
       const tbody = document.getElementById('leaderboard-body');
-      tbody.innerHTML = '';
-      dummyScores.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${row.rank}</td><td>${row.name}</td><td>${row.score}</td>`;
-        tbody.appendChild(tr);
-      });
+      db.ref('leaderboard')
+        .orderByChild('score')
+        .limitToLast(10)
+        .once('value', snapshot => {
+          const entries = [];
+          snapshot.forEach(child => entries.push(child.val()));
+          entries.reverse().forEach((e, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${i+1}</td>
+              <td>${e.name || 'Anonymous'}</td>
+              <td>${e.score}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
     }
-    populateLeaderboard();
 
     /*-------------------------
-      Flappy Bird Game Logic
+      Flappy Bird Game Code
     -------------------------*/
     const ctx = canvas.getContext('2d');
-    const WIDTH  = canvas.width;
-    const HEIGHT = canvas.height;
+    const WIDTH = canvas.width, HEIGHT = canvas.height;
 
-    // Images
-    const birdImg = new Image();
-    birdImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bird.png';
-    const pipeNorthImg = new Image();
-    pipeNorthImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeNorth.png';
-    const pipeSouthImg = new Image();
-    pipeSouthImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeSouth.png';
-    const bgImg = new Image();
-    bgImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bg.png';
-    const fgImg = new Image();
-    fgImg.src = 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/fg.png';
+    const imgs = {
+      bg:    Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bg.png' }),
+      fg:    Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/fg.png' }),
+      bird:  Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bird.png' }),
+      pipeN: Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeNorth.png' }),
+      pipeS: Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeSouth.png' })
+    };
 
-    // Game vars
-    let bird = { x: 50, y: 150, width: 34, height: 24, gravity: 1.5, lift: -25, velocity: 0 };
-    let pipes = [];
-    let frame = 0, score = 0, gameOver = false;
+    let bird = { x: 50, y: 150, w: 34, h: 24, gravity: 1.5, lift: -25, vel: 0 };
+    let pipes = [], frame = 0, score = 0, playing = false;
 
-    // Controls
     document.addEventListener('keydown', e => {
-      if (e.code === 'Space' && !gameOver) bird.velocity = bird.lift;
-      if (e.code === 'Enter' && gameOver) resetGame();
+      if (e.code === 'Space' && playing) bird.vel = bird.lift;
+      if (e.code === 'Enter' && !playing) resetGame();
     });
+    canvas.addEventListener('click', () => { if (playing) bird.vel = bird.lift; });
 
-    // Start the game loop
     function startGame() {
-      gameOver = false;
-      score = 0;
-      pipes = [];
-      bird.y = 150;
-      bird.velocity = 0;
-      frame = 0;
+      playing = true; score = 0; frame = 0;
+      bird.y = 150; bird.vel = 0; pipes = [];
       loop();
     }
-
     function loop() {
-      ctx.drawImage(bgImg, 0, 0);
+      ctx.drawImage(imgs.bg, 0, 0);
       pipes.forEach((p, i) => {
-        ctx.drawImage(pipeNorthImg, p.x, p.y);
-        ctx.drawImage(pipeSouthImg, p.x, p.y + p.gap + pipeNorthImg.height);
+        ctx.drawImage(imgs.pipeN, p.x, p.y);
+        ctx.drawImage(imgs.pipeS, p.x, p.y + imgs.pipeN.height + p.gap);
         p.x--;
-
-        // off-screen
-        if (p.x < -pipeNorthImg.width) pipes.splice(i, 1);
-
-        // score
-        if (p.x === 50) score++;
-
-        // collision
+        if (p.x + imgs.pipeN.width < 0) pipes.splice(i,1);
+        if (p.x === bird.x) score++;
         if (
-          bird.x + bird.width > p.x &&
-          bird.x < p.x + pipeNorthImg.width &&
-          (bird.y < p.y + pipeNorthImg.height ||
-            bird.y + bird.height > p.y + p.gap + pipeNorthImg.height) ||
-          bird.y + bird.height >= HEIGHT - fgImg.height
-        ) {
-          if (!skipToGameOver) return endGame();
-        }
+          bird.x + bird.w > p.x && bird.x < p.x + imgs.pipeN.width &&
+          (bird.y < p.y + imgs.pipeN.height || bird.y + bird.h > p.y + imgs.pipeN.height + p.gap)
+        ) return endGame();
       });
-
-      // add pipes every 150 frames
       if (frame % 150 === 0) {
         const gap = 100;
-        const y = Math.floor(Math.random() * (pipeNorthImg.height)) - pipeNorthImg.height;
+        const y = Math.random() * (imgs.pipeN.height) - imgs.pipeN.height/2;
         pipes.push({ x: WIDTH, y, gap });
       }
-
-      // draw foreground & bird
-      ctx.drawImage(fgImg, 0, HEIGHT - fgImg.height);
-      ctx.drawImage(birdImg, bird.x, bird.y);
-
-      // physics
-      bird.velocity += bird.gravity;
-      bird.y += bird.velocity;
-
-      // score display
-      ctx.fillStyle = '#000';
-      ctx.font = '20px Arial';
+      ctx.drawImage(imgs.fg, 0, HEIGHT - imgs.fg.height);
+      ctx.drawImage(imgs.bird, bird.x, bird.y);
+      bird.vel += bird.gravity; bird.y += bird.vel;
+      ctx.fillStyle = '#fff'; ctx.font = '20px Arial';
       ctx.fillText(`Score: ${score}`, 10, HEIGHT - 20);
-
-      if (!gameOver) {
-        frame++;
-        requestAnimationFrame(loop);
-      }
+      frame++;
+      if (bird.y + bird.h >= HEIGHT - imgs.fg.height || bird.y <= 0) return endGame();
+      if (playing) requestAnimationFrame(loop);
     }
-
     function endGame() {
-      gameOver = true;
-      ctx.fillStyle = 'red';
+      playing = false;
+      ctx.fillStyle = '#FF0000';
       ctx.font = '30px Arial';
-      ctx.fillText('Game Over', WIDTH / 2 - 80, HEIGHT / 2);
-      if (soundOn) {
-        const dieSnd = new Audio('https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/audio/die.wav');
-        dieSnd.play();
-      }
+      ctx.fillText('Game Over', WIDTH/2-80, HEIGHT/2);
+      // push to Firebase leaderboard
+      db.ref('leaderboard').push({
+        name: 'Anonymous',
+        score,
+        timestamp: Date.now()
+      });
     }
-
     function resetGame() {
       startGame();
     }
   </script>
+
+  <!-- Footer -->
+  <footer>
+    MASONNET INTERNAL TESTING<br/>
+    masonnet.org
+  </footer>
 </body>
 </html>
+```[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/szerintedmi/roadmap-radar-chart/tree/45ee5f9f7a1d44100313358e369abb025b935cea/README.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/qolbudr/huniaja/tree/dfffc3911a0f8482d668f6ac884f7ca81dbe151b/laravel%2Fresources%2Fviews%2Fmaster.blade.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Joshi-labs/gamedev/tree/2dd18cd352d5590f29d784d3e9142c67979959c6/APS%20Talks%2Findex2.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
