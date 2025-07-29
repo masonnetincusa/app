@@ -1,423 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flappy Bird Hub – MasonNet</title>
+  <meta charset="UTF-8" />
+  <title>Flappy Bird Hub</title>
+  <link rel="icon" href="https://app.masonnet.org/fbrc.png" />
   <style>
-    /* Base & reset */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #000000;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-    }
-    .hidden { display: none; }
-
-    /* Profile card */
-    #profile-card {
-      position: absolute;
-      top: 16px; right: 16px;
-      width: 56px; height: 56px;
-      background: url("https://app.masonnet.org/default-avatar.png") center/cover no-repeat;
-      border-radius: 8px;
-      cursor: pointer;
-      z-index: 1000;
-      transition: width .2s, padding .2s, background .2s;
-    }
-    #profile-card.expanded {
-      width: 200px;
-      padding: 12px;
-      background: #1A1A1A;
-      height: auto;
-    }
-    #profile-card .options {
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    #profile-card.expanded .options {
-      display: flex;
-    }
-    #profile-card .options button {
-      background: #FF0000;
-      color: #fff;
-      border: none;
-      padding: 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    /* Main menu */
-    #menu {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      z-index: 500;
-    }
-    #menu img {
-      width: 240px;
-      margin-bottom: 16px;
-    }
-    .menu-btn {
-      width: 240px; height: 44px;
-      margin: 12px auto;
-      background: #FF0000;
-      color: #FFFFFF;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      text-transform: none;
-      cursor: pointer;
-    }
-    .menu-btn:active { opacity: 0.85; }
-
-    /* Canvas */
-    #gameCanvas {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+    html, body {
+      margin: 0;
+      padding: 0;
       background: #70c5ce;
-      border: 2px solid #FF0000;
-      border-radius: 4px;
-      z-index: 100;
+      overflow: hidden;
+      font-family: sans-serif;
     }
 
-    /* Overlays */
-    .overlay {
+    /* Game canvas */
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: #70c5ce;
+    }
+
+    /* Full-screen overlay, fully centered */
+    #gameOverOverlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000;
-    }
-    .overlay.hidden { display: none; }
-
-    .panel {
-      background: #1A1A1A;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 280px;
+      background: rgba(255, 255, 255, 0.95);
       padding: 20px;
       border-radius: 8px;
-      color: #fff;
-      width: 320px;
-      max-width: 90%;
-    }
-    .panel h2 {
-      margin-bottom: 12px;
-      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       text-align: center;
-    }
-    .panel label {
-      display: flex;
-      justify-content: space-between;
-      margin: 12px 0;
-    }
-    .panel input[type="checkbox"] {
-      transform: scale(1.2);
-      cursor: pointer;
-    }
-    .panel button {
-      margin-top: 16px;
-      width: 100%;
-      padding: 10px;
-      background: #FF0000;
-      border: none;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
+      display: none;
+      z-index: 1000;
     }
 
-    /* Leaderboard table */
-    table {
+    #gameOverOverlay h2 {
+      margin: 0 0 10px;
+      font-size: 1.4em;
+      color: #333;
+    }
+
+    #scoreTable {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 12px;
-    }
-    th, td {
-      border: 1px solid #333;
-      padding: 8px;
-      text-align: center;
-      font-size: 14px;
+      margin-bottom: 15px;
     }
 
-    /* Diagnostics modal */
-    #diagnostics-overlay .panel {
-      width: 360px;
-    }
-    #diagnostics-content {
-      font-family: monospace;
-      font-size: 14px;
-      line-height: 1.4;
-      color: #ddd;
+    #scoreTable th,
+    #scoreTable td {
+      border-bottom: 1px solid #ccc;
+      padding: 6px 4px;
     }
 
-    /* Footer */
-    footer {
-      position: absolute;
-      bottom: 8px; right: 16px;
-      font-size: 10px;
+    #scoreTable th {
+      font-weight: bold;
       color: #555;
-      text-align: right;
-      line-height: 1.2;
+    }
+
+    #restartBtn {
+      padding: 8px 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+
+    #restartBtn:hover {
+      background: #43a047;
     }
   </style>
 </head>
 <body>
+  <canvas id="gameCanvas" width="320" height="480"></canvas>
 
-  <!-- Profile Card -->
-  <div id="profile-card">
-    <div class="options">
-      <button id="view-profile">View profile</button>
-      <button id="logout">Log out</button>
-      <input type="password" id="diag-pass" placeholder="Admin code" style="padding:6px;"/>
-      <button id="open-diagnostics">Run diagnostics</button>
-    </div>
+  <div id="gameOverOverlay">
+    <h2>High Scores</h2>
+    <table id="scoreTable">
+      <thead>
+        <tr><th>Player</th><th>Score</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button id="restartBtn">Restart</button>
   </div>
 
-  <!-- Main Menu -->
-  <div id="menu">
-    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub Logo"/>
-    <button id="start-btn" class="menu-btn">Start</button>
-    <button id="leaderboard-btn" class="menu-btn">Leaderboard</button>
-    <button id="settings-btn" class="menu-btn">Settings</button>
-    <button id="hub-btn" class="menu-btn">Flappy Bird Hub</button>
-    <button id="test-btn" class="menu-btn">Test</button>
-  </div>
-
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas" width="288" height="512" class="hidden"></canvas>
-
-  <!-- Settings Overlay -->
-  <div id="settings-overlay" class="overlay hidden">
-    <div class="panel">
-      <h2>Settings</h2>
-      <label>Sound <input type="checkbox" id="toggle-sound" checked/></label>
-      <label>Dark mode <input type="checkbox" id="toggle-dark"/></label>
-      <label>Skip to game over <input type="checkbox" id="toggle-skip"/></label>
-      <button id="close-settings">Close</button>
-    </div>
-  </div>
-
-  <!-- Leaderboard Overlay -->
-  <div id="leaderboard-overlay" class="overlay hidden">
-    <div class="panel">
-      <h2>Leaderboard</h2>
-      <table>
-        <thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead>
-        <tbody id="leaderboard-body"></tbody>
-      </table>
-      <button id="close-leaderboard">Close</button>
-    </div>
-  </div>
-
-  <!-- Diagnostics Overlay -->
-  <div id="diagnostics-overlay" class="overlay hidden">
-    <div class="panel">
-      <h2>Diagnostics</h2>
-      <div id="diagnostics-content"><p>Running checks…</p></div>
-      <button id="close-diagnostics">Close</button>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer>
-    MASONNET INTERNAL TESTING<br/>masonnet.org
-  </footer>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script>
-    // Firebase Initialization
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-      authDomain: "masonnet-app-official.firebaseapp.com",
-      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-      projectId: "masonnet-app-official",
-      storageBucket: "masonnet-app-official.firebasestorage.app",
-      messagingSenderId: "783919367562",
-      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-      measurementId: "G-X1YKV5VK7J"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // DOM refs
-    const menu           = document.getElementById('menu');
-    const canvas         = document.getElementById('gameCanvas');
-    const profileCard    = document.getElementById('profile-card');
-    const settingsOv     = document.getElementById('settings-overlay');
-    const leaderOv       = document.getElementById('leaderboard-overlay');
-    const diagOv         = document.getElementById('diagnostics-overlay');
-
-    // Profile expand/collapse
-    profileCard.addEventListener('click', e => {
-      profileCard.classList.toggle('expanded');
-      e.stopPropagation();
-    });
-    document.body.addEventListener('click', () => {
-      profileCard.classList.remove('expanded');
-    });
-
-    // Menu buttons
-    document.getElementById('start-btn').onclick = () => {
-      menu.classList.add('hidden');
-      canvas.classList.remove('hidden');
-      startGame();
-    };
-    document.getElementById('settings-btn').onclick = () => {
-      settingsOv.classList.remove('hidden');
-    };
-    document.getElementById('close-settings').onclick = () => {
-      settingsOv.classList.add('hidden');
-    };
-    document.getElementById('leaderboard-btn').onclick = showLeaderboard;
-    document.getElementById('close-leaderboard').onclick = () => {
-      leaderOv.classList.add('hidden');
-      document.getElementById('leaderboard-body').innerHTML = '';
-    };
-    document.getElementById('hub-btn').onclick = () => {
-      window.location.href = 'https://app.masonnet.org/flappybirdhub';
-    };
-    document.getElementById('test-btn').onclick = () => {
-      alert('Test passed!');
-    };
-
-    // Settings toggles
-    let soundOn = true, darkMode = false, skipGo = false;
-    document.getElementById('toggle-sound').onchange = e => soundOn = e.target.checked;
-    document.getElementById('toggle-dark').onchange = e => {
-      darkMode = e.target.checked;
-      document.body.style.background = darkMode ? '#1A1A1A' : '#000000';
-    };
-    document.getElementById('toggle-skip').onchange = e => skipGo = e.target.checked;
-
-    // Leaderboard
-    function showLeaderboard() {
-      leaderOv.classList.remove('hidden');
-      const tbody = document.getElementById('leaderboard-body');
-      tbody.innerHTML = '<tr><td colspan="3">Loading…</td></tr>';
-      db.ref('leaderboard')
-        .orderByChild('score')
-        .limitToLast(10)
-        .once('value', snap => {
-          const rows = [];
-          snap.forEach(c => rows.push(c.val()));
-          rows.reverse();
-          tbody.innerHTML = rows.map((r,i) => `
-            <tr>
-              <td>${i+1}</td>
-              <td>${r.name || 'Anonymous'}</td>
-              <td>${r.score}</td>
-            </tr>
-          `).join('') || '<tr><td colspan="3">No entries</td></tr>';
-        });
-    }
-
-    // Diagnostics
-    document.getElementById('open-diagnostics').onclick = () => {
-      const code = document.getElementById('diag-pass').value;
-      if (code === 'admin123') {
-        diagOv.classList.remove('hidden');
-        runDiagnostics();
-      } else {
-        alert('Wrong code');
-      }
-    };
-    document.getElementById('close-diagnostics').onclick = () => {
-      diagOv.classList.add('hidden');
-    };
-    function runDiagnostics() {
-      const content = document.getElementById('diagnostics-content');
-      content.innerHTML = '<p>Running checks…</p>';
-      setTimeout(() => {
-        const checks = [
-          { label: 'Firebase connected', pass: true },
-          { label: 'Database rules valid', pass: true },
-          { label: 'Canvas loaded', pass: true },
-          { label: 'No debug leaks', pass: true }
-        ];
-        content.innerHTML = checks.map(c =>
-          `<div style="display:flex;justify-content:space-between;
-                       color:${c.pass?'#0f0':'#f00'}">
-             <span>${c.label}</span><span>${c.pass?'PASS':'FAIL'}</span>
-           </div>`
-        ).join('');
-      }, 300);
-    }
-
-    /*------------------------------------
-      Flappy Bird game code
-    ------------------------------------*/
+    // Canvas setup
+    const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const WIDTH = canvas.width, HEIGHT = canvas.height;
-    const imgs = {
-      bg:    Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bg.png' }),
-      fg:    Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/fg.png' }),
-      bird:  Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/bird.png' }),
-      pipeN: Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeNorth.png' }),
-      pipeS: Object.assign(new Image(), { src: 'https://cdn.jsdelivr.net/gh/sourabhv/FlapPyBird/images/pipeSouth.png' })
+
+    // Bird parameters
+    const bird = {
+      x: 60,
+      y: canvas.height / 2,
+      radius: 12,
+      gravity: 0.6,
+      lift: -12,
+      velocity: 0
     };
-    let birdObj = { x:50, y:150, w:34, h:24, gravity:1.5, lift:-25, vel:0 };
-    let pipes = [], frame = 0, score = 0, playing = false;
 
-    function startGame() {
-      playing = true; score = 0; frame = 0;
-      birdObj.y = 150; birdObj.vel = 0; pipes = [];
-      loop();
+    // Pipes
+    const pipes = [];
+    const pipeWidth = 40;
+    const gap = 120;
+    let frameCount = 0;
+
+    // Game state
+    let score = 0;
+    let bestScores = [
+      { name: "MASONNETthisisreal", score: 124 },
+      { name: "mdawg", score: 27 },
+      { name: "V2Stableoutnow!", score: 25 },
+      { name: "Mason Duckart", score: 21 },
+      { name: "V2.1testing", score: 19 },
+      { name: "Wheredacashat", score: 17 },
+      { name: "LilWayne222", score: 15 },
+      { name: "Whatsupgang", score: 15 },
+      { name: "CARTERII", score: 14 },
+      { name: "Admin", score: 14 }
+    ];
+    let gameOverFlag = false;
+
+    // Input handlers
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') jump();
+    });
+
+    window.addEventListener('mousedown', jump);
+
+    function jump() {
+      if (!gameOverFlag) bird.velocity = bird.lift;
     }
-    function loop() {
-      ctx.drawImage(imgs.bg, 0, 0);
-      pipes.forEach((p,i) => {
-        ctx.drawImage(imgs.pipeN, p.x, p.y);
-        ctx.drawImage(imgs.pipeS, p.x, p.y + imgs.pipeN.height + p.gap);
-        p.x--;
-        if (p.x + imgs.pipeN.width < 0) pipes.splice(i,1);
-        if (p.x === birdObj.x) score++;
-        if (
-          birdObj.x + birdObj.w > p.x &&
-          birdObj.x < p.x + imgs.pipeN.width &&
-          (birdObj.y < p.y + imgs.pipeN.height ||
-           birdObj.y + birdObj.h > p.y + imgs.pipeN.height + p.gap)
-        ) return endGame();
+
+    // Spawn new pipes
+    function spawnPipe() {
+      const topHeight = Math.random() * (canvas.height - gap - 80) + 20;
+      pipes.push({
+        x: canvas.width,
+        top: topHeight,
+        bottom: canvas.height - topHeight - gap
       });
-      if (frame % 150 === 0) {
-        const gap = 100;
-        const y = Math.random() * (imgs.pipeN.height) - imgs.pipeN.height/2;
-        pipes.push({ x: WIDTH, y, gap });
-      }
-      ctx.drawImage(imgs.fg, 0, HEIGHT - imgs.fg.height);
-      ctx.drawImage(imgs.bird, birdObj.x, birdObj.y);
-      birdObj.vel += birdObj.gravity; birdObj.y += birdObj.vel;
-      ctx.fillStyle = '#fff'; ctx.font = '20px Arial';
-      ctx.fillText(`Score: ${score}`, 10, 30);
-      frame++;
-      if (birdObj.y + birdObj.h > HEIGHT - imgs.fg.height || birdObj.y < 0) return endGame();
-      if (playing) requestAnimationFrame(loop);
-    }
-    function endGame() {
-      playing = false;
-      ctx.fillStyle = '#FF0000'; ctx.font = '30px Arial';
-      ctx.fillText('Game Over', WIDTH/2-80, HEIGHT/2);
-      // push score
-      db.ref('leaderboard').push({ name: 'Anonymous', score });
     }
 
-    // Controls
-    document.addEventListener('keydown', e => {
-      if (e.code === 'Space' && playing) birdObj.vel = birdObj.lift;
-      if (e.code === 'Enter' && !playing) startGame();
-    });
-    canvas.addEventListener('click', () => {
-      if (playing) birdObj.vel = birdObj.lift;
-    });
+    // Collision check
+    function checkCollision(pipe) {
+      // Bird inside horizontal pipe range?
+      if (
+        bird.x + bird.radius > pipe.x &&
+        bird.x - bird.radius < pipe.x + pipeWidth
+      ) {
+        // Colliding with top or bottom
+        if (
+          bird.y - bird.radius < pipe.top ||
+          bird.y + bird.radius > canvas.height - pipe.bottom
+        ) return true;
+      }
+      return false;
+    }
+
+    // Render loop
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw bird
+      ctx.fillStyle = '#ff0';
+      ctx.beginPath();
+      ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw pipes
+      ctx.fillStyle = '#2ecc71';
+      pipes.forEach(pipe => {
+        // top pipe
+        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+        // bottom pipe
+        ctx.fillRect(
+          pipe.x,
+          canvas.height - pipe.bottom,
+          pipeWidth,
+          pipe.bottom
+        );
+      });
+
+      // Draw score
+      ctx.fillStyle = '#fff';
+      ctx.font = '24px sans-serif';
+      ctx.fillText(score, canvas.width - 50, 30);
+    }
+
+    // Update physics and state
+    function update() {
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      // Ground & ceiling
+      if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+        triggerGameOver();
+      }
+
+      // Pipes logic
+      pipes.forEach((pipe, i) => {
+        pipe.x -= 2;
+
+        // Score increment
+        if (pipe.x + pipeWidth === bird.x) {
+          score++;
+        }
+
+        // Remove off-screen pipes
+        if (pipe.x + pipeWidth < 0) pipes.splice(i, 1);
+
+        // Collision
+        if (checkCollision(pipe)) triggerGameOver();
+      });
+
+      // Spawn pipes every 90 frames
+      if (frameCount % 90 === 0) spawnPipe();
+      frameCount++;
+    }
+
+    // Main game loop
+    function loop() {
+      if (!gameOverFlag) {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+      }
+    }
+
+    // Game over handler
+    function triggerGameOver() {
+      gameOverFlag = true;
+      showOverlay();
+    }
+
+    // Populate & show overlay
+    function showOverlay() {
+      const tbody = document.querySelector('#scoreTable tbody');
+      tbody.innerHTML = '';
+      bestScores.forEach(entry => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${entry.name}</td><td>${entry.score}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('gameOverOverlay').style.display = 'block';
+    }
+
+    // Restart the game
+    document.getElementById('restartBtn').onclick = () => {
+      // Reset state
+      bird.y = canvas.height / 2;
+      bird.velocity = 0;
+      pipes.length = 0;
+      score = 0;
+      frameCount = 0;
+      gameOverFlag = false;
+      document.getElementById('gameOverOverlay').style.display = 'none';
+
+      // Restart loop
+      requestAnimationFrame(loop);
+    };
+
+    // Kick off the game
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
-```[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/qolbudr/huniaja/tree/dfffc3911a0f8482d668f6ac884f7ca81dbe151b/laravel%2Fresources%2Fviews%2Fmaster.blade.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Joshi-labs/gamedev/tree/2dd18cd352d5590f29d784d3e9142c67979959c6/APS%20Talks%2Findex2.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")
