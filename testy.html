@@ -2,272 +2,156 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird Hub</title>
-  <link rel="icon" href="https://app.masonnet.org/fbrc.png" />
+  <title>Flappy Bird Hub – Main Menu</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #70c5ce;
-      overflow: hidden;
-      font-family: sans-serif;
+    /* Reset & base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; overflow: hidden; background: #fff; transition: background .3s; }
+
+    /* Theme toggles */
+    body.dark { background: #111; color: #eee; }
+
+    /* Fullscreen container */
+    #app {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 100vw; height: 100vh; position: relative;
+      animation: fadeIn 0.6s ease-out;
     }
 
-    /* Game canvas */
-    #gameCanvas {
-      display: block;
-      margin: 0 auto;
-      background: #70c5ce;
-    }
+    /* Logo */
+    #logo { width: 160px; margin-bottom: 32px; }
 
-    /* Full-screen overlay, fully centered */
-    #gameOverOverlay {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 280px;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      text-align: center;
-      display: none;
-      z-index: 1000;
+    /* Buttons */
+    .btn {
+      background: #28a745; color: #fff; border: none; cursor: pointer;
+      padding: 12px 24px; margin: 8px 0; border-radius: 4px;
+      font-size: 1.1rem; transition: background .2s, transform .1s;
     }
+    .btn:hover { background: #218838; }
+    .btn:active { transform: scale(0.97); }
 
-    #gameOverOverlay h2 {
-      margin: 0 0 10px;
-      font-size: 1.4em;
-      color: #333;
+    /* Profile & Diagnostics */
+    #profile {
+      display: flex; align-items: center; position: absolute; top: 16px; right: 16px;
+      cursor: pointer; opacity: .9; transition: opacity .2s;
     }
+    #profile:hover { opacity: 1; }
+    #profile img { width: 48px; height: 48px; border-radius: 50%; margin-right: 8px; }
+    #diagnostics-btn { margin-left: 16px; font-size: .9rem; }
 
-    #scoreTable {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 15px;
+    /* Overlay (settings & diagnostics) */
+    .overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: #fff;
+      visibility: hidden; opacity: 0; transition: opacity .3s, visibility .3s;
     }
+    .overlay.open { visibility: visible; opacity: 1; }
+    .overlay .panel {
+      background: #222; padding: 24px; border-radius: 6px; width: 320px;
+    }
+    .overlay label { display: flex; align-items: center; margin: 12px 0; }
+    .overlay input[type=checkbox] { margin-right: 8px; transform: scale(1.2); }
 
-    #scoreTable th,
-    #scoreTable td {
-      border-bottom: 1px solid #ccc;
-      padding: 6px 4px;
-    }
-
-    #scoreTable th {
-      font-weight: bold;
-      color: #555;
-    }
-
-    #restartBtn {
-      padding: 8px 16px;
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1em;
-    }
-
-    #restartBtn:hover {
-      background: #43a047;
-    }
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="320" height="480"></canvas>
+  <div id="app">
+    <img id="logo" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub Logo" />
+    <button id="start-btn" class="btn">Start Game</button>
+    <button id="settings-btn" class="btn">Settings</button>
+    <a href="https://app.masonnet.org/flappybirdhub" class="btn">Back to Hub</a>
 
-  <div id="gameOverOverlay">
-    <h2>High Scores</h2>
-    <table id="scoreTable">
-      <thead>
-        <tr><th>Player</th><th>Score</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button id="restartBtn">Restart</button>
+    <div id="profile">
+      <img src="https://app.masonnet.org/default-avatar.png" alt="User Avatar">
+      <span id="username">Player1</span>
+      <!-- Diagnostics toggle shown only for admins -->
+      <button id="diagnostics-btn" class="btn" style="display:none;">Diagnostics</button>
+    </div>
+  </div>
+
+  <!-- Settings Overlay -->
+  <div id="settings-overlay" class="overlay">
+    <div class="panel">
+      <h2>Settings</h2>
+      <label><input type="checkbox" id="toggle-sound" checked /> Sound</label>
+      <label><input type="checkbox" id="toggle-dark" /> Dark Mode</label>
+      <label><input type="checkbox" id="toggle-skip" /> Skip to Game Over</label>
+      <button id="close-settings" class="btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Diagnostics Overlay -->
+  <div id="diagnostics-overlay" class="overlay">
+    <div class="panel">
+      <h2>Diagnostics (Admin)</h2>
+      <pre id="diag-log" style="max-height:200px; overflow:auto; background:#000; padding:8px;"></pre>
+      <button id="close-diag" class="btn">Close</button>
+    </div>
   </div>
 
   <script>
-    // Canvas setup
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    (function(){
+      // Mock user auth – replace with real check
+      const user = { name: 'Player1', isAdmin: true };
 
-    // Bird parameters
-    const bird = {
-      x: 60,
-      y: canvas.height / 2,
-      radius: 12,
-      gravity: 0.6,
-      lift: -12,
-      velocity: 0
-    };
+      // Settings state
+      const settings = { sound: true, darkMode: false, skipToGameOver: false };
+      const app = document.getElementById('app');
 
-    // Pipes
-    const pipes = [];
-    const pipeWidth = 40;
-    const gap = 120;
-    let frameCount = 0;
+      // DOM refs
+      const settingsBtn = document.getElementById('settings-btn');
+      const settingsOverlay = document.getElementById('settings-overlay');
+      const closeSettings = document.getElementById('close-settings');
+      const toggleSound = document.getElementById('toggle-sound');
+      const toggleDark = document.getElementById('toggle-dark');
+      const toggleSkip = document.getElementById('toggle-skip');
 
-    // Game state
-    let score = 0;
-    let bestScores = [
-      { name: "MASONNETthisisreal", score: 124 },
-      { name: "mdawg", score: 27 },
-      { name: "V2Stableoutnow!", score: 25 },
-      { name: "Mason Duckart", score: 21 },
-      { name: "V2.1testing", score: 19 },
-      { name: "Wheredacashat", score: 17 },
-      { name: "LilWayne222", score: 15 },
-      { name: "Whatsupgang", score: 15 },
-      { name: "CARTERII", score: 14 },
-      { name: "Admin", score: 14 }
-    ];
-    let gameOverFlag = false;
+      const diagBtn = document.getElementById('diagnostics-btn');
+      const diagOverlay = document.getElementById('diagnostics-overlay');
+      const closeDiag = document.getElementById('close-diag');
+      const diagLog = document.getElementById('diag-log');
 
-    // Input handlers
-    window.addEventListener('keydown', e => {
-      if (e.code === 'Space') jump();
-    });
+      // Initialize UI
+      document.getElementById('username').textContent = user.name;
+      if (user.isAdmin) diagBtn.style.display = 'inline-block';
 
-    window.addEventListener('mousedown', jump);
+      // Event handlers
+      document.getElementById('start-btn').onclick = () => {
+        console.log('Starting game with settings:', settings);
+        // TODO: call game.init(settings)
+      };
 
-    function jump() {
-      if (!gameOverFlag) bird.velocity = bird.lift;
-    }
+      settingsBtn.onclick = () => settingsOverlay.classList.add('open');
+      closeSettings.onclick = () => settingsOverlay.classList.remove('open');
 
-    // Spawn new pipes
-    function spawnPipe() {
-      const topHeight = Math.random() * (canvas.height - gap - 80) + 20;
-      pipes.push({
-        x: canvas.width,
-        top: topHeight,
-        bottom: canvas.height - topHeight - gap
+      toggleSound.onchange = e => settings.sound = e.target.checked;
+      toggleDark.onchange = e => {
+        settings.darkMode = e.target.checked;
+        document.body.classList.toggle('dark', settings.darkMode);
+      };
+      toggleSkip.onchange = e => settings.skipToGameOver = e.target.checked;
+
+      // Diagnostics (admin only)
+      diagBtn.onclick = () => {
+        diagLog.textContent = 'Fetching logs…';
+        // TODO: fetch real diagnostics
+        setTimeout(() => {
+          diagLog.textContent = JSON.stringify({ settings, uptime: Date.now() }, null, 2);
+        }, 300);
+        diagOverlay.classList.add('open');
+      };
+      closeDiag.onclick = () => diagOverlay.classList.remove('open');
+
+      // Global click to close overlays if needed
+      [settingsOverlay, diagOverlay].forEach(ov => {
+        ov.addEventListener('click', e => {
+          if (e.target === ov) ov.classList.remove('open');
+        });
       });
-    }
-
-    // Collision check
-    function checkCollision(pipe) {
-      // Bird inside horizontal pipe range?
-      if (
-        bird.x + bird.radius > pipe.x &&
-        bird.x - bird.radius < pipe.x + pipeWidth
-      ) {
-        // Colliding with top or bottom
-        if (
-          bird.y - bird.radius < pipe.top ||
-          bird.y + bird.radius > canvas.height - pipe.bottom
-        ) return true;
-      }
-      return false;
-    }
-
-    // Render loop
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw bird
-      ctx.fillStyle = '#ff0';
-      ctx.beginPath();
-      ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Draw pipes
-      ctx.fillStyle = '#2ecc71';
-      pipes.forEach(pipe => {
-        // top pipe
-        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
-        // bottom pipe
-        ctx.fillRect(
-          pipe.x,
-          canvas.height - pipe.bottom,
-          pipeWidth,
-          pipe.bottom
-        );
-      });
-
-      // Draw score
-      ctx.fillStyle = '#fff';
-      ctx.font = '24px sans-serif';
-      ctx.fillText(score, canvas.width - 50, 30);
-    }
-
-    // Update physics and state
-    function update() {
-      bird.velocity += bird.gravity;
-      bird.y += bird.velocity;
-
-      // Ground & ceiling
-      if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
-        triggerGameOver();
-      }
-
-      // Pipes logic
-      pipes.forEach((pipe, i) => {
-        pipe.x -= 2;
-
-        // Score increment
-        if (pipe.x + pipeWidth === bird.x) {
-          score++;
-        }
-
-        // Remove off-screen pipes
-        if (pipe.x + pipeWidth < 0) pipes.splice(i, 1);
-
-        // Collision
-        if (checkCollision(pipe)) triggerGameOver();
-      });
-
-      // Spawn pipes every 90 frames
-      if (frameCount % 90 === 0) spawnPipe();
-      frameCount++;
-    }
-
-    // Main game loop
-    function loop() {
-      if (!gameOverFlag) {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-      }
-    }
-
-    // Game over handler
-    function triggerGameOver() {
-      gameOverFlag = true;
-      showOverlay();
-    }
-
-    // Populate & show overlay
-    function showOverlay() {
-      const tbody = document.querySelector('#scoreTable tbody');
-      tbody.innerHTML = '';
-      bestScores.forEach(entry => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${entry.name}</td><td>${entry.score}</td>`;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('gameOverOverlay').style.display = 'block';
-    }
-
-    // Restart the game
-    document.getElementById('restartBtn').onclick = () => {
-      // Reset state
-      bird.y = canvas.height / 2;
-      bird.velocity = 0;
-      pipes.length = 0;
-      score = 0;
-      frameCount = 0;
-      gameOverFlag = false;
-      document.getElementById('gameOverOverlay').style.display = 'none';
-
-      // Restart loop
-      requestAnimationFrame(loop);
-    };
-
-    // Kick off the game
-    requestAnimationFrame(loop);
+    })();
   </script>
 </body>
 </html>
