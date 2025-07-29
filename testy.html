@@ -2,156 +2,270 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird Hub – Main Menu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Branded Game Hub</title>
   <style>
-    /* Reset & base */
+    /* Global & Body */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; overflow: hidden; background: #fff; transition: background .3s; }
-
-    /* Theme toggles */
-    body.dark { background: #111; color: #eee; }
-
-    /* Fullscreen container */
-    #app {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      width: 100vw; height: 100vh; position: relative;
-      animation: fadeIn 0.6s ease-out;
+    body {
+      background-color: #000000;
+      font-family: Arial, sans-serif;
+      color: #ffffff;
+      overflow: hidden;
+      position: relative;
+      height: 100vh;
+      width: 100vw;
     }
 
-    /* Logo */
-    #logo { width: 160px; margin-bottom: 32px; }
-
-    /* Buttons */
-    .btn {
-      background: #28a745; color: #fff; border: none; cursor: pointer;
-      padding: 12px 24px; margin: 8px 0; border-radius: 4px;
-      font-size: 1.1rem; transition: background .2s, transform .1s;
+    /* MAIN MENU */
+    #main-menu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
     }
-    .btn:hover { background: #218838; }
-    .btn:active { transform: scale(0.97); }
-
-    /* Profile & Diagnostics */
-    #profile {
-      display: flex; align-items: center; position: absolute; top: 16px; right: 16px;
-      cursor: pointer; opacity: .9; transition: opacity .2s;
+    #main-menu button {
+      width: 240px;
+      height: 44px;
+      background-color: #FF0000;
+      color: #FFFFFF;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 44px;
     }
-    #profile:hover { opacity: 1; }
-    #profile img { width: 48px; height: 48px; border-radius: 50%; margin-right: 8px; }
-    #diagnostics-btn { margin-left: 16px; font-size: .9rem; }
 
-    /* Overlay (settings & diagnostics) */
+    /* PROFILE CARD */
+    #profile-card {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 56px;
+      height: 56px;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: width 0.2s, height 0.2s;
+    }
+    #profile-card.expanded {
+      width: 200px; /* adjust as needed */
+      height: auto;
+      background-color: #111;
+      padding: 12px;
+    }
+    #profile-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* OVERLAYS & MODALS */
     .overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
-      align-items: center; justify-content: center; color: #fff;
-      visibility: hidden; opacity: 0; transition: opacity .3s, visibility .3s;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
     }
-    .overlay.open { visibility: visible; opacity: 1; }
-    .overlay .panel {
-      background: #222; padding: 24px; border-radius: 6px; width: 320px;
+    .overlay.visible { display: flex; }
+    .overlay-content {
+      background: #111;
+      padding: 24px;
+      border-radius: 8px;
+      width: 320px;
+      text-align: center;
     }
-    .overlay label { display: flex; align-items: center; margin: 12px 0; }
-    .overlay input[type=checkbox] { margin-right: 8px; transform: scale(1.2); }
-
-    /* Animations */
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .overlay-content h2 {
+      margin-bottom: 16px;
+    }
+    .overlay-content label {
+      display: block;
+      margin: 8px 0;
+      font-size: 14px;
+      text-align: left;
+    }
+    .overlay-content input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .overlay-content button {
+      margin-top: 16px;
+      width: 100%;
+      height: 36px;
+      background: #FF0000;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
-  <div id="app">
-    <img id="logo" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub Logo" />
-    <button id="start-btn" class="btn">Start Game</button>
-    <button id="settings-btn" class="btn">Settings</button>
-    <a href="https://app.masonnet.org/flappybirdhub" class="btn">Back to Hub</a>
 
-    <div id="profile">
-      <img src="https://app.masonnet.org/default-avatar.png" alt="User Avatar">
-      <span id="username">Player1</span>
-      <!-- Diagnostics toggle shown only for admins -->
-      <button id="diagnostics-btn" class="btn" style="display:none;">Diagnostics</button>
-    </div>
+  <!-- Main Menu -->
+  <div id="main-menu">
+    <button id="start-btn">Start</button>
+    <button id="leaderboard-btn">Leaderboard</button>
+    <button id="settings-btn">Settings</button>
+    <button id="flappyhub-btn">Flappy Bird Hub</button>
+    <button id="test-btn">Test</button>
+  </div>
+
+  <!-- Profile Card -->
+  <div id="profile-card">
+    <img src="https://app.masonnet.org/default-avatar.png" alt="Profile"/>
   </div>
 
   <!-- Settings Overlay -->
   <div id="settings-overlay" class="overlay">
-    <div class="panel">
+    <div class="overlay-content">
       <h2>Settings</h2>
-      <label><input type="checkbox" id="toggle-sound" checked /> Sound</label>
-      <label><input type="checkbox" id="toggle-dark" /> Dark Mode</label>
-      <label><input type="checkbox" id="toggle-skip" /> Skip to Game Over</label>
-      <button id="close-settings" class="btn">Close</button>
+      <label><input type="checkbox" id="sound-toggle"/> Sound</label>
+      <label><input type="checkbox" id="darkmode-toggle"/> Dark Mode</label>
+      <label><input type="checkbox" id="skip-toggle"/> Skip to Game Over</label>
+      <button id="settings-close">Close</button>
     </div>
   </div>
 
-  <!-- Diagnostics Overlay -->
-  <div id="diagnostics-overlay" class="overlay">
-    <div class="panel">
-      <h2>Diagnostics (Admin)</h2>
-      <pre id="diag-log" style="max-height:200px; overflow:auto; background:#000; padding:8px;"></pre>
-      <button id="close-diag" class="btn">Close</button>
+  <!-- Leaderboard Overlay -->
+  <div id="leaderboard-overlay" class="overlay">
+    <div class="overlay-content">
+      <h2>Leaderboard</h2>
+      <ol id="scores-list">
+        <!-- dynamically populated -->
+      </ol>
+      <button id="leaderboard-close">Close</button>
+    </div>
+  </div>
+
+  <!-- Diagnostics/Test Modal -->
+  <div id="test-modal" class="overlay">
+    <div class="overlay-content">
+      <h2>Diagnostics</h2>
+      <pre id="diag-info">Loading diagnostics…</pre>
+      <button id="test-close">Close</button>
     </div>
   </div>
 
   <script>
-    (function(){
-      // Mock user auth – replace with real check
-      const user = { name: 'Player1', isAdmin: true };
+    // ELEMENTS
+    const overlays = {
+      settings: document.getElementById('settings-overlay'),
+      leaderboard: document.getElementById('leaderboard-overlay'),
+      test: document.getElementById('test-modal')
+    };
+    const btns = {
+      start: document.getElementById('start-btn'),
+      leaderboard: document.getElementById('leaderboard-btn'),
+      settings: document.getElementById('settings-btn'),
+      flappyhub: document.getElementById('flappyhub-btn'),
+      test: document.getElementById('test-btn')
+    };
+    const closeBtns = {
+      settings: document.getElementById('settings-close'),
+      leaderboard: document.getElementById('leaderboard-close'),
+      test: document.getElementById('test-close')
+    };
+    const toggles = {
+      sound: document.getElementById('sound-toggle'),
+      darkmode: document.getElementById('darkmode-toggle'),
+      skip: document.getElementById('skip-toggle')
+    };
+    const profileCard = document.getElementById('profile-card');
+    const diagInfo = document.getElementById('diag-info');
+    const scoresList = document.getElementById('scores-list');
 
-      // Settings state
-      const settings = { sound: true, darkMode: false, skipToGameOver: false };
-      const app = document.getElementById('app');
+    // UTILITY: Close all overlays
+    function closeAll() {
+      Object.values(overlays).forEach(o => o.classList.remove('visible'));
+    }
 
-      // DOM refs
-      const settingsBtn = document.getElementById('settings-btn');
-      const settingsOverlay = document.getElementById('settings-overlay');
-      const closeSettings = document.getElementById('close-settings');
-      const toggleSound = document.getElementById('toggle-sound');
-      const toggleDark = document.getElementById('toggle-dark');
-      const toggleSkip = document.getElementById('toggle-skip');
+    // MAIN MENU EVENTS
+    btns.start.addEventListener('click', () => {
+      closeAll();
+      // Insert game-start logic here
+      alert('Game Starting…');
+    });
 
-      const diagBtn = document.getElementById('diagnostics-btn');
-      const diagOverlay = document.getElementById('diagnostics-overlay');
-      const closeDiag = document.getElementById('close-diag');
-      const diagLog = document.getElementById('diag-log');
+    btns.leaderboard.addEventListener('click', () => {
+      closeAll();
+      loadLeaderboard();
+      overlays.leaderboard.classList.add('visible');
+    });
 
-      // Initialize UI
-      document.getElementById('username').textContent = user.name;
-      if (user.isAdmin) diagBtn.style.display = 'inline-block';
+    btns.settings.addEventListener('click', () => {
+      closeAll();
+      overlays.settings.classList.add('visible');
+    });
 
-      // Event handlers
-      document.getElementById('start-btn').onclick = () => {
-        console.log('Starting game with settings:', settings);
-        // TODO: call game.init(settings)
-      };
+    btns.flappyhub.addEventListener('click', () => {
+      window.open('https://app.masonnet.org/flappybirdhub', '_blank');
+    });
 
-      settingsBtn.onclick = () => settingsOverlay.classList.add('open');
-      closeSettings.onclick = () => settingsOverlay.classList.remove('open');
+    btns.test.addEventListener('click', () => {
+      const pwd = prompt('Enter admin password:');
+      if (pwd === 'admin123') {
+        closeAll();
+        runDiagnostics();
+        overlays.test.classList.add('visible');
+      } else {
+        alert('Access Denied');
+      }
+    });
 
-      toggleSound.onchange = e => settings.sound = e.target.checked;
-      toggleDark.onchange = e => {
-        settings.darkMode = e.target.checked;
-        document.body.classList.toggle('dark', settings.darkMode);
-      };
-      toggleSkip.onchange = e => settings.skipToGameOver = e.target.checked;
+    // CLOSE BUTTONS
+    closeBtns.settings.addEventListener('click', closeAll);
+    closeBtns.leaderboard.addEventListener('click', closeAll);
+    closeBtns.test.addEventListener('click', closeAll);
 
-      // Diagnostics (admin only)
-      diagBtn.onclick = () => {
-        diagLog.textContent = 'Fetching logs…';
-        // TODO: fetch real diagnostics
-        setTimeout(() => {
-          diagLog.textContent = JSON.stringify({ settings, uptime: Date.now() }, null, 2);
-        }, 300);
-        diagOverlay.classList.add('open');
-      };
-      closeDiag.onclick = () => diagOverlay.classList.remove('open');
+    // PROFILE CARD TOGGLE
+    profileCard.addEventListener('click', () => {
+      profileCard.classList.toggle('expanded');
+    });
 
-      // Global click to close overlays if needed
-      [settingsOverlay, diagOverlay].forEach(ov => {
-        ov.addEventListener('click', e => {
-          if (e.target === ov) ov.classList.remove('open');
-        });
+    // SETTINGS TOGGLES
+    toggles.darkmode.addEventListener('change', e => {
+      document.body.classList.toggle('dark-mode', e.target.checked);
+    });
+    toggles.sound.addEventListener('change', e => {
+      // hook into your audio manager
+      console.log('Sound toggled:', e.target.checked);
+    });
+    toggles.skip.addEventListener('change', e => {
+      console.log('Skip to game over:', e.target.checked);
+    });
+
+    // LEADERBOARD LOADING (mocked)
+    function loadLeaderboard() {
+      scoresList.innerHTML = '';
+      const dummy = [1200, 900, 850, 700, 500];
+      dummy.forEach((s, i) => {
+        const li = document.createElement('li');
+        li.textContent = `#${i+1} — ${s}`;
+        scoresList.appendChild(li);
       });
-    })();
+    }
+
+    // DIAGNOSTICS LOGIC
+    function runDiagnostics() {
+      // simulate real diagnostics
+      setTimeout(() => {
+        diagInfo.textContent = `
+Canvas OK: true
+FPS: 59.8
+Memory Usage: 45MB
+Network Latency: 34ms
+All systems nominal.
+        `.trim();
+      }, 500);
+    }
   </script>
+
 </body>
 </html>
