@@ -2,441 +2,307 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Flappy Bird Hub</title>
-
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X1YKV5VK7J"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-X1YKV5VK7J');
-  </script>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
   <style>
-    /* Basic reset */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: sans-serif; background: #70c5ce; overflow: hidden; }
-
-    /* Navbar */
-    #navbar { position: fixed; top: 0; width: 100%; background: #fff; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    #navbar h1 { font-size: 1.2rem; color: #333; }
-    .profile { position: relative; cursor: pointer; }
-    .profile img { width: 32px; height: 32px; border-radius: 50%; }
-    .dropdown { position: absolute; right: 0; top: 45px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display: none; min-width: 160px; }
-    .dropdown a { display: block; padding: 10px; color: #333; text-decoration: none; }
-    .dropdown a:hover { background: #f1f1f1; }
-
-    /* Canvas */
-    #game-container { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; }
-    #gameCanvas { background: #70c5ce; display: block; }
-
-    /* Overlay */
-    #overlay { position: absolute; top: 50px; left: 0; width: 100%; height: calc(100% - 50px); background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-size: 1.5rem; z-index: 20; }
-    #overlay button { margin-top: 20px; padding: 10px 20px; border: none; background: #fd0; color: #333; font-size: 1rem; border-radius: 4px; cursor: pointer; }
-
-    /* Modals */
-    .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 30; }
-    .modal { background: #fff; border-radius: 6px; width: 90%; max-width: 500px; max-height: 80%; overflow-y: auto; padding: 20px; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; }
-    .modal-header h2 { font-size: 1.2rem; }
-    .modal-header .close { cursor: pointer; font-size: 1.2rem; }
-
-    /* Admin Console */
-    #admin-tabs { display: flex; border-bottom: 1px solid #ccc; margin-bottom: 10px; }
-    #admin-tabs button { flex: 1; padding: 10px; border: none; background: #f9f9f9; cursor: pointer; }
-    #admin-tabs button.active { background: #fff; border-bottom: 2px solid #007bff; }
-    .admin-panel { display: none; }
-    .admin-panel.active { display: block; }
-
-    /* Leaderboard table */
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 8px; border-bottom: 1px solid #ccc; text-align: left; }
-
+    /* Layered UI: canvas (z-index 1), overlays (z-index 2) */
+    #layer-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #gameCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      display: none;
+    }
+    #ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+    }
+    .panel.visible { display: flex; }
+    .btn {
+      background: #e63946;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #d62839; }
+    ul { list-style: none; padding: 0; color: white; }
+    ul li { font-size: 1.5rem; margin: 4px 0; }
   </style>
+
+  <!-- Firebase SDKs (v9 modular) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      orderBy,
+      limit,
+      serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+
+    // TODO: replace with your Firebase config
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+  authDomain: "masonnet-app-official.firebaseapp.com",
+  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app-official",
+  storageBucket: "masonnet-app-official.firebasestorage.app",
+  messagingSenderId: "783919367562",
+  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+  measurementId: "G-X1YKV5VK7J"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Record a new score in Firestore
+    function recordScore(score) {
+      return addDoc(collection(db, 'leaderboard'), {
+        score,
+        timestamp: serverTimestamp()
+      }).catch(console.error);
+    }
+
+    // Load top 10 scores and render in the UL
+    async function loadScores() {
+      const q = query(
+        collection(db, 'leaderboard'),
+        orderBy('score', 'desc'),
+        limit(10)
+      );
+      const snapshot = await getDocs(q);
+      const list = document.getElementById('scores-list');
+      list.innerHTML = '';
+      snapshot.forEach(doc => {
+        const li = document.createElement('li');
+        li.textContent = doc.data().score;
+        list.appendChild(li);
+      });
+    }
+
+    // Expose to global so UI code can call
+    window.recordScore = recordScore;
+    window.loadScores = loadScores;
+  </script>
 </head>
+
 <body>
+  <div id="layer-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui-layer">
+      <!-- Main Menu -->
+      <div id="main-menu" class="panel visible">
+        <h1 style="color:white">Flappy Bird Hub</h1>
+        <button id="start-button" class="btn">Start Game</button>
+        <button id="settings-button" class="btn">Settings</button>
+        <button id="leaderboard-button" class="btn">Leaderboard</button>
+      </div>
 
-  <!-- Navbar / Main Menu -->
-  <div id="navbar">
-    <h1>Flappy Bird Hub</h1>
-    <div class="profile" id="profileMenu">
-      <img src="https://www.gravatar.com/avatar?d=mp&s=32" alt="Profile" />
-      <div class="dropdown" id="dropdownMenu">
-        <a href="#" data-action="settings">Settings</a>
-        <a href="#" data-action="leaderboard">Leaderboard</a>
-        <a href="#" data-action="feedback">Feedback</a>
-        <a href="#" data-action="account">Account Settings</a>
-        <a href="#" data-action="search">Search</a>
-        <a href="#" data-action="admin" id="adminLink" style="display:none;">Admin Console</a>
-        <a href="#" data-action="signout">Sign Out</a>
+      <!-- Settings -->
+      <div id="settings" class="panel">
+        <h2 style="color:white">Settings</h2>
+        <!-- add your controls here -->
+        <button id="settings-back" class="btn">Back</button>
       </div>
-    </div>
-  </div>
 
-  <!-- Game Canvas -->
-  <div id="game-container">
-    <canvas id="gameCanvas" width="320" height="512"></canvas>
-  </div>
+      <!-- Leaderboard -->
+      <div id="leaderboard" class="panel">
+        <h2 style="color:white">Leaderboard</h2>
+        <ul id="scores-list"></ul>
+        <button id="leaderboard-back" class="btn">Back</button>
+      </div>
 
-  <!-- Game Over Overlay -->
-  <div id="overlay">
-    <div>Game Over<br/>Score: <span id="finalScore">0</span></div>
-    <button id="retryBtn">Play Again</button>
-  </div>
-
-  <!-- Modals -->
-  <div class="modal-backdrop" id="settingsModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Settings</h2>
-        <span class="close" data-close="settingsModal">&times;</span>
-      </div>
-      <div>
-        <label>
-          <input type="checkbox" id="muteToggle" /> Mute Sound
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="leaderboardModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Leaderboard</h2>
-        <span class="close" data-close="leaderboardModal">&times;</span>
-      </div>
-      <table id="leaderboardTable">
-        <thead><tr><th>Player</th><th>Score</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="feedbackModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Feedback</h2>
-        <span class="close" data-close="feedbackModal">&times;</span>
-      </div>
-      <textarea id="feedbackText" rows="5" style="width:100%;"></textarea>
-      <button id="submitFeedback" style="margin-top:10px;">Submit</button>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="accountModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Account Settings</h2>
-        <span class="close" data-close="accountModal">&times;</span>
-      </div>
-      <div>
-        <label>Display Name:</label>
-        <input type="text" id="displayName" style="width:100%;"/>
-        <button id="updateName" style="margin-top:10px;">Update</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="searchModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Search</h2>
-        <span class="close" data-close="searchModal">&times;</span>
-      </div>
-      <input type="text" id="searchInput" style="width:100%;" placeholder="Search..." />
-      <button id="doSearch" style="margin-top:10px;">Go</button>
-      <div id="searchResults" style="margin-top:10px;"></div>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="adminModal">
-    <div class="modal" style="max-width:800px;">
-      <div class="modal-header">
-        <h2>Admin Console</h2>
-        <span class="close" data-close="adminModal">&times;</span>
-      </div>
-      <div id="admin-tabs">
-        <button data-tab="home" class="active">Home</button>
-        <button data-tab="accounts">Accounts & Moderation</button>
-        <button data-tab="feedback">Feedback</button>
-        <button data-tab="other">Other</button>
-      </div>
-      <div id="admin-home" class="admin-panel active">
-        <h3>Welcome, Admin</h3>
-        <p>System status: All systems nominal.</p>
-      </div>
-      <div id="admin-accounts" class="admin-panel">
-        <h3>User Accounts</h3>
-        <ul id="userList"></ul>
-      </div>
-      <div id="admin-feedbackList" class="admin-panel">
-        <h3>Feedback Entries</h3>
-        <ul id="feedbackList"></ul>
-      </div>
-      <div id="admin-other" class="admin-panel">
-        <h3>Analytics & Tools</h3>
-        <p>Google Analytics is enabled globally.</p>
+      <!-- Game Over -->
+      <div id="game-over" class="panel">
+        <h2 style="color:white">Game Over</h2>
+        <p style="color:white">Your score: <span id="final-score">0</span></p>
+        <button id="restart-button" class="btn">Play Again</button>
+        <button id="menu-button" class="btn">Main Menu</button>
       </div>
     </div>
   </div>
 
   <script>
-  //---- Firebase Initialization ----
-  const firebaseConfig = {
-    apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-    authDomain: "masonnet-app-official.firebaseapp.com",
-    databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-    projectId: "masonnet-app-official",
-    storageBucket: "masonnet-app-official.firebasestorage.app",
-    messagingSenderId: "783919367562",
-    appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-    measurementId: "G-X1YKV5VK7J"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
-
-  //---- UIDs ----
-  const ADMIN_UID = "Y4ZoHRQaIrVhdvZr15Ebz90Byh62";
-  let currentUser = null, isAdmin = false;
-
-  //---- Auth State Listener ----
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user;
-      isAdmin = (user.uid === ADMIN_UID);
-      document.getElementById("adminLink").style.display = isAdmin ? "block" : "none";
-    } else {
-      // Auto sign-in test user for demo
-      auth.signInWithUID("YQZhZsoC4OUd7oa11APl3D00gjz2").catch(console.error);
-    }
-  });
-
-  //---- Profile Dropdown ----
-  const profileMenu = document.getElementById("profileMenu");
-  const dropdown = document.getElementById("dropdownMenu");
-  profileMenu.onclick = () => dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-
-  dropdown.querySelectorAll("a").forEach(a => {
-    a.onclick = e => {
-      e.preventDefault();
-      const action = a.dataset.action;
-      dropdown.style.display = "none";
-      switch(action){
-        case "settings": showModal("settingsModal"); break;
-        case "leaderboard": loadLeaderboard(); showModal("leaderboardModal"); break;
-        case "feedback": showModal("feedbackModal"); break;
-        case "account": loadAccount(); showModal("accountModal"); break;
-        case "search": showModal("searchModal"); break;
-        case "admin": showModal("adminModal"); loadAdminPanels(); break;
-        case "signout": auth.signOut(); break;
-      }
+    // Sound assets
+    const SFX = {
+      flap: new Audio('https://app.masonnet.org/flap.mp3'),
+      hit: new Audio('https://app.masonnet.org/hit.mp3'),
+      die: new Audio('https://app.masonnet.org/die.mp3'),
+      point: new Audio('https://app.masonnet.org/point.mp3')
     };
-  });
 
-  document.querySelectorAll(".close").forEach(btn => {
-    btn.onclick = _=> document.getElementById(btn.dataset.close).style.display = "none";
-  });
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
-  function showModal(id) {
-    document.getElementById(id).style.display = "flex";
-  }
-
-  //---- Settings ----
-  document.getElementById("muteToggle").onchange = e => muted = e.target.checked;
-
-  //---- Account Settings ----
-  function loadAccount(){
-    document.getElementById("displayName").value = currentUser.displayName || "";
-  }
-  document.getElementById("updateName").onclick = () => {
-    const name = document.getElementById("displayName").value;
-    currentUser.updateProfile({ displayName: name }).then(_=>{
-      alert("Name updated");
-      document.getElementById("accountModal").style.display="none";
-    });
-  };
-
-  //---- Feedback ----
-  document.getElementById("submitFeedback").onclick = () => {
-    const text = document.getElementById("feedbackText").value;
-    if(!text) return alert("Enter feedback");
-    db.ref("feedback").push({
-      uid: currentUser.uid,
-      text,
-      timestamp: Date.now()
-    }).then(_=>{
-      alert("Thanks!");
-      document.getElementById("feedbackText").value="";
-      document.getElementById("feedbackModal").style.display="none";
-    });
-  };
-
-  //---- Search ----
-  document.getElementById("doSearch").onclick = () => {
-    const q = document.getElementById("searchInput").value.toLowerCase();
-    const results = [];
-    ["Flappy Bird Hub","Leaderboard","Settings","Feedback","Admin Console"].forEach(item=>{
-      if(item.toLowerCase().includes(q)) results.push(item);
-    });
-    const container = document.getElementById("searchResults");
-    container.innerHTML = results.length ? results.map(r=>`<div>${r}</div>`).join("") : "<div>No matches</div>";
-  };
-
-  //---- Leaderboard ----
-  function loadLeaderboard(){
-    const tbody = document.querySelector("#leaderboardTable tbody");
-    tbody.innerHTML = "<tr><td colspan='2'>Loading...</td></tr>";
-    db.ref("scores").orderByChild("score").limitToLast(10).once("value", snap=>{
-      const data = [];
-      snap.forEach(c=> data.push(c.val()));
-      data.reverse();
-      tbody.innerHTML = data.map(d=>`<tr><td>${d.name||"Anon"}</td><td>${d.score}</td></tr>`).join("");
-    });
-  }
-
-  //---- Admin Panels ----
-  function loadAdminPanels(){
-    // Users
-    db.ref("users").once("value", snap=>{
-      const ul = document.getElementById("userList");
-      ul.innerHTML = "";
-      snap.forEach(u=>{
-        const li = document.createElement("li");
-        li.textContent = `${u.val().displayName||u.key} (${u.key})`;
-        ul.appendChild(li);
-      });
-    });
-    // Feedback
-    db.ref("feedback").once("value", snap=>{
-      const ul = document.getElementById("feedbackList");
-      ul.innerHTML = "";
-      snap.forEach(f=>{
-        const li = document.createElement("li");
-        li.textContent = `${f.val().text} — ${new Date(f.val().timestamp).toLocaleString()}`;
-        ul.appendChild(li);
-      });
-    });
-  }
-  document.querySelectorAll("#admin-tabs button").forEach(btn=>{
-    btn.onclick = () => {
-      document.querySelectorAll(".admin-panel").forEach(p=>p.classList.remove("active"));
-      document.querySelectorAll("#admin-tabs button").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      document.getElementById(`admin-${btn.dataset.tab}${btn.dataset.tab==="feedback"?"List":""}`).classList.add("active");
+    const panels = {
+      main:    document.getElementById('main-menu'),
+      settings:document.getElementById('settings'),
+      leaderboard: document.getElementById('leaderboard'),
+      gameOver: document.getElementById('game-over')
     };
-  });
 
-  //---- Flappy Bird Game Code ----
-  const canvas = document.getElementById("gameCanvas");
-  const ctx = canvas.getContext("2d");
-  const W = canvas.width, H = canvas.height;
+    let bird, pipes, score, gameState, loopHandle;
 
-  // Assets
-  const birdImg = new Image(), bgImg = new Image(), fgImg = new Image(), pipeTop = new Image(), pipeBottom = new Image();
-  birdImg.src = "https://app.masonnet.org/bird.png";
-  bgImg.src   = "https://app.masonnet.org/bg.png";
-  fgImg.src   = "https://app.masonnet.org/fg.png";
-  pipeTop.src = "https://app.masonnet.org/pipeNorth.png";
-  pipeBottom.src = "https://app.masonnet.org/pipeSouth.png";
-
-  // Sounds
-  const sfx = {
-    fly: new Audio("https://app.masonnet.org/flap.mp3"),
-    point: new Audio("https://app.masonnet.org/point.mp3"),
-    hit: new Audio("https://app.masonnet.org/hit.mp3"),
-    die: new Audio("https://app.masonnet.org/die.mp3")
-  };
-  let muted = false;
-
-  // Game variables
-  let gap = 100, constant;
-  let bX = 50, bY = 150, gravity = 1.5, score = 0;
-  let pipes = [];
-
-  // Initialize pipes
-  pipes[0] = { x: W, y: -100 };
-
-  // Controls
-  document.addEventListener("keydown", fly);
-  document.addEventListener("mousedown", fly);
-  function fly(){
-    bY -= 25;
-    if(!muted) sfx.fly.play();
-  }
-
-  // Draw loop
-  function draw(){
-    ctx.drawImage(bgImg, 0, 0);
-    for(let i=0; i<pipes.length; i++){
-      constant = pipeTop.height + gap;
-      ctx.drawImage(pipeTop, pipes[i].x, pipes[i].y);
-      ctx.drawImage(pipeBottom, pipes[i].x, pipes[i].y + constant);
-      pipes[i].x--;
-
-      // Add new pipe
-      if(pipes[i].x == 150) pipes.push({ x: W, y: Math.floor(Math.random()*pipeTop.height) - pipeTop.height });
-
-      // Collision detection
-      if(bX + birdImg.width >= pipes[i].x && bX <= pipes[i].x + pipeTop.width &&
-         (bY <= pipes[i].y + pipeTop.height || bY + birdImg.height >= pipes[i].y + constant) ||
-         bY + birdImg.height >= H - fgImg.height){
-        gameOver();
-        return;
-      }
-
-      // Scoring
-      if(pipes[i].x == bX && !muted){
-        sfx.point.play();
-        score++;
-      }
-    }
-
-    ctx.drawImage(fgImg, 0, H - fgImg.height);
-    ctx.drawImage(birdImg, bX, bY);
-    bY += gravity;
-    ctx.fillStyle = "#000";
-    ctx.font = "20px Arial";
-    ctx.fillText("Score: "+score, 10, H-20);
-
-    requestAnimationFrame(draw);
-  }
-
-  // Game Over
-  function gameOver(){
-    if(!muted) sfx.hit.play();
-    setTimeout(_=>{
-      if(!muted) sfx.die.play();
-      showOverlay();
-    }, 200);
-  }
-
-  function showOverlay(){
-    document.getElementById("finalScore").textContent = score;
-    document.getElementById("overlay").style.display = "flex";
-    // Submit score
-    if(currentUser){
-      db.ref("scores").push({
-        uid: currentUser.uid,
-        name: currentUser.displayName || "Anon",
-        score,
-        timestamp: Date.now()
+    // Show exactly one panel (or none for gameplay)
+    function showPanel(name) {
+      Object.entries(panels).forEach(([key, el]) => {
+        el.classList.toggle('visible', key === name);
       });
+      // Hide canvas whenever a panel is visible
+      canvas.style.display = name ? 'none' : 'block';
+      gameState = name || 'playing';
+      if (name === 'leaderboard') window.loadScores();
     }
-  }
 
-  document.getElementById("retryBtn").onclick = () => location.reload();
+    // Resize to full viewport
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
 
-  // Start when images are loaded
-  pipeBottom.onload = () => draw();
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+      showPanel('main');
+    });
+    window.addEventListener('resize', resizeCanvas);
 
+    // Button bindings
+    document.getElementById('start-button').onclick     = () => { resetGame(); showPanel(''); };
+    document.getElementById('settings-button').onclick  = () => { showPanel('settings'); };
+    document.getElementById('leaderboard-button').onclick = () => { showPanel('leaderboard'); };
+    document.getElementById('settings-back').onclick    = () => { showPanel('main'); };
+    document.getElementById('leaderboard-back').onclick = () => { showPanel('main'); };
+    document.getElementById('restart-button').onclick   = () => { resetGame(); showPanel(''); };
+    document.getElementById('menu-button').onclick      = () => { showPanel('main'); };
+
+    // Game setup & loop
+    function resetGame() {
+      bird = { x: 100, y: canvas.height/2, dy: 0, size: 30 };
+      pipes = [];
+      score = 0;
+      loopHandle && cancelAnimationFrame(loopHandle);
+      gameLoop();
+    }
+
+    function gameLoop() {
+      update();
+      render();
+      if (gameState === 'playing') {
+        loopHandle = requestAnimationFrame(gameLoop);
+      }
+    }
+
+    function update() {
+      bird.dy += 0.6;
+      bird.y += bird.dy;
+
+      if (!update.bound) {
+        update.bound = true;
+        window.addEventListener('keydown', e => { if (e.code === 'Space') flap(); });
+        canvas.addEventListener('mousedown', flap);
+      }
+
+      if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+        const gap = 150;
+        const topH = Math.random() * (canvas.height - gap - 100) + 50;
+        pipes.push({ x: canvas.width, yTop: topH, gap, passed: false });
+      }
+
+      pipes.forEach(pipe => {
+        pipe.x -= 3;
+        if (!pipe.passed && pipe.x + 50 < bird.x) {
+          pipe.passed = true;
+          score++;
+          SFX.point.play();
+        }
+      });
+
+      // Collision
+      pipes.forEach(pipe => {
+        if (
+          bird.x + bird.size/2 > pipe.x &&
+          bird.x - bird.size/2 < pipe.x + 50 &&
+          (bird.y - bird.size/2 < pipe.yTop ||
+           bird.y + bird.size/2 > pipe.yTop + pipe.gap)
+        ) endGame();
+      });
+
+      if (bird.y + bird.size/2 > canvas.height ||
+          bird.y - bird.size/2 < 0) {
+        endGame();
+      }
+
+      pipes = pipes.filter(pipe => pipe.x + 50 > 0);
+    }
+
+    function render() {
+      ctx.fillStyle = '#70c5ce';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#228b22';
+      pipes.forEach(pipe => {
+        ctx.fillRect(pipe.x, 0, 50, pipe.yTop);
+        ctx.fillRect(pipe.x, pipe.yTop + pipe.gap, 50, canvas.height);
+      });
+
+      ctx.fillStyle = '#ff0';
+      ctx.beginPath();
+      ctx.arc(bird.x, bird.y, bird.size/2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '48px sans-serif';
+      ctx.fillText(score, canvas.width / 2 - 12, 60);
+    }
+
+    function flap() {
+      bird.dy = -10;
+      SFX.flap.play();
+    }
+
+    function endGame() {
+      gameState = 'ended';
+      SFX.hit.play();
+      setTimeout(() => {
+        SFX.die.play();
+        document.getElementById('final-score').textContent = score;
+        window.recordScore(score);
+        showPanel('gameOver');
+      }, 200);
+    }
   </script>
 </body>
 </html>
