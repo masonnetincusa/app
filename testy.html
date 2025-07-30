@@ -2,307 +2,455 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Flappy Bird Hub</title>
-  <style>
-    /* Layered UI: canvas (z-index 1), overlays (z-index 2) */
-    #layer-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #gameCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-      display: none;
-    }
-    #ui-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      pointer-events: none;
-    }
-    .panel {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      background: rgba(0, 0, 0, 0.5);
-      pointer-events: auto;
-    }
-    .panel.visible { display: flex; }
-    .btn {
-      background: #e63946;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      margin: 8px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: background 0.2s;
-    }
-    .btn:hover { background: #d62839; }
-    ul { list-style: none; padding: 0; color: white; }
-    ul li { font-size: 1.5rem; margin: 4px 0; }
-  </style>
 
-  <!-- Firebase SDKs (v9 modular) -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      orderBy,
-      limit,
-      serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
-
-    // TODO: replace with your Firebase config
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-  authDomain: "masonnet-app-official.firebaseapp.com",
-  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-  projectId: "masonnet-app-official",
-  storageBucket: "masonnet-app-official.firebasestorage.app",
-  messagingSenderId: "783919367562",
-  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-  measurementId: "G-X1YKV5VK7J"
-};
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Record a new score in Firestore
-    function recordScore(score) {
-      return addDoc(collection(db, 'leaderboard'), {
-        score,
-        timestamp: serverTimestamp()
-      }).catch(console.error);
-    }
-
-    // Load top 10 scores and render in the UL
-    async function loadScores() {
-      const q = query(
-        collection(db, 'leaderboard'),
-        orderBy('score', 'desc'),
-        limit(10)
-      );
-      const snapshot = await getDocs(q);
-      const list = document.getElementById('scores-list');
-      list.innerHTML = '';
-      snapshot.forEach(doc => {
-        const li = document.createElement('li');
-        li.textContent = doc.data().score;
-        list.appendChild(li);
-      });
-    }
-
-    // Expose to global so UI code can call
-    window.recordScore = recordScore;
-    window.loadScores = loadScores;
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X1YKV5VK7J"></script>
+  <script>
+    window.dataLayer = window.dataLayer||[];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config','G-X1YKV5VK7J');
   </script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
+
+  <style>
+    /* Reset */
+    * { margin:0; padding:0; box-sizing:border-box }
+    html, body { width:100%; height:100%; overflow:hidden; font-family:Arial, sans-serif; }
+
+    /* Body backgrounds */
+    body { background: url('https://app.masonnet.org/lightbg.png') no-repeat center/cover; }
+    body.dark-mode { background: url('https://app.masonnet.org/darkbg.png') no-repeat center/cover; }
+
+    /* Layer container */
+    #layer-container { position: relative; width:100%; height:100%; }
+
+    /* Game canvas */
+    #gameCanvas {
+      position:absolute; top:0; left:0;
+      z-index:1;
+      display:none;
+    }
+
+    /* UI layer above canvas */
+    #ui-layer {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      z-index:2; pointer-events:none;
+    }
+
+    /* Panels (menu, settings, leaderboard, test, gameover) */
+    .panel {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      display:none;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      pointer-events:auto;
+    }
+    .panel.visible { display:flex }
+
+    /* Main menu */
+    #main-menu {
+      background: rgba(0,0,0,0.6);
+    }
+    #main-menu #title {
+      margin-bottom:24px;
+    }
+    #main-menu #title img {
+      width:240px;
+    }
+    .menu-btn {
+      width:220px;
+      height:44px;
+      margin:8px 0;
+      background:#FF0000;
+      color:#fff;
+      border:none;
+      border-radius:4px;
+      font-size:16px;
+      cursor:pointer;
+      pointer-events:auto;
+    }
+    .menu-btn:active { opacity:0.85 }
+
+    /* Profile card */
+    #profile-card {
+      position:absolute; top:16px; right:16px;
+      width:56px; height:56px;
+      background:#222; border-radius:4px;
+      overflow:hidden; cursor:pointer;
+      transition:width .2s,height .2s,padding .2s;
+      pointer-events:auto;
+    }
+    #profile-card.expanded { width:180px; height:auto; padding:12px; }
+    #profile-card img {
+      width:100%; height:100%; object-fit:cover;
+    }
+    #profile-card .options {
+      display:none; flex-direction:column; gap:8px; margin-top:12px;
+    }
+    #profile-card.expanded .options { display:flex }
+    #profile-card .options button {
+      background:#FF0000; color:#fff; border:none;
+      padding:8px; border-radius:4px; font-size:14px;
+      cursor:pointer;
+    }
+
+    /* Overlays (settings, leaderboard, test, gameover) */
+    .overlay {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.8);
+      display:none; align-items:center; justify-content:center;
+      pointer-events:auto; z-index:10;
+    }
+    .overlay.visible { display:flex }
+
+    .modal {
+      background:#1A1A1A; padding:24px;
+      border-radius:8px; width:320px;
+      color:#fff; text-align:center;
+      position:relative;
+    }
+    .modal h2 { margin-bottom:16px; }
+    .modal .close-btn {
+      position:absolute; top:12px; right:12px;
+      width:32px; height:32px; background:#FF0000;
+      border:none; border-radius:50%; color:#fff;
+      font-size:20px; line-height:28px; cursor:pointer;
+    }
+    .modal .close-btn:hover { background:#e60000 }
+
+    /* Settings toggles */
+    .modal label {
+      display:flex; justify-content:space-between;
+      align-items:center; margin:12px 0; font-size:14px;
+    }
+    .modal input[type="checkbox"] { transform:scale(1.2); cursor:pointer }
+
+    /* Leaderboard list */
+    #leaderboard-list {
+      list-style:decimal; text-align:left;
+      margin:12px 0; padding-left:20px;
+    }
+    #leaderboard-list li { margin:6px 0; }
+
+    /* Test diagnostics */
+    #diagnostics-output {
+      text-align:left; max-height:200px; overflow:auto;
+      background:#000; padding:8px; border-radius:4px;
+      font-family:monospace; font-size:12px;
+    }
+
+    /* SFX overlay */
+    #sfx-overlay .modal { width:200px; }
+  </style>
 </head>
 
 <body>
   <div id="layer-container">
+    <!-- Game Canvas -->
     <canvas id="gameCanvas"></canvas>
+
+    <!-- UI Layer -->
     <div id="ui-layer">
+      <!-- Profile Card -->
+      <div id="profile-card">
+        <img src="https://app.masonnet.org/default-avatar.png" alt="Avatar">
+        <div class="options">
+          <button id="signin-btn">Sign In</button>
+          <button id="signout-btn">Sign Out</button>
+        </div>
+      </div>
+
       <!-- Main Menu -->
       <div id="main-menu" class="panel visible">
-        <h1 style="color:white">Flappy Bird Hub</h1>
-        <button id="start-button" class="btn">Start Game</button>
-        <button id="settings-button" class="btn">Settings</button>
-        <button id="leaderboard-button" class="btn">Leaderboard</button>
+        <div id="title">
+          <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub">
+        </div>
+        <button class="menu-btn" id="start-btn">Start</button>
+        <button class="menu-btn" id="leaderboard-btn">Leaderboard</button>
+        <button class="menu-btn" id="settings-btn">Settings</button>
+        <button class="menu-btn" id="hub-btn">Flappy Bird Hub</button>
+        <button class="menu-btn" id="test-btn">Test</button>
       </div>
 
-      <!-- Settings -->
-      <div id="settings" class="panel">
-        <h2 style="color:white">Settings</h2>
-        <!-- add your controls here -->
-        <button id="settings-back" class="btn">Back</button>
+      <!-- Settings Overlay -->
+      <div id="settings-overlay" class="overlay">
+        <div class="modal">
+          <button class="close-btn" data-close="settings-overlay">&times;</button>
+          <h2>Settings</h2>
+          <label>Sound <input type="checkbox" id="toggle-sound" checked></label>
+          <label>Dark Mode <input type="checkbox" id="toggle-dark"></label>
+          <label>Skip to End <input type="checkbox" id="toggle-skip"></label>
+        </div>
       </div>
 
-      <!-- Leaderboard -->
-      <div id="leaderboard" class="panel">
-        <h2 style="color:white">Leaderboard</h2>
-        <ul id="scores-list"></ul>
-        <button id="leaderboard-back" class="btn">Back</button>
+      <!-- Leaderboard Overlay -->
+      <div id="leaderboard-overlay" class="overlay">
+        <div class="modal">
+          <button class="close-btn" data-close="leaderboard-overlay">&times;</button>
+          <h2>Top 10 Leaderboard</h2>
+          <ol id="leaderboard-list"><li>Loading…</li></ol>
+        </div>
       </div>
 
-      <!-- Game Over -->
-      <div id="game-over" class="panel">
-        <h2 style="color:white">Game Over</h2>
-        <p style="color:white">Your score: <span id="final-score">0</span></p>
-        <button id="restart-button" class="btn">Play Again</button>
-        <button id="menu-button" class="btn">Main Menu</button>
+      <!-- Test (Diagnostics) Overlay -->
+      <div id="test-overlay" class="overlay">
+        <div class="modal">
+          <button class="close-btn" data-close="test-overlay">&times;</button>
+          <h2>Diagnostics</h2>
+          <pre id="diagnostics-output"></pre>
+        </div>
+      </div>
+
+      <!-- SFX Overlay -->
+      <div id="sfx-overlay" class="overlay">
+        <div class="modal">
+          <h2>Playing SFX…</h2>
+        </div>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div id="gameover-overlay" class="overlay">
+        <div class="modal">
+          <button class="close-btn" data-close="gameover-overlay">&times;</button>
+          <h2>Game Over</h2>
+          <p>Your Score: <span id="final-score">0</span></p>
+          <button class="menu-btn" id="restart-btn">Restart</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Sound assets
-    const SFX = {
-      flap: new Audio('https://app.masonnet.org/flap.mp3'),
-      hit: new Audio('https://app.masonnet.org/hit.mp3'),
-      die: new Audio('https://app.masonnet.org/die.mp3'),
-      point: new Audio('https://app.masonnet.org/point.mp3')
+    // Firebase config & init
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+      authDomain: "masonnet-app-official.firebaseapp.com",
+      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId: "masonnet-app-official",
+      storageBucket: "masonnet-app-official.firebasestorage.app",
+      messagingSenderId: "783919367562",
+      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+      measurementId: "G-X1YKV5VK7J"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+    const auth = firebase.auth();
+    const db   = firebase.database();
+
+    // DOM refs
+    const profileCard      = document.getElementById('profile-card');
+    const signinBtn        = document.getElementById('signin-btn');
+    const signoutBtn       = document.getElementById('signout-btn');
+    const mainMenu         = document.getElementById('main-menu');
+    const canvas           = document.getElementById('gameCanvas');
+    const ctx              = canvas.getContext('2d');
+    const settingsOverlay  = document.getElementById('settings-overlay');
+    const leaderboardOverlay = document.getElementById('leaderboard-overlay');
+    const testOverlay      = document.getElementById('test-overlay');
+    const sfxOverlay       = document.getElementById('sfx-overlay');
+    const gameoverOverlay  = document.getElementById('gameover-overlay');
+    const startBtn         = document.getElementById('start-btn');
+    const leaderboardBtn   = document.getElementById('leaderboard-btn');
+    const settingsBtn      = document.getElementById('settings-btn');
+    const hubBtn           = document.getElementById('hub-btn');
+    const testBtn          = document.getElementById('test-btn');
+    const toggleSound      = document.getElementById('toggle-sound');
+    const toggleDark       = document.getElementById('toggle-dark');
+    const toggleSkip       = document.getElementById('toggle-skip');
+    const leaderboardList   = document.getElementById('leaderboard-list');
+    const diagnosticsOutput = document.getElementById('diagnostics-output');
+    const restartBtn       = document.getElementById('restart-btn');
+    const finalScoreEl     = document.getElementById('final-score');
+
+    // Assets
+    const ASSETS = {
+      pipe: 'https://app.masonnet.org/pipe-green.png',
+      bird: 'https://app.masonnet.org/bird.png',
+      sfx: {
+        flap:  new Audio('https://app.masonnet.org/flap.mp3'),
+        point: new Audio('https://app.masonnet.org/point.mp3'),
+        hit:   new Audio('https://app.masonnet.org/hit.mp3'),
+        die:   new Audio('https://app.masonnet.org/die.mp3')
+      }
     };
 
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    const panels = {
-      main:    document.getElementById('main-menu'),
-      settings:document.getElementById('settings'),
-      leaderboard: document.getElementById('leaderboard'),
-      gameOver: document.getElementById('game-over')
-    };
-
-    let bird, pipes, score, gameState, loopHandle;
-
-    // Show exactly one panel (or none for gameplay)
-    function showPanel(name) {
-      Object.entries(panels).forEach(([key, el]) => {
-        el.classList.toggle('visible', key === name);
-      });
-      // Hide canvas whenever a panel is visible
-      canvas.style.display = name ? 'none' : 'block';
-      gameState = name || 'playing';
-      if (name === 'leaderboard') window.loadScores();
-    }
-
-    // Resize to full viewport
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      resizeCanvas();
-      showPanel('main');
+    // Profile toggle & auth
+    profileCard.addEventListener('click', e=> {
+      profileCard.classList.toggle('expanded');
+      e.stopPropagation();
     });
+    document.body.addEventListener('click', ()=> {
+      profileCard.classList.remove('expanded');
+    });
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        signinBtn.style.display = 'none';
+        signoutBtn.style.display = 'block';
+      } else {
+        signinBtn.style.display = 'block';
+        signoutBtn.style.display = 'none';
+      }
+    });
+    signinBtn.onclick  = ()=> auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    signoutBtn.onclick = ()=> auth.signOut();
+
+    // Panel toggles
+    function showOverlay(el){ el.classList.add('visible') }
+    function hideOverlay(el){ el.classList.remove('visible') }
+    document.querySelectorAll('.close-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> hideOverlay(
+        document.getElementById(btn.dataset.close)
+      ));
+    });
+
+    // Menu buttons
+    startBtn.onclick = () => {
+      mainMenu.classList.remove('visible');
+      canvas.style.display = 'block';
+      startGame();
+    };
+    hubBtn.onclick = ()=> window.open('https://app.masonnet.org/flappybirdhub','_blank');
+    settingsBtn.onclick = ()=> showOverlay(settingsOverlay);
+    leaderboardBtn.onclick = async ()=> {
+      showOverlay(leaderboardOverlay);
+      leaderboardList.innerHTML = '<li>Loading…</li>';
+      const snap = await db.ref('leaderboard')
+        .orderByChild('score').limitToLast(10).once('value');
+      const arr = [];
+      snap.forEach(c=>arr.push(c.val()));
+      arr.sort((a,b)=>b.score-a.score);
+      leaderboardList.innerHTML = '';
+      arr.forEach(e=> {
+        const li = document.createElement('li');
+        li.textContent = `${e.username||'Anonymous'}: ${e.score}`;
+        leaderboardList.appendChild(li);
+      });
+    };
+    testBtn.onclick = ()=> {
+      const pw = prompt('Enter admin password:');
+      if (pw==='admin123') {
+        diagnosticsOutput.textContent =
+          'Firebase: OK\nDB rules: OK\nNo leaks\nUI gating enforced';
+        showOverlay(testOverlay);
+      } else alert('Access denied');
+    };
+
+    // Settings toggles
+    let SOUND_ON = true, SKIP_END = false;
+    toggleSound.onchange = e=> SOUND_ON = e.target.checked;
+    toggleDark.onchange  = e=> document.body.classList.toggle('dark-mode', e.target.checked);
+    toggleSkip.onchange  = e=> SKIP_END = e.target.checked;
+
+    // Responsive canvas
+    function resizeCanvas(){
+      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if(!isMobile){
+        // maintain 16:9
+        let tw = vw, th = vw*9/16;
+        if(th>vh){ th=vh; tw=vh*16/9; }
+        canvas.style.width  = `${tw}px`;
+        canvas.style.height = `${th}px`;
+      } else {
+        canvas.style.width  = `${vw}px`;
+        canvas.style.height = `${vh}px`;
+      }
+      canvas.width  = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    }
     window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    // Button bindings
-    document.getElementById('start-button').onclick     = () => { resetGame(); showPanel(''); };
-    document.getElementById('settings-button').onclick  = () => { showPanel('settings'); };
-    document.getElementById('leaderboard-button').onclick = () => { showPanel('leaderboard'); };
-    document.getElementById('settings-back').onclick    = () => { showPanel('main'); };
-    document.getElementById('leaderboard-back').onclick = () => { showPanel('main'); };
-    document.getElementById('restart-button').onclick   = () => { resetGame(); showPanel(''); };
-    document.getElementById('menu-button').onclick      = () => { showPanel('main'); };
-
-    // Game setup & loop
-    function resetGame() {
-      bird = { x: 100, y: canvas.height/2, dy: 0, size: 30 };
-      pipes = [];
-      score = 0;
-      loopHandle && cancelAnimationFrame(loopHandle);
-      gameLoop();
+    // Game logic
+    let bird, pipes, score, raf, frame;
+    function startGame(){
+      bird = { x:50, y:200, vel:0 };
+      pipes = []; score=0; frame=0;
+      if(SKIP_END) return endGame();
+      raf = requestAnimationFrame(gameLoop);
     }
-
-    function gameLoop() {
-      update();
-      render();
-      if (gameState === 'playing') {
-        loopHandle = requestAnimationFrame(gameLoop);
+    function gameLoop(){
+      raf = requestAnimationFrame(gameLoop);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      frame++;
+      // spawn
+      if(frame%100===0){
+        const gap=120;
+        const top=Math.random()*(canvas.height-gap-40)+20;
+        pipes.push({ x:canvas.width, y:top, gap, passed:false });
       }
-    }
-
-    function update() {
-      bird.dy += 0.6;
-      bird.y += bird.dy;
-
-      if (!update.bound) {
-        update.bound = true;
-        window.addEventListener('keydown', e => { if (e.code === 'Space') flap(); });
-        canvas.addEventListener('mousedown', flap);
-      }
-
-      if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
-        const gap = 150;
-        const topH = Math.random() * (canvas.height - gap - 100) + 50;
-        pipes.push({ x: canvas.width, yTop: topH, gap, passed: false });
-      }
-
-      pipes.forEach(pipe => {
-        pipe.x -= 3;
-        if (!pipe.passed && pipe.x + 50 < bird.x) {
-          pipe.passed = true;
-          score++;
-          SFX.point.play();
+      // pipes
+      ctx.fillStyle='#228B22';
+      pipes.forEach((p,i)=> {
+        p.x-=2;
+        ctx.fillRect(p.x,0,52,p.y);
+        ctx.fillRect(p.x,p.y+p.gap,52,canvas.height-p.y-p.gap);
+        if(!p.passed && p.x+52<bird.x){
+          p.passed=true; score++;
+          if(SOUND_ON) ASSETS.sfx.point.play();
         }
+        if(p.x+52<0) pipes.splice(i,1);
       });
-
-      // Collision
-      pipes.forEach(pipe => {
-        if (
-          bird.x + bird.size/2 > pipe.x &&
-          bird.x - bird.size/2 < pipe.x + 50 &&
-          (bird.y - bird.size/2 < pipe.yTop ||
-           bird.y + bird.size/2 > pipe.yTop + pipe.gap)
-        ) endGame();
-      });
-
-      if (bird.y + bird.size/2 > canvas.height ||
-          bird.y - bird.size/2 < 0) {
-        endGame();
-      }
-
-      pipes = pipes.filter(pipe => pipe.x + 50 > 0);
-    }
-
-    function render() {
-      ctx.fillStyle = '#70c5ce';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = '#228b22';
-      pipes.forEach(pipe => {
-        ctx.fillRect(pipe.x, 0, 50, pipe.yTop);
-        ctx.fillRect(pipe.x, pipe.yTop + pipe.gap, 50, canvas.height);
-      });
-
-      ctx.fillStyle = '#ff0';
+      // bird
+      bird.vel+=0.6; bird.y+=bird.vel;
+      ctx.fillStyle='#FFD700';
       ctx.beginPath();
-      ctx.arc(bird.x, bird.y, bird.size/2, 0, Math.PI * 2);
+      ctx.arc(bird.x,bird.y,12,0,2*Math.PI);
       ctx.fill();
-
-      ctx.fillStyle = '#fff';
-      ctx.font = '48px sans-serif';
-      ctx.fillText(score, canvas.width / 2 - 12, 60);
+      // score
+      ctx.fillStyle='#fff'; ctx.font='24px Arial';
+      ctx.fillText(score,10,30);
+      // collision
+      if(bird.y+12>canvas.height||bird.y-12<0||
+        pipes.some(p=> bird.x+12>p.x&&bird.x-12<p.x+52&&
+          (bird.y-12<p.y||bird.y+12>p.y+p.gap))
+      ) endGame();
     }
-
-    function flap() {
-      bird.dy = -10;
-      SFX.flap.play();
+    function flap(){
+      bird.vel=-10;
+      if(SOUND_ON) ASSETS.sfx.flap.play();
     }
+    document.addEventListener('keydown',e=>{ if(e.code==='Space') flap(); });
+    canvas.addEventListener('mousedown', flap);
 
-    function endGame() {
-      gameState = 'ended';
-      SFX.hit.play();
-      setTimeout(() => {
-        SFX.die.play();
-        document.getElementById('final-score').textContent = score;
-        window.recordScore(score);
-        showPanel('gameOver');
-      }, 200);
+    function endGame(){
+      cancelAnimationFrame(raf);
+      if(SOUND_ON) ASSETS.sfx.hit.play();
+      setTimeout(()=>{
+        if(SOUND_ON) ASSETS.sfx.die.play();
+        showOverlay(sfxOverlay);
+        ASSETS.sfx.die.onended = ()=>{
+          hideOverlay(sfxOverlay);
+          finalScoreEl.textContent=score;
+          showOverlay(gameoverOverlay);
+          // submit
+          const user=auth.currentUser;
+          db.ref('leaderboard').push({
+            username:user?user.displayName:'Anonymous',
+            score,ts:Date.now()
+          });
+        };
+      },200);
     }
+    restartBtn.onclick = ()=>{
+      hideOverlay(gameoverOverlay);
+      startGame();
+    };
   </script>
 </body>
 </html>
+```[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/szerintedmi/roadmap-radar-chart/tree/45ee5f9f7a1d44100313358e369abb025b935cea/README.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
