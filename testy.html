@@ -1,416 +1,464 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Flappy Bird Hub</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flappy Bird Hub – All-in-One</title>
   <style>
-    /* === Theme Variables === */
     :root {
-      --bg-light: #fff;
-      --text-light: #000;
-      --btn-bg-light: #ffcd00;
-      --bg-dark: #000;
-      --text-dark: #fff;
-      --btn-bg-dark: #444;
+      --font-family: 'MasonUI', sans-serif;
+      --font-size: 32px;
+      --font-weight: bold;
+      --btn-w: 320px;
+      --btn-h: 64px;
+      --gap: 24px;
+      --primary: #ffcc00;
+      --bg: #ffffff;
+      --fg: #333333;
+      --modal-bg: rgba(0,0,0,0.5);
     }
-
-    /* === Base Styles === */
-    body {
+    *, *::before, *::after {
+      box-sizing: border-box;
       margin: 0;
-      font-family: Arial, sans-serif;
+      padding: 0;
+    }
+    body {
+      font-family: var(--font-family);
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
       overflow: hidden;
-      transition: background 0.3s, color 0.3s;
     }
-    body.theme-light {
-      background: var(--bg-light);
-      color: var(--text-light);
+    img.title-banner {
+      margin-top: 40px;
+      max-width: 80%;
+      height: auto;
     }
-    body.theme-dark {
-      background: var(--bg-dark);
-      color: var(--text-dark);
-    }
-
-    #titleImg {
+    .profile-card {
       position: absolute;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 6;
-      width: 240px;
-    }
-
-    .panel {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      z-index: 5;
-      display: none;
-    }
-    .panel.visible {
-      display: block;
-    }
-
-    button {
-      display: block;
-      margin: 10px auto;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
       cursor: pointer;
-      transition: background 0.2s;
+      user-select: none;
     }
-    body.theme-light button {
-      background: var(--btn-bg-light);
-      color: var(--text-light);
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      margin-right: 10px;
     }
-    body.theme-dark button {
-      background: var(--btn-bg-dark);
-      color: var(--text-dark);
+    .username {
+      font-size: 20px;
+      font-weight: normal;
     }
-    button:hover {
-      opacity: 0.85;
-    }
-
-    #profileCard {
-      position: fixed;
-      top: 10px;
-      right: 10px;
+    .profile-dropdown {
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg);
+      border: 1px solid #ccc;
+      list-style: none;
+      width: 160px;
+      display: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       z-index: 10;
     }
-    #profileCard img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      vertical-align: middle;
+    .profile-card.open .profile-dropdown {
+      display: block;
     }
-    #profileCard button {
-      margin-left: 8px;
-      padding: 5px 10px;
-      font-size: 0.9em;
+    .profile-dropdown li {
+      padding: 12px 16px;
+      font-size: 18px;
+      cursor: pointer;
     }
-
-    #gameCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 0;
-      display: none;
+    .profile-dropdown li:hover {
+      background: #f0f0f0;
     }
-
-    #overlayContainer {
+    .menu {
+      margin-top: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+    }
+    .menu-button {
+      width: var(--btn-w);
+      height: var(--btn-h);
+      font-size: var(--font-size);
+      font-weight: var(--font-weight);
+      background: var(--primary);
+      color: var(--fg);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      position: relative;
+      z-index: 1;
+    }
+    .menu-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    /* Modals */
+    .modal-backdrop {
       position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 15;
-      pointer-events: none;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: var(--modal-bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
     }
-    .overlay {
-      background: rgba(0,0,0,0.7);
-      color: #ffcd00;
-      padding: 5px 10px;
-      margin-top: 5px;
-      border-radius: 3px;
-      animation: fadeOut 1s ease-out 1 forwards;
+    .modal {
+      background: var(--bg);
+      padding: 24px;
+      border-radius: 8px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
-    @keyframes fadeOut {
-      to { opacity: 0; transform: translateY(-20px); }
+    .modal h2 {
+      margin-bottom: 16px;
+      font-size: 28px;
+    }
+    .modal button {
+      margin-top: 16px;
+      padding: 8px 16px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .modal ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .modal ul li {
+      margin-bottom: 8px;
+      font-size: 20px;
     }
   </style>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
-<body class="theme-light">
+<body>
+  <!-- Title Banner -->
+  <img src="https://app.masonnet.org/title.png" alt="Flappy Bird Hub" class="title-banner"/>
 
-  <!-- Profile & Auth -->
-  <div id="profileCard">
-    <img id="avatar" src="https://app.masonnet.org/default-avatar.png" alt="Avatar" />
-    <button id="authBtn">Sign In</button>
+  <!-- Profile Card -->
+  <div class="profile-card" id="profileCard">
+    <img src="https://app.masonnet.org/avatar.png" alt="Avatar" class="avatar"/>
+    <span class="username">Mason</span>
+    <ul class="profile-dropdown">
+      <li id="accountBtn">Account</li>
+      <li id="logoutBtn">Logout</li>
+    </ul>
   </div>
-
-  <!-- Branded Title -->
-  <img id="titleImg" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Hub" />
 
   <!-- Main Menu -->
-  <div id="menuPanel" class="panel visible">
-    <button id="startBtn">Start Game</button>
-    <button id="leaderboardBtn">Leaderboard</button>
-    <button id="settingsBtn">Settings</button>
-    <button id="hubBtn">Flappy Bird Hub</button>
-    <button id="testBtn" style="display:none;">Admin Test</button>
+  <div class="menu">
+    <button class="menu-button" id="startBtn">Start</button>
+    <button class="menu-button" id="leaderboardBtn">Leaderboard</button>
+    <button class="menu-button" id="settingsBtn">Settings</button>
+    <button class="menu-button" id="hubBtn">Flappy Bird Hub</button>
+    <button class="menu-button" id="testBtn">Diagnostics</button>
+    <button class="menu-button" id="exitBtn">Exit</button>
   </div>
 
-  <!-- Leaderboard Panel -->
-  <div id="leaderboardPanel" class="panel">
-    <h2>Leaderboard</h2>
-    <ol id="scoresList"></ol>
-    <button id="backFromLeaderboard">Back</button>
+  <!-- Leaderboard Modal -->
+  <div id="leaderboardModal" class="modal-backdrop">
+    <div class="modal">
+      <h2>Leaderboard</h2>
+      <ul id="leaderboardList"></ul>
+      <button id="closeLeaderboard">Close</button>
+    </div>
   </div>
 
-  <!-- Settings Panel -->
-  <div id="settingsPanel" class="panel">
-    <h2>Settings</h2>
-    <label>
-      <input type="checkbox" id="sfxToggle" checked />
-      Sound Effects
-    </label>
-    <label>
-      <input type="checkbox" id="themeToggle" />
-      Dark Mode
-    </label>
-    <button id="backFromSettings">Back</button>
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-backdrop">
+    <div class="modal">
+      <h2>Settings</h2>
+      <label><input type="checkbox" id="toggleMusic"/> Music</label><br/>
+      <label><input type="checkbox" id="toggleSfx"/> SFX</label><br/>
+      <button id="closeSettings">Close</button>
+    </div>
   </div>
 
-  <!-- Admin Debug Panel -->
-  <div id="testPanel" class="panel">
-    <h2>Admin Debug</h2>
-    <pre id="debugInfo">Loading...</pre>
-    <button id="backFromTest">Back</button>
+  <!-- Diagnostics Modal -->
+  <div id="diagnosticsModal" class="modal-backdrop">
+    <div class="modal">
+      <h2>Diagnostics</h2>
+      <pre id="diagnosticsLog"></pre>
+      <button id="closeDiagnostics">Close</button>
+    </div>
   </div>
 
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas" width="480" height="640"></canvas>
-
-  <!-- Overlays -->
-  <div id="overlayContainer"></div>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
 
   <script>
-  // ===== Firebase Initialization =====
+  // ─────────────────────────────────────────────────────────────────────────────
+  // INITIALIZE FIREBASE
+  // ─────────────────────────────────────────────────────────────────────────────
   const firebaseConfig = {
-    apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0F9E7axOIxE",
-    authDomain: "masonnet-app-official.firebaseapp.com",
-    databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-    projectId: "masonnet-app-official",
-    storageBucket: "masonnet-app-official.firebasestorage.app",
-    messagingSenderId: "783919367562",
-    appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-    measurementId: "G-X1YKV5VK7J"
+    // TODO: Replace with your config
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_DOMAIN",
+    databaseURL: "YOUR_DB_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db   = firebase.database();
 
-  // ===== DOM & State =====
-  const panels      = {
-    menu: document.getElementById('menuPanel'),
-    leaderboard: document.getElementById('leaderboardPanel'),
-    settings: document.getElementById('settingsPanel'),
-    test: document.getElementById('testPanel')
-  };
-  const canvas      = document.getElementById('gameCanvas');
-  const ctx         = canvas.getContext('2d');
-  const titleImg    = document.getElementById('titleImg');
-  const overlays    = document.getElementById('overlayContainer');
-  let gameState     = 'MENU';   // MENU | GAME | OVER
-  let isAdmin       = false;
-  let settingsObj   = { sfx: true, theme: localStorage.getItem('theme') || 'light' };
+  // ─────────────────────────────────────────────────────────────────────────────
+  // UI SFX & MUSIC PREFERENCES
+  // ─────────────────────────────────────────────────────────────────────────────
+  let musicEnabled = JSON.parse(localStorage.getItem('musicEnabled')) ?? true;
+  let sfxEnabled   = JSON.parse(localStorage.getItem('sfxEnabled'))   ?? true;
 
-  // ===== Load & Apply Theme =====
-  document.body.classList.remove('theme-light','theme-dark');
-  document.body.classList.add(`theme-${settingsObj.theme}`);
-  document.getElementById('themeToggle').checked = settingsObj.theme === 'dark';
+  const hoverSfx = new Audio('https://app.masonnet.org/point.mp3');
+  const clickSfx = new Audio('https://app.masonnet.org/flap.mp3');
+  const backgroundMusic = new Audio('https://app.masonnet.org/bg-music.mp3');
+  backgroundMusic.loop = true;
+  if (musicEnabled) backgroundMusic.play();
 
-  // ===== Sprite Assets =====
-  const bgImg        = new Image();
-  bgImg.src          = 'https://app.masonnet.org/bg-day.png';
-  const birdImg      = new Image();
-  birdImg.src        = 'https://app.masonnet.org/bird.png';
-  const pipeNorthImg = new Image();
-  pipeNorthImg.src   = 'https://app.masonnet.org/pipeNorth.png';
-  const pipeSouthImg = new Image();
-  pipeSouthImg.src   = 'https://app.masonnet.org/pipeSouth.png';
+  function playHover() { if (sfxEnabled) hoverSfx.play(); }
+  function playClick() { if (sfxEnabled) clickSfx.play(); }
 
-  // Audio Assets
-  const sounds = {
-    flap:  new Audio('https://app.masonnet.org/flap.mp3'),
-    point: new Audio('https://app.masonnet.org/point.mp3'),
-    hit:   new Audio('https://app.masonnet.org/hit.mp3'),
-    die:   new Audio('https://app.masonnet.org/die.mp3')
-  };
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ELEMENT REFERENCES
+  // ─────────────────────────────────────────────────────────────────────────────
+  const pc  = document.getElementById('profileCard');
+  const ub  = document.querySelector('.username');
+  const LB  = document.getElementById('leaderboardModal');
+  const SM  = document.getElementById('settingsModal');
+  const DM  = document.getElementById('diagnosticsModal');
+  const listEl = document.getElementById('leaderboardList');
+  const logEl  = document.getElementById('diagnosticsLog');
+  const musicToggle = document.getElementById('toggleMusic');
+  const sfxToggle   = document.getElementById('toggleSfx');
 
-  // ===== Utilities =====
-  function showPanel(name) {
-    Object.values(panels).forEach(p => p.classList.remove('visible'));
-    if (name && panels[name]) {
-      panels[name].classList.add('visible');
-      canvas.style.display = 'none';
-      titleImg.style.display  = name === 'menu' ? 'block' : 'none';
-    }
-  }
-  function toast(msg) {
-    const div = document.createElement('div');
-    div.className = 'overlay';
-    div.textContent = msg;
-    overlays.append(div);
-    setTimeout(() => div.remove(), 1000);
-  }
-
-  // ===== Auth & Admin Gating =====
-  document.getElementById('authBtn').onclick = () => {
-    if (auth.currentUser) auth.signOut();
-    else auth.signInAnonymously();
-  };
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUTH & PROFILE DROPDOWN
+  // ─────────────────────────────────────────────────────────────────────────────
   auth.onAuthStateChanged(user => {
-    const btn = document.getElementById('authBtn');
-    btn.textContent = user ? 'Sign Out' : 'Sign In';
-    isAdmin = false;
-    if (user) {
-      user.getIdTokenResult().then(token => {
-        isAdmin = !!token.claims.admin;
-        document.getElementById('testBtn').style.display = isAdmin ? 'block' : 'none';
-      });
-    } else {
-      document.getElementById('testBtn').style.display = 'none';
-    }
+    if (!user) return window.location.href = '/login';
+    ub.textContent = user.displayName || user.email;
+  });
+  pc.addEventListener('click', () => pc.classList.toggle('open'));
+  document.getElementById('logoutBtn')
+    .addEventListener('click', () => auth.signOut());
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // MENU BUTTON HANDLERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.menu-button').forEach(btn => {
+    btn.addEventListener('mouseenter', playHover);
+    btn.addEventListener('click', playClick);
   });
 
-  // ===== Menu Hooks =====
-  document.getElementById('startBtn').onclick = () => {
-    Object.values(panels).forEach(p => p.classList.remove('visible'));
-    titleImg.style.display = 'none';
-    canvas.style.display   = 'block';
-    startGame();
-  };
-  document.getElementById('leaderboardBtn').onclick = () => {
-    loadLeaderboard();
-    showPanel('leaderboard');
-  };
-  document.getElementById('settingsBtn').onclick = () => {
-    document.getElementById('sfxToggle').checked = settingsObj.sfx;
-    document.getElementById('themeToggle').checked = settingsObj.theme === 'dark';
-    showPanel('settings');
-  };
-  document.getElementById('hubBtn').onclick = () => {
-    window.location = 'https://app.masonnet.org/flappybirdhub';
-  };
-  document.getElementById('testBtn').onclick = () => showPanel('test');
-  document.getElementById('backFromLeaderboard').onclick = () => showPanel('menu');
-  document.getElementById('backFromSettings').onclick  = () => showPanel('menu');
-  document.getElementById('backFromTest').onclick      = () => showPanel('menu');
+  document.getElementById('startBtn')
+    .addEventListener('click', () => window.FlappyHub.start());
+  document.getElementById('leaderboardBtn')
+    .addEventListener('click', openLeaderboardModal);
+  document.getElementById('settingsBtn')
+    .addEventListener('click', openSettingsModal);
+  document.getElementById('hubBtn')
+    .addEventListener('click', () =>
+      window.location.href = 'https://app.masonnet.org/flappybirdhub'
+    );
+  document.getElementById('testBtn')
+    .addEventListener('click', runDiagnostics);
+  document.getElementById('exitBtn')
+    .addEventListener('click', () => window.location.href = '/goodbye');
 
-  document.getElementById('sfxToggle').onchange = e => {
-    settingsObj.sfx = e.target.checked;
-    toast('SFX ' + (settingsObj.sfx ? 'On' : 'Off'));
-  };
-  document.getElementById('themeToggle').onchange = e => {
-    const theme = e.target.checked ? 'dark' : 'light';
-    settingsObj.theme = theme;
-    localStorage.setItem('theme', theme);
-    document.body.classList.toggle('theme-dark', theme==='dark');
-    document.body.classList.toggle('theme-light', theme==='light');
-    toast(theme.charAt(0).toUpperCase() + theme.slice(1) + ' Mode');
-  };
-
-  // ===== Leaderboard =====
-  function loadLeaderboard() {
-    const list = document.getElementById('scoresList');
-    list.innerHTML = '<li>Loading...</li>';
-    db.ref('scores').orderByChild('score').limitToLast(10)
+  // ─────────────────────────────────────────────────────────────────────────────
+  // LEADERBOARD LOGIC
+  // ─────────────────────────────────────────────────────────────────────────────
+  function openLeaderboardModal() {
+    listEl.innerHTML = '<li>Loading…</li>';
+    LB.style.display = 'flex';
+    db.ref('scores')
+      .orderByChild('score')
+      .limitToLast(10)
       .once('value', snap => {
-        const items = [];
-        snap.forEach(c => items.push(c.val()));
-        items.reverse();
-        list.innerHTML = items.map(o => `<li>${o.name}: ${o.score}</li>`).join('');
+        const data = [];
+        snap.forEach(child => data.push(child.val()));
+        data.sort((a,b)=> b.score - a.score);
+        if (!data.length) {
+          listEl.innerHTML = '<li>No scores yet.</li>';
+        } else {
+          listEl.innerHTML = data
+            .map(r => `<li>${r.name}: ${r.score}</li>`)
+            .join('');
+        }
       });
   }
+  document.getElementById('closeLeaderboard')
+    .addEventListener('click', () => LB.style.display = 'none');
 
-  // ===== Game Logic =====
-  let bird, pipes, frameCount, score, animRef;
-  function startGame() {
-    bird       = { x: 50, y: 320, w: 34, h: 24, vel: 0 };
-    pipes      = [];
-    frameCount = 0;
-    score      = 0;
-    gameState  = 'GAME';
-    loop();
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SETTINGS LOGIC
+  // ─────────────────────────────────────────────────────────────────────────────
+  function openSettingsModal() {
+    musicToggle.checked = musicEnabled;
+    sfxToggle.checked   = sfxEnabled;
+    SM.style.display = 'flex';
   }
-  function loop() {
-    animRef = requestAnimationFrame(loop);
-    update();
-    draw();
-    if (gameState==='OVER') {
-      cancelAnimationFrame(animRef);
-      endGame();
-    }
-  }
-  function update() {
-    frameCount++;
-    bird.vel += 0.5; bird.y += bird.vel;
-
-    if (frameCount % 100 === 0) {
-      const gap = 120;
-      const topH = Math.random()*(canvas.height-gap-200)+50;
-      pipes.push({ x:480, y:0, w:52, h:topH, passed:false });
-      pipes.push({ x:480, y:topH+gap, w:52, h:canvas.height, passed:false });
-    }
-
-    pipes.forEach(p => {
-      p.x -= 2;
-      if (!p.passed && p.x+p.w < bird.x) {
-        score++; p.passed=true;
-        if (settingsObj.sfx) sounds.point.play();
-      }
-      if (bird.x<p.x+p.w && bird.x+bird.w>p.x &&
-          bird.y<p.y+p.h && bird.y+bird.h>p.y) {
-        gameState='OVER'; if (settingsObj.sfx) sounds.hit.play();
-      }
-    });
-
-    if (bird.y+bird.h>canvas.height||bird.y<0) {
-      gameState='OVER'; if (settingsObj.sfx) sounds.die.play();
-    }
-  }
-  function draw() {
-    // background
-    ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
-
-    // pipes
-    pipes.forEach(p=>{
-      if(p.y===0) ctx.drawImage(pipeNorthImg,p.x,p.y,p.w,p.h);
-      else        ctx.drawImage(pipeSouthImg,p.x,p.y,p.w,p.h);
-    });
-
-    // bird
-    ctx.drawImage(birdImg,bird.x,bird.y,bird.w,bird.h);
-
-    // score
-    ctx.fillStyle = settingsObj.theme==='dark'?'#fff':'#000';
-    ctx.font = '30px Arial';
-    ctx.fillText(score,canvas.width/2-10,50);
-  }
-  function endGame() {
-    const uid = auth.currentUser?auth.currentUser.uid:'anon';
-    const name= uid.slice(0,5);
-    db.ref('scores').push({ name, score });
-    toast('Game Over! Score: '+score);
-    setTimeout(()=> showPanel('menu'),2000);
-  }
-
-  // ===== Input =====
-  window.addEventListener('keydown',e=>{
-    if(e.code==='Space'&&gameState==='GAME'){
-      bird.vel=-8; if(settingsObj.sfx) sounds.flap.play();
-    }
+  musicToggle.addEventListener('change', () => {
+    musicEnabled = musicToggle.checked;
+    localStorage.setItem('musicEnabled', musicEnabled);
+    musicEnabled ? backgroundMusic.play() : backgroundMusic.pause();
   });
-  canvas.addEventListener('click',()=>{
-    if(gameState==='GAME'){
-      bird.vel=-8; if(settingsObj.sfx) sounds.flap.play();
-    }
+  sfxToggle.addEventListener('change', () => {
+    sfxEnabled = sfxToggle.checked;
+    localStorage.setItem('sfxEnabled', sfxEnabled);
   });
+  document.getElementById('closeSettings')
+    .addEventListener('click', () => SM.style.display = 'none');
 
-  // ===== Admin Debug Info =====
-  setInterval(()=>{
-    if(isAdmin){
-      document.getElementById('debugInfo').textContent =
-        JSON.stringify({ frame:frameCount, pipes:pipes.length, score },null,2);
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DIAGNOSTICS / TEST SUITE
+  // ─────────────────────────────────────────────────────────────────────────────
+  function runDiagnostics() {
+    const logs = [];
+    logs.push(`Firebase Auth: ${auth.currentUser ? '✅ Connected' : '❌ Not connected'}`);
+    logs.push(`User: ${auth.currentUser?.email || '—'}`);
+    logs.push(`Database: ${db ? '✅ OK' : '❌ Missing'}`);
+    logs.push(`Music toggle: ${musicEnabled ? 'ON' : 'OFF'}`);
+    logs.push(`SFX toggle: ${sfxEnabled ? 'ON' : 'OFF'}`);
+    logs.push(`Game assets loaded: ${window.FlappyHub.assetsLoaded ? '✅ YES' : '❌ NO'}`);
+    logEl.textContent = logs.join('\n');
+    DM.style.display = 'flex';
+  }
+  document.getElementById('closeDiagnostics')
+    .addEventListener('click', () => DM.style.display = 'none');
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FLAPPY BIRD GAME (INLINE)
+  // ─────────────────────────────────────────────────────────────────────────────
+  (function(){
+    const canvas = document.createElement('canvas');
+    const ctx    = canvas.getContext('2d');
+    canvas.width  = 320;
+    canvas.height = 480;
+    canvas.style.position = 'absolute';
+    canvas.style.top  = '0';
+    canvas.style.left = '0';
+    canvas.style.zIndex = '50';
+
+    const spriteUrls = {
+      bg:       'https://app.masonnet.org/flappy-bg.png',
+      fg:       'https://app.masonnet.org/flappy-fg.png',
+      bird:     'https://app.masonnet.org/flappy-bird.png',
+      pipeUp:   'https://app.masonnet.org/flappy-pipe-up.png',
+      pipeDown: 'https://app.masonnet.org/flappy-pipe-down.png'
+    };
+    const sprites = {};
+    let loaded = 0, toLoad = Object.keys(spriteUrls).length;
+    const sounds = {
+      point: new Audio('https://app.masonnet.org/point.mp3'),
+      hit:   new Audio('https://app.masonnet.org/hit.mp3'),
+      die:   new Audio('https://app.masonnet.org/die.mp3'),
+      flap:  new Audio('https://app.masonnet.org/flap.mp3')
+    };
+
+    let bird, pipes, score, frameId, gameStarted, frameCount;
+    window.FlappyHub = { assetsLoaded: false, start };
+
+    function loadSprites(cb) {
+      for (let key in spriteUrls) {
+        const img = new Image();
+        img.src = spriteUrls[key];
+        img.onload = () => {
+          sprites[key] = img;
+          if (++loaded === toLoad) cb();
+        };
+      }
     }
-  },500);
+
+    function resetGame() {
+      bird = { x:50, y:150, w:34, h:24, vel:0, gravity:0.6, lift:-10 };
+      pipes = [];
+      score = 0;
+      frameCount = 0;
+      gameStarted = true;
+    }
+
+    function draw() {
+      ctx.drawImage(sprites.bg, 0, 0);
+      pipes.forEach(p => {
+        ctx.drawImage(sprites.pipeUp, p.x, p.y);
+        ctx.drawImage(sprites.pipeDown, p.x, p.y + sprites.pipeUp.height + p.gap);
+        p.x -= 2;
+        // collision
+        if (
+          bird.x + bird.w > p.x &&
+          bird.x < p.x + sprites.pipeUp.width &&
+          (bird.y < p.y + sprites.pipeUp.height ||
+           bird.y + bird.h > p.y + sprites.pipeUp.height + p.gap)
+        ) {
+          sounds.hit.play();
+          endGame();
+        }
+        if (p.x + sprites.pipeUp.width === bird.x) {
+          score++;
+          sounds.point.play();
+        }
+      });
+      if (frameCount % 100 === 0) {
+        const topY = Math.random() * (canvas.height/2);
+        pipes.push({ x: canvas.width, y: topY, gap: 120 });
+      }
+      ctx.drawImage(sprites.fg, 0, canvas.height - sprites.fg.height);
+      bird.vel += bird.gravity;
+      bird.y += bird.vel;
+      ctx.drawImage(sprites.bird, bird.x, bird.y);
+      if (bird.y + bird.h >= canvas.height - sprites.fg.height) {
+        sounds.die.play();
+        endGame();
+      }
+      ctx.fillStyle = '#fff';
+      ctx.font = '28px Arial';
+      ctx.fillText(score, canvas.width/2 - 10, 50);
+
+      frameCount++;
+      if (gameStarted) frameId = requestAnimationFrame(draw);
+    }
+
+    function flap() {
+      bird.vel = bird.lift;
+      sounds.flap.play();
+    }
+
+    function start() {
+      if (gameStarted) return;
+      document.body.appendChild(canvas);
+      resetGame();
+      draw();
+      window.addEventListener('keydown', e => { if (e.code==='Space') flap(); });
+      canvas.addEventListener('click', flap);
+    }
+
+    function endGame() {
+      gameStarted = false;
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('keydown', flap);
+      canvas.remove();
+    }
+
+    loadSprites(() => { window.FlappyHub.assetsLoaded = true; });
+  })();
   </script>
 </body>
 </html>
+```[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/joeqnicholson/OysterWars/tree/7ec0d812c418ae24b19efc34538c6af59f37763f/Assets%2FKinematic2D%2FCore%2FScripts%2FCharacterMotor.cs?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ngtaloc/TotNghiep-Project/tree/8b72be93496d37f227ac7d87d5aae25d5241d519/WebEng%2FWebEng%2FContent%2FTemplate%2Fplugins%2Fraphael%2Fraphael.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/victorguz/coky-framework/tree/c82351863c1c288929e5f1eaf66a6b619f31a9b7/src%2Fapp%2Fclasses%2FPiecesPHP%2FBuiltIn%2FShop%2FEntryPointController.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Thiti-Dev/ScheduralizationV2/tree/ebb64385ad03ab7a0d1492fdb8c88ca4ccf196c7/controller%2Fusers.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/muzudho/Kifuwarabe_Igo_Unity_Think/tree/ed1945a963aed75b5d6a5ae74f879560ba5a7bba/Kifuwarabe_Unity%2Fheader%2Fn950_main____%2Fn950_500_kifuwarabeThink.cs?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "5")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ComLock/enonic-xp-lib-sync/tree/7d8c8fb87d70dcd63c18d0fc328ad1d7c1054d84/gulpfile.babel.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "6")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/pouyakary/gerda/tree/f922891d5f249e681ddad5ee66bd7bbe2127aa46/server%2Farendelle-tools%2Ffile-system%2Fdirectory.ts?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "7")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Dazzed/dental-back/tree/ce276d59a779d91df0156e6ae2dff9024eaf3fc3/controllers%2Fv1%2Foffices.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "8")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DSDarkMark/jsgames/tree/f8e151b441474d83de0ed2eeff5822518f76ae18/carRun%2Fassets%2Fjs%2Findex.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "9")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/gokulapap/gokulapap.github.io/tree/e399b93f5ec880c50654567341f4e3b76589668c/_posts%2FBinary%20Exploitation%2Fphoenix%2F2021-06-11-2-format0.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "10")
