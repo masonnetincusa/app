@@ -1,267 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Flappy Bird Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
   <style>
-    /* RESET & BASE FONT */
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body, html { height:100%; font-family:MasonUI, sans-serif; background:#f5f5f5; }
-
-    /* HEADER */
-    .header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:20px 40px;
-      background:#fff;
-      box-shadow:0 2px 4px rgba(0,0,0,0.1);
+    :root {
+      --font-family: 'MasonUI', 'Roboto', sans-serif;
+      --font-size: 32px;
+      --btn-margin: 20px 0;
+      --primary-color: #333;
+      --bg-color: #f9f9f9;
+      --frame-color: rgba(0,0,0,0.1);
     }
-    .header h1 {
-      font-size:36px;
-      font-weight:bold;
-      color:#333;
+    html, body {
+      margin: 0; padding: 0;
+      font-family: var(--font-family);
+      background: var(--bg-color);
+      color: var(--primary-color);
+      height: 100%;
+      overflow: hidden;
     }
-    .profile-card span {
-      font-size:18px;
-      font-weight:500;
-      color:#666;
+    #banner {
+      width: 100%; max-width: 600px;
+      margin: 20px auto;
+      display: block;
     }
-
-    /* MAIN MENU (vertical stack) */
-    #menu-container {
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      margin-top:80px;
+    #menu, #game-container {
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+      position: relative;
     }
-    .menu-button {
-      width:240px;
-      padding:16px 0;
-      margin:20px 0;
-      font-size:32px;
-      font-weight:bold;
-      color:#fff;
-      background:#1e90ff;
-      border:none;
-      border-radius:8px;
-      cursor:pointer;
-      transition:background 0.2s ease;
+    button {
+      font-size: var(--font-size);
+      font-weight: 700;
+      padding: 10px 20px;
+      margin: var(--btn-margin);
+      width: 80%;
+      cursor: pointer;
+      background: #fff;
+      border: 2px solid var(--primary-color);
+      border-radius: 5px;
     }
-    .menu-button:hover { background:#1c86ee; }
-
-    /* GAME CANVAS & OVERLAYS */
-    #game-container {
-      position:relative;
-      width:320px;
-      height:480px;
-      margin:40px auto;
-      display:none;
+    #profile {
+      position: absolute;
+      top: 20px; right: 20px;
+    }
+    #profile img {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    #profile-details {
+      display: none;
+      position: absolute;
+      top: 60px; right: 0;
+      background: #fff;
+      border: 1px solid var(--frame-color);
+      padding: 10px;
+      text-align: left;
     }
     #game-canvas {
-      display:block;
-      background:#70c5ce;
-      border-radius:8px;
+      background: #fff;
+      box-shadow: 0 0 0 10px var(--frame-color);
+      display: none;
+      margin: auto;
+      border-radius: 5px;
     }
-    #game-over-overlay {
-      position:absolute;
-      top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.5);
-      display:none;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      color:#fff;
-      font-size:32px;
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center; align-items: center;
+      color: #fff; font-size: var(--font-size);
     }
-    .overlay-button {
-      width:200px;
-      padding:12px 0;
-      margin:12px 0;
-      font-size:28px;
-      font-weight:bold;
-      background:#ff4757;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      transition:background 0.2s ease;
+    .overlay div {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
     }
-    .overlay-button:hover { background:#e84118; }
+    .overlay h2 {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>Flappy Bird Hub</h1>
-    <div class="profile-card">
-      <span>Logged in as Mason</span>
+  <img id="banner" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC">
+
+  <div id="profile">
+    <img src="https://app.masonnet.org/avatar.png" alt="Profile" id="profile-btn">
+    <div id="profile-details">
+      <p>Mason</p>
+      <button id="logout">Logout</button>
     </div>
   </div>
 
-  <!-- MAIN MENU -->
-  <div id="menu-container">
-    <button id="start-btn" class="menu-button">Start Game</button>
-    <button class="menu-button"
-      onclick="window.location.href='https://app.masonnet.org/flappybirdhub/leaderboard'"
-    >Leaderboard</button>
-    <button class="menu-button"
-      onclick="window.location.href='https://app.masonnet.org/flappybirdhub/settings'"
-    >Settings</button>
+  <div id="menu">
+    <button id="hub-btn">Flappy Bird Hub</button>
+    <button id="start-btn">Start Game</button>
+    <button id="leaderboard-btn">Leaderboard</button>
+    <button id="settings-btn">Settings</button>
+    <button id="diagnostics-btn">Diagnostics</button>
+    <button id="exit-btn">Exit</button>
   </div>
 
-  <!-- GAME VIEW -->
   <div id="game-container">
-    <canvas id="game-canvas" width="320" height="480"></canvas>
-    <div id="game-over-overlay" class="flex">
-      <div>Game Over</div>
-      <div id="final-score" style="margin:12px 0;">Score: 0</div>
-      <button id="restart-btn" class="overlay-button">Restart</button>
-      <button id="menu-btn" class="overlay-button">Main Menu</button>
+    <canvas id="game-canvas" width="400" height="600"></canvas>
+    <div id="game-over" class="overlay">
+      <div>
+        <p>Game Over</p>
+        <button id="menu-btn">Main Menu</button>
+      </div>
     </div>
   </div>
 
+  <div id="leaderboard" class="overlay">
+    <div>
+      <h2>Leaderboard</h2>
+      <ol id="scores" style="text-align:left;max-height:300px;overflow:auto;"></ol>
+      <button id="close-leaderboard">Close</button>
+    </div>
+  </div>
+
+  <div id="settings" class="overlay">
+    <div>
+      <h2>Settings</h2>
+      <label><input type="checkbox" id="sfx-toggle" checked> SFX</label>
+      <button id="close-settings">Close</button>
+    </div>
+  </div>
+
+  <div id="diagnostics" class="overlay">
+    <div>
+      <h2>Diagnostics</h2>
+      <p id="fps">FPS: --</p>
+      <p id="entities">Pipes: --</p>
+      <button id="close-diagnostics">Close</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   <script>
-    // SFX ASSETS
-    const flapSound  = new Audio('https://app.masonnet.org/flap.mp3');
-    const pointSound = new Audio('https://app.masonnet.org/point.mp3');
-    const hitSound   = new Audio('https://app.masonnet.org/hit.mp3');
-    const dieSound   = new Audio('https://app.masonnet.org/die.mp3');
+    // Firebase setup
+    var firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "your-app.firebaseapp.com",
+      databaseURL: "https://your-app.firebaseio.com",
+      projectId: "your-app",
+      storageBucket: "your-app.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
 
-    // DOM ELEMENTS
-    const menuEl      = document.getElementById('menu-container');
-    const gameContainer = document.getElementById('game-container');
-    const overlayEl   = document.getElementById('game-over-overlay');
-    const finalScoreEl= document.getElementById('final-score');
-    const canvas      = document.getElementById('game-canvas');
-    const ctx         = canvas.getContext('2d');
+    // Profile dropdown
+    document.getElementById('profile-btn').onclick = () => {
+      var pd = document.getElementById('profile-details');
+      pd.style.display = pd.style.display === 'block' ? 'none' : 'block';
+    };
+    document.getElementById('logout').onclick = () => {
+      // implement logout logic
+      alert('Logged out');
+    };
 
-    let bird, pipes, score, gameLoopId, pipeTimer;
+    // Menu elements
+    var menu = document.getElementById('menu'),
+        gameContainer = document.getElementById('game-container'),
+        canvas = document.getElementById('game-canvas'),
+        overlayGameOver = document.getElementById('game-over'),
+        leaderboardOverlay = document.getElementById('leaderboard'),
+        settingsOverlay = document.getElementById('settings'),
+        diagnosticsOverlay = document.getElementById('diagnostics');
 
-    // START & MENU BUTTONS
-    document.getElementById('start-btn').addEventListener('click', () => {
-      menuEl.style.display = 'none';
-      gameContainer.style.display = 'block';
-      initGame();
-    });
-    document.getElementById('menu-btn').addEventListener('click', () => {
-      overlayEl.style.display = 'none';
+    document.getElementById('hub-btn').onclick = () => resetToMenu();
+    document.getElementById('start-btn').onclick = startGame;
+    document.getElementById('leaderboard-btn').onclick = () => openOverlay(leaderboardOverlay, loadScores);
+    document.getElementById('settings-btn').onclick = () => openOverlay(settingsOverlay);
+    document.getElementById('diagnostics-btn').onclick = () => {
+      var pwd = prompt('Admin Password:');
+      if (pwd === 'admin123') openOverlay(diagnosticsOverlay);
+    };
+    document.getElementById('exit-btn').onclick = () => location.href = 'https://app.masonnet.org/';
+    document.getElementById('close-leaderboard').onclick = () => closeOverlay(leaderboardOverlay);
+    document.getElementById('close-settings').onclick = () => closeOverlay(settingsOverlay);
+    document.getElementById('close-diagnostics').onclick = () => closeOverlay(diagnosticsOverlay);
+    document.getElementById('menu-btn').onclick = () => resetToMenu();
+
+    function openOverlay(el, callback) {
+      el.style.display = 'flex';
+      if (callback) callback();
+    }
+    function closeOverlay(el) {
+      el.style.display = 'none';
+    }
+    function resetToMenu() {
+      menu.style.display = 'block';
+      canvas.style.display = 'none';
       gameContainer.style.display = 'none';
-      menuEl.style.display = 'flex';
-    });
-    document.getElementById('restart-btn').addEventListener('click', () => {
-      overlayEl.style.display = 'none';
-      initGame();
-    });
+      overlayGameOver.style.display = 'none';
+    }
 
-    // GAME INITIALIZATION
-    function initGame() {
-      bird = { x:60, y:canvas.height/2, size:32, gravity:0.6, lift:-10, velocity:0 };
+    // Settings
+    var sfxOn = true;
+    document.getElementById('sfx-toggle').onchange = e => sfxOn = e.target.checked;
+
+    // Leaderboard
+    function loadScores() {
+      var scoresEl = document.getElementById('scores');
+      scoresEl.innerHTML = '';
+      db.ref('leaderboard').orderByChild('score').limitToLast(10).once('value', snap => {
+        var arr = [];
+        snap.forEach(c => arr.push(c.val()));
+        arr.reverse().forEach(item => {
+          var li = document.createElement('li');
+          li.innerText = `${item.name}: ${item.score}`;
+          scoresEl.appendChild(li);
+        });
+      });
+    }
+
+    // Audio assets
+    var sounds = {
+      flap: new Audio('https://app.masonnet.org/flap.mp3'),
+      point: new Audio('https://app.masonnet.org/point.mp3'),
+      hit: new Audio('https://app.masonnet.org/hit.mp3'),
+      die: new Audio('https://app.masonnet.org/die.mp3')
+    };
+
+    // Game variables
+    var ctx = canvas.getContext('2d'),
+        bird, pipes, score, frames, fpsInterval, then, now, elapsed;
+
+    // Start game
+    function startGame() {
+      menu.style.display = 'none';
+      gameContainer.style.display = 'block';
+      canvas.style.display = 'block';
+      bird = { x: 50, y: 300, vy: 0, r: 12 };
       pipes = [];
-      score = 0;
-      // clear any existing timers/loops
-      if (pipeTimer) clearInterval(pipeTimer);
-      cancelAnimationFrame(gameLoopId);
-
-      // spawn a new pipe every 1.5s
-      pipeTimer = setInterval(() => pipes.push(createPipe()), 1500);
-
-      // start loop
-      gameLoop();
+      score = 0; frames = 0;
+      then = Date.now();
+      fpsInterval = 1000 / 60;
+      animate();
     }
 
-    // CREATE PIPE PAIR
-    function createPipe() {
-      const gap = 120;
-      const topH = Math.random()*(canvas.height - gap - 80) + 20;
-      return {
-        x: canvas.width,
-        w: 52,
-        top: topH,
-        bottom: canvas.height - topH - gap,
-        passed: false
-      };
-    }
-
-    // MAIN LOOP
-    function gameLoop() {
-      update();
-      draw();
-      gameLoopId = requestAnimationFrame(gameLoop);
-    }
-
-    // UPDATE LOGIC
-    function update() {
-      // bird physics
-      bird.velocity += bird.gravity;
-      bird.y += bird.velocity;
-      if (bird.y + bird.size > canvas.height || bird.y < 0) {
-        gameOver();
+    function animate() {
+      requestAnimationFrame(animate);
+      now = Date.now();
+      elapsed = now - then;
+      if (elapsed > fpsInterval) {
+        then = now - (elapsed % fpsInterval);
+        update();
+        draw();
       }
-
-      // pipes
-      pipes.forEach(pipe => {
-        pipe.x -= 2;
-        // score
-        if (!pipe.passed && pipe.x + pipe.w < bird.x) {
-          pointSound.play();
-          score++;
-          pipe.passed = true;
-        }
-        // collision
-        if (
-          bird.x < pipe.x + pipe.w &&
-          bird.x + bird.size > pipe.x &&
-          (bird.y < pipe.top || bird.y + bird.size > canvas.height - pipe.bottom)
-        ) {
-          gameOver();
-        }
-      });
-      // remove off-screen
-      pipes = pipes.filter(p => p.x + p.w > 0);
     }
 
-    // DRAW EVERYTHING
+    // Diagnostics update
+    function updateDiagnostics() {
+      document.getElementById('fps').innerText = 'FPS: ' + Math.round(1000 / elapsed);
+      document.getElementById('entities').innerText = 'Pipes: ' + pipes.length;
+    }
+
+    function update() {
+      bird.vy += 0.5; bird.y += bird.vy;
+      if (sfxOn && bird.vy < 0) sounds.flap.play();
+
+      if (frames % 90 === 0) {
+        var gap = 120, y = Math.random() * (400 - gap) + 50;
+        pipes.push({ x: 400, y: y, scored: false });
+      }
+      pipes.forEach(p => {
+        p.x -= 2;
+        if (bird.x + bird.r > p.x && bird.x - bird.r < p.x + 50 &&
+            (bird.y < p.y || bird.y > p.y + 120)) {
+          endGame();
+        }
+        if (!p.scored && p.x < bird.x) {
+          score++; p.scored = true;
+          if (sfxOn) sounds.point.play();
+        }
+      });
+      pipes = pipes.filter(p => p.x > -50);
+      if (bird.y > 600 || bird.y < 0) endGame();
+      frames++;
+      if (diagnosticsOverlay.style.display === 'flex') updateDiagnostics();
+    }
+
     function draw() {
-      // clear
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // bird
-      ctx.fillStyle = '#ffd500';
-      ctx.fillRect(bird.x, bird.y, bird.size, bird.size);
-
-      // pipes
-      ctx.fillStyle = '#228B22';
-      pipes.forEach(pipe => {
-        ctx.fillRect(pipe.x, 0, pipe.w, pipe.top);
-        ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipe.w, pipe.bottom);
+      ctx.fillStyle = 'yellow';
+      ctx.beginPath(); ctx.arc(bird.x, bird.y, bird.r, 0, 2 * Math.PI); ctx.fill();
+      ctx.fillStyle = 'green';
+      pipes.forEach(p => {
+        ctx.fillRect(p.x, 0, 50, p.y);
+        ctx.fillRect(p.x, p.y + 120, 50, canvas.height - p.y - 120);
       });
-
-      // score
-      ctx.fillStyle = '#fff';
-      ctx.font = '32px MasonUI, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(score, canvas.width/2, 50);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.fillText(score, canvas.width / 2 - 10, 50);
     }
 
-    // FLAP CONTROLS
-    function flap() {
-      bird.velocity = bird.lift;
-      flapSound.play();
+    function endGame() {
+      if (sfxOn) sounds.die.play();
+      overlayGameOver.style.display = 'flex';
+      var user = prompt('Enter your name:');
+      db.ref('leaderboard').push({ name: user || 'Anon', score: score });
     }
-    window.addEventListener('keydown', e => { if (e.code === 'Space') flap(); });
-    canvas.addEventListener('pointerdown', flap);
 
-    // GAME OVER HANDLER
-    function gameOver() {
-      clearInterval(pipeTimer);
-      cancelAnimationFrame(gameLoopId);
-      hitSound.play();
-      dieSound.play();
-      finalScoreEl.textContent = `Score: ${score}`;
-      overlayEl.style.display = 'flex';
-    }
+    canvas.addEventListener('click', () => bird.vy = -8);
   </script>
 </body>
 </html>
+```[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/waynelinks/facebox/tree/c100ed7cc2f9cf48df2f29743b8b4d2b47ee05ed/client%2Fsrc%2Fserver%2Findex.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/SeanCena123/test-project-viola/tree/66037dd59ce3ad042e431600ef674f0cc66797d8/public%2Fjs%2Fsignin.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/VikashAnandJha/WebRTCDemo/tree/3ff742204e928ee9907853adaf2f02c1a0f6464d/index.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/syahdanny/monitoring-aquaponik/tree/254121a6fed846b2cedb151ce226d8b10b05072b/index.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")
