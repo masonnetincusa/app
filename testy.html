@@ -1,285 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
   <title>Flappy Bird Hub</title>
-  <link
-    href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap"
-    rel="stylesheet"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
-    :root {
-      --font-family: "Roboto", sans-serif;
-      --brand-color: #ffcc00;
-      --button-bg: #ffdd57;
-      --button-hover: #ffc549;
-      --overlay-bg: rgba(0, 0, 0, 0.5);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: var(--font-family);
-      background: #70c5ce;
+    /* Global Reset */
+    html, body {
+      margin: 0; padding: 0;
+      background: #000; color: #fff;
+      font-family: 'MasonUI', sans-serif;
       overflow: hidden;
       height: 100vh;
-      position: relative;
     }
-
-    /* HEADER */
-    #title-banner {
+    /* Title Banner */
+    #banner {
       display: block;
-      margin: 20px auto 0;
+      margin: 40px auto 20px;
       width: 240px;
     }
-
-    /* PROFILE DROPDOWN */
-    .profile {
-      position: absolute;
-      top: 20px;
-      right: 20px;
+    /* Avatar & Dropdown */
+    #avatar {
+      position: absolute; top: 20px; right: 20px;
+      width: 48px; height: 48px;
+      border: 2px solid #fff; border-radius: 50%;
+      background: url('https://app.masonnet.org/avatar.png') center/cover no-repeat;
+      cursor: pointer; z-index: 1000;
     }
-
-    .profile .avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+    #user-menu {
+      position: absolute; top: 68px; right: 20px;
+      background: #111; border:1px solid #333; border-radius:4px;
+      display: none; flex-direction: column; z-index: 1001;
+    }
+    #user-menu button {
+      background: none; border: none; color: #fff;
+      padding: 10px 16px; text-align: left; font-size: 16px;
       cursor: pointer;
     }
+    #user-menu button:hover { background: rgba(255,255,255,0.1); }
 
-    .dropdown {
-      position: absolute;
-      top: 60px;
-      right: 0;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      display: none;
-      flex-direction: column;
-      min-width: 160px;
+    /* Main Menu */
+    #menu {
+      display: flex; flex-direction: column; align-items: center;
+      margin-top: 20px;
     }
-
-    .dropdown button {
-      background: none;
-      border: none;
-      padding: 10px 16px;
-      text-align: left;
+    .btn {
+      width: 240px; height: 44px;
+      margin: 20px 0;
+      background: #E02401; color: #fff;
+      font-size: 32px; font-weight: bold;
+      border: none; border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      transition: background .15s;
     }
+    .btn:hover { background: #b81b01; }
 
-    .dropdown button:hover {
-      background: #f0f0f0;
-    }
-
-    .profile:hover .dropdown {
-      display: flex;
-    }
-
-    /* MAIN MENU */
-    #main-menu {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 40px;
-    }
-
-    #main-menu button {
-      font-size: 32px;
-      font-weight: 700;
-      background: var(--button-bg);
-      border: 2px solid var(--brand-color);
-      border-radius: 8px;
-      padding: 12px 24px;
-      margin: 12px 0;
-      width: 260px;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    #main-menu button:hover {
-      background: var(--button-hover);
-    }
-
-    /* GAME CANVAS */
+    /* Game Container */
     #game-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
       display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #game-canvas {
-      background: #70c5ce;
-      border: 4px solid var(--brand-color);
-      border-radius: 8px;
-    }
-
-    /* OVERLAYS */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--overlay-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .panel {
-      background: #fff;
-      border-radius: 8px;
-      padding: 24px;
-      width: 90%;
-      max-width: 400px;
       position: relative;
-      text-align: center;
+      width: 320px; height: 480px;
+      margin: 40px auto;
     }
-
-    .panel h2 {
-      margin-bottom: 16px;
-      font-size: 24px;
-      font-weight: 700;
-    }
-
-    .panel .close {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: none;
-      border: none;
-      font-size: 24px;
-      line-height: 1;
-      cursor: pointer;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    /* SETTINGS SLIDERS */
-    .panel label {
+    canvas {
       display: block;
-      margin: 12px 0;
-      font-size: 16px;
+      width: 320px; height: 480px;
+      background: #70c5ce;
+      border: 1px solid #fff; border-radius: 4px;
     }
 
-    .panel input[type="range"] {
-      width: 100%;
-      margin-top: 6px;
+    /* Overlay (Game Over, Leaderboard, Settings, Diagnostics) */
+    .overlay {
+      position: absolute; top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      flex-direction: column; align-items:center; justify-content:center;
+      font-size: 24px;
+      padding: 20px;
+      z-index: 900;
     }
-
-    /* LEADERBOARD */
-    #leaderboard-list {
-      text-align: left;
-      padding-left: 20px;
-      margin-top: 8px;
+    .overlay .panel {
+      background: #111; border:1px solid #333; border-radius:8px;
+      width: 90%; max-width:400px;
+      padding:24px; text-align:center;
+      position: relative;
     }
+    .overlay h2 { margin-bottom:16px; font-size:28px; }
+    .overlay .close {
+      position:absolute; top:16px; right:16px;
+      background:none; border:none; color:#ccc;
+      font-size:24px; cursor:pointer;
+    }
+    .overlay ul { list-style:none; padding:0; text-align:left; }
+    .overlay ul li { margin-bottom:8px; }
   </style>
 </head>
-
 <body>
-  <!-- Title Banner -->
-  <header><img id="title-banner" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC Logo" /></header>
 
-  <!-- Profile Card -->
-  <div class="profile">
-    <img class="avatar" id="profile-avatar" src="https://app.masonnet.org/avatar.png" alt="User avatar" />
-    <div class="dropdown">
-      <button id="account-btn">Account</button>
-      <button id="search-btn">Search</button>
-      <button id="sign-in-btn">Sign In</button>
-      <button id="sign-out-btn" class="hidden">Sign Out</button>
+  <!-- Banner + Avatar -->
+  <img id="banner" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC"/>
+  <div id="avatar"></div>
+  <div id="user-menu">
+    <button id="btn-account">Account</button>
+    <button id="btn-search">Search</button>
+    <button id="btn-signin">Sign In</button>
+    <button id="btn-signout" class="hidden">Sign Out</button>
+  </div>
+
+  <!-- Vertical Main Menu -->
+  <div id="menu">
+    <button id="btn-start" class="btn">Start</button>
+    <button id="btn-leader" class="btn">Leaderboard</button>
+    <button id="btn-settings" class="btn">Settings</button>
+    <button id="btn-hub" class="btn">Flappy Bird Hub</button>
+    <button id="btn-diag" class="btn hidden">Diagnostics</button>
+    <button id="btn-exit" class="btn">Exit</button>
+  </div>
+
+  <!-- Game + Game Over -->
+  <div id="game-container">
+    <canvas id="gameCanvas" width="320" height="480"></canvas>
+    <div id="game-over" class="overlay">
+      <div class="panel">
+        <h2>Game Over</h2>
+        <div id="finalScore" style="margin-bottom:20px;font-size:20px;"></div>
+        <button id="btn-retry" class="btn">Retry</button>
+        <button id="btn-menu"  class="btn">Main Menu</button>
+      </div>
     </div>
   </div>
 
-  <!-- Main Menu -->
-  <nav id="main-menu">
-    <button id="start-btn">Start</button>
-    <button id="leaderboard-btn">Leaderboard</button>
-    <button id="settings-btn">Settings</button>
-    <button id="hub-btn">Flappy Bird Hub</button>
-    <button id="diagnostics-btn">Diagnostics</button>
-    <button id="exit-btn">Exit</button>
-  </nav>
-
-  <!-- Game Canvas -->
-  <div id="game-container">
-    <canvas id="game-canvas" width="400" height="600"></canvas>
-  </div>
-
   <!-- Leaderboard Overlay -->
-  <div id="leaderboard-overlay" class="overlay hidden">
+  <div id="leader-overlay" class="overlay">
     <div class="panel">
-      <button class="close" id="lb-close-btn">&times;</button>
+      <button class="close" id="close-leader">&times;</button>
       <h2>Leaderboard</h2>
-      <ol id="leaderboard-list"></ol>
+      <ul id="leader-list"></ul>
     </div>
   </div>
 
   <!-- Settings Overlay -->
-  <div id="settings-overlay" class="overlay hidden">
+  <div id="settings-overlay" class="overlay">
     <div class="panel">
-      <button class="close" id="settings-close-btn">&times;</button>
+      <button class="close" id="close-settings">&times;</button>
       <h2>Settings</h2>
-      <label>
-        Music Volume:
-        <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.5" />
-      </label>
-      <label>
-        SFX Volume:
-        <input type="range" id="sfx-volume" min="0" max="1" step="0.05" value="0.8" />
+      <label style="display:block;margin:12px 0;">
+        <input type="checkbox" id="toggle-sfx"/> Enable SFX
       </label>
     </div>
   </div>
 
   <!-- Diagnostics Overlay -->
-  <div id="diagnostics-overlay" class="overlay hidden">
+  <div id="diag-overlay" class="overlay">
     <div class="panel">
-      <button class="close" id="diag-close-btn">&times;</button>
+      <button class="close" id="close-diag">&times;</button>
       <h2>Diagnostics</h2>
-      <pre id="diagnostics-info"></pre>
+      <pre id="diag-info" style="text-align:left;color:#0f0;"></pre>
     </div>
   </div>
 
+  <!-- Audio Assets -->
+  <audio id="flap"  src="https://app.masonnet.org/flap.mp3"  preload="auto"></audio>
+  <audio id="point" src="https://app.masonnet.org/point.mp3" preload="auto"></audio>
+  <audio id="hit"   src="https://app.masonnet.org/hit.mp3"   preload="auto"></audio>
+  <audio id="die"   src="https://app.masonnet.org/die.mp3"   preload="auto"></audio>
+
   <!-- Firebase & Game Logic -->
   <script type="module">
-    // Firebase v9+ modular imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
     import {
-      getAuth,
-      signInWithPopup,
-      signOut,
-      GoogleAuthProvider,
-      onAuthStateChanged,
-    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+      getAuth, signInWithPopup, GoogleAuthProvider,
+      signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
     import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      limit,
-      getDocs,
-      addDoc,
-      serverTimestamp,
-    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+      getFirestore, collection, query, orderBy, limit,
+      getDocs, addDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
 
-    // TODO: replace with your real config
+    // Your Firebase config
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
@@ -292,244 +191,242 @@ const firebaseConfig = {
   measurementId: "G-X1YKV5VK7J"
 };
 
-    const app = initializeApp(firebaseConfig);
+    // Init
+    const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
-    let currentUser = null;
+    const db   = getFirestore(app);
+    const ADMIN_UID = "REPLACE_WITH_ADMIN_UID";
 
-    // PROFILE UI
-    const signInBtn = document.getElementById("sign-in-btn");
-    const signOutBtn = document.getElementById("sign-out-btn");
-    const accountBtn = document.getElementById("account-btn");
+    // Elements
+    const avatar   = document.getElementById("avatar");
+    const userMenu = document.getElementById("user-menu");
+    const btnSignIn= document.getElementById("btn-signin");
+    const btnSignOut= document.getElementById("btn-signout");
+    const btnStart = document.getElementById("btn-start");
+    const btnLeader= document.getElementById("btn-leader");
+    const btnSettings= document.getElementById("btn-settings");
+    const btnHub   = document.getElementById("btn-hub");
+    const btnDiag  = document.getElementById("btn-diag");
+    const btnExit  = document.getElementById("btn-exit");
+    const menuEl   = document.getElementById("menu");
+    const gameEl   = document.getElementById("game-container");
+    const canvas   = document.getElementById("gameCanvas");
+    const ctx      = canvas.getContext("2d");
+    const overlayGameOver = document.getElementById("game-over");
+    const finalScoreEl    = document.getElementById("finalScore");
+    const btnRetry = document.getElementById("btn-retry");
+    const btnMenu  = document.getElementById("btn-menu");
+    const leaderOL = document.getElementById("leader-overlay");
+    const leaderList = document.getElementById("leader-list");
+    const closeLeader= document.getElementById("close-leader");
+    const settingsOL = document.getElementById("settings-overlay");
+    const toggleSfx  = document.getElementById("toggle-sfx");
+    const closeSettings= document.getElementById("close-settings");
+    const diagOL     = document.getElementById("diag-overlay");
+    const diagInfo   = document.getElementById("diag-info");
+    const closeDiag  = document.getElementById("close-diag");
 
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
+    // SFX & Toggle
+    const sounds = {
+      flap:  new Audio("https://app.masonnet.org/flap.mp3"),
+      point: new Audio("https://app.masonnet.org/point.mp3"),
+      hit:   new Audio("https://app.masonnet.org/hit.mp3"),
+      die:   new Audio("https://app.masonnet.org/die.mp3")
+    };
+    let sfxEnabled = JSON.parse(localStorage.getItem("sfxEnabled")) ?? true;
+    toggleSfx.checked = sfxEnabled;
+    toggleSfx.onchange = () => {
+      sfxEnabled = toggleSfx.checked;
+      localStorage.setItem("sfxEnabled", JSON.stringify(sfxEnabled));
+    };
+    function playSfx(key) {
+      if (!sfxEnabled) return;
+      sounds[key].currentTime = 0;
+      sounds[key].play();
+    }
+
+    // Auth Logic
+    onAuthStateChanged(auth, user => {
       if (user) {
-        signInBtn.classList.add("hidden");
-        signOutBtn.classList.remove("hidden");
-        accountBtn.textContent = user.displayName || "Account";
+        btnSignIn.classList.add("hidden");
+        btnSignOut.classList.remove("hidden");
+        if (user.uid === ADMIN_UID) btnDiag.classList.remove("hidden");
       } else {
-        signInBtn.classList.remove("hidden");
-        signOutBtn.classList.add("hidden");
-        accountBtn.textContent = "Account";
+        btnSignIn.classList.remove("hidden");
+        btnSignOut.classList.add("hidden");
+        btnDiag.classList.add("hidden");
+      }
+    });
+    btnSignIn.onclick  = () => signInWithPopup(auth, new GoogleAuthProvider());
+    btnSignOut.onclick = () => signOut(auth);
+
+    // Avatar Dropdown
+    avatar.onclick = () => {
+      userMenu.style.display = userMenu.style.display==="flex"?"none":"flex";
+    };
+    document.addEventListener("click", e => {
+      if (!avatar.contains(e.target) && !userMenu.contains(e.target)) {
+        userMenu.style.display = "none";
       }
     });
 
-    signInBtn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-    signOutBtn.onclick = () => signOut(auth);
+    // Overlay Toggle
+    function toggleOverlay(el, show) { el.style.display = show?"flex":"none"; }
 
-    // UTIL: toggle overlays
-    function toggleOverlay(id, show) {
-      document.getElementById(id).classList.toggle("hidden", !show);
-    }
-
-    // LEADERBOARD
-    const lbBtn = document.getElementById("leaderboard-btn");
-    const lbClose = document.getElementById("lb-close-btn");
-    const lbList = document.getElementById("leaderboard-list");
-
-    lbBtn.onclick = async () => {
-      lbList.innerHTML = "";
-      const q = query(
-        collection(db, "leaderboard"),
-        orderBy("score", "desc"),
-        limit(10)
-      );
+    // Leaderboard
+    btnLeader.onclick = async () => {
+      leaderList.innerHTML = "<li>Loading…</li>";
+      toggleOverlay(leaderOL, true);
+      const q = query(collection(db,"leaderboard"), orderBy("score","desc"), limit(10));
       const snap = await getDocs(q);
-      snap.forEach((doc) => {
+      leaderList.innerHTML = "";
+      snap.forEach(doc => {
+        const d = doc.data();
         const li = document.createElement("li");
-        li.textContent = `${doc.data().name}: ${doc.data().score}`;
-        lbList.appendChild(li);
+        li.textContent = `${d.name}: ${d.score}`;
+        leaderList.appendChild(li);
       });
-      toggleOverlay("leaderboard-overlay", true);
     };
-    lbClose.onclick = () => toggleOverlay("leaderboard-overlay", false);
+    closeLeader.onclick = () => toggleOverlay(leaderOL, false);
 
-    // SETTINGS
-    document.getElementById("settings-btn").onclick = () =>
-      toggleOverlay("settings-overlay", true);
-    document.getElementById("settings-close-btn").onclick = () =>
-      toggleOverlay("settings-overlay", false);
+    // Settings
+    btnSettings.onclick  = () => toggleOverlay(settingsOL, true);
+    closeSettings.onclick= () => toggleOverlay(settingsOL, false);
 
-    // DIAGNOSTICS
-    const diagInfo = document.getElementById("diagnostics-info");
-    document.getElementById("diagnostics-btn").onclick = () => {
-      diagInfo.textContent = `
-FPS: ${Math.round(fps)} 
-Score: ${score} 
-Gravity: ${gravity.toFixed(2)} 
-Velocity: ${bird.vfy.toFixed(2)}
-      `;
-      toggleOverlay("diagnostics-overlay", true);
+    // Diagnostics
+    btnDiag.onclick = () => {
+      const info = [
+        `Pipes: ${pipes.length}`,
+        `Score: ${score}`,
+        `SFX: ${sfxEnabled?"ON":"OFF"}`,
+        `FPS: ${Math.round(fps)}`
+      ].join("\n");
+      diagInfo.textContent = info;
+      toggleOverlay(diagOL, true);
     };
-    document.getElementById("diag-close-btn").onclick = () =>
-      toggleOverlay("diagnostics-overlay", false);
+    closeDiag.onclick = () => toggleOverlay(diagOL, false);
 
-    // HUB & EXIT
-    document.getElementById("hub-btn").onclick = () =>
-      window.location.replace("https://app.masonnet.org/flappybirdhub");
-    document.getElementById("exit-btn").onclick = () => window.close();
+    // Navigation
+    btnHub.onclick  = () => window.location.href = "https://app.masonnet.org/flappybirdhub";
+    btnExit.onclick = () => window.close();
+    closeLeader.onclick();
 
-    // GAME AUDIO
-    const audio = {
-      flap: new Audio("https://app.masonnet.org/flap.mp3"),
-      hit: new Audio("https://app.masonnet.org/hit.mp3"),
-      die: new Audio("https://app.masonnet.org/die.mp3"),
-      point: new Audio("https://app.masonnet.org/point.mp3"),
-    };
-
-    // VOLUME CONTROLS
-    const musicVol = document.getElementById("music-volume");
-    const sfxVol = document.getElementById("sfx-volume");
-    musicVol.oninput = () => (/* bg music volume if any */ null);
-    sfxVol.oninput = () => {
-      Object.values(audio).forEach((a) => (a.volume = sfxVol.value));
-    };
-
-    // CANVAS & GAME LOGIC
-    const canvas = document.getElementById("game-canvas");
-    const ctx = canvas.getContext("2d");
-    const W = canvas.width,
-      H = canvas.height;
-
-    let bird, pipes, frame, score, gravity, fps;
-    let lastTime = performance.now();
+    // Game State
+    let bird, pipes, frame, score, fps;
+    let lastTime = 0, gameEnded = true;
 
     function resetGame() {
-      bird = { x: 80, y: H / 2, vfy: 0, size: 24 };
+      bird = { x:60, y:240, vy:0, w:34, h:24 };
       pipes = [];
       frame = 0;
       score = 0;
-      gravity = 0.4;
-      toggleOverlay("leaderboard-overlay", false);
+      gameEnded = false;
+      toggleOverlay(overlayGameOver, false);
     }
 
     function spawnPipe() {
-      const gap = 120;
-      const topH = Math.random() * (H - gap - 100) + 50;
-      pipes.push({ x: W, y: 0, w: 52, h: topH });
-      pipes.push({ x: W, y: topH + gap, w: 52, h: H - topH - gap });
+      const gapVal = 120;
+      const topH = Math.random()*(canvas.height-gapVal-60)+30;
+      pipes.push({ x: canvas.width, top: topH, passed: false });
+    }
+
+    function update() {
+      bird.vy += 0.4;
+      bird.y += bird.vy;
+
+      if (bird.y < 0 || bird.y + bird.h > canvas.height) {
+        return gameOver();
+      }
+
+      if (frame % 90 === 0) spawnPipe();
+
+      pipes.forEach(p => p.x -= 2);
+      pipes = pipes.filter(p => {
+        if (!p.passed && p.x + 52 < bird.x) {
+          p.passed = true;
+          score++;
+          playSfx("point");
+        }
+        return p.x + 52 > 0;
+      });
+
+      for (let p of pipes) {
+        const hitX = bird.x + bird.w > p.x && bird.x < p.x + 52;
+        const hitY = bird.y < p.top || bird.y + bird.h > p.top + gap;
+        if (hitX && hitY) return gameOver();
+      }
+
+      frame++;
     }
 
     function draw() {
-      // background
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = "#70c5ce";
-      ctx.fillRect(0, 0, W, H);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // bird
-      ctx.fillStyle = "#ffeb8a";
-      ctx.fillRect(bird.x, bird.y, bird.size, bird.size);
+      ctx.fillStyle = "#228B22";
+      for (let p of pipes) {
+        ctx.fillRect(p.x, 0, 52, p.top);
+        ctx.fillRect(p.x, p.top + gap, 52, canvas.height);
+      }
 
-      // pipes
-      ctx.fillStyle = "#4ec0ca";
-      pipes.forEach((p) => ctx.fillRect(p.x, p.y, p.w, p.h));
+      ctx.fillStyle = "#ffd500";
+      ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
 
-      // score
       ctx.fillStyle = "#fff";
-      ctx.font = "48px Roboto";
-      ctx.fillText(score, W / 2 - 12, 80);
+      ctx.font = "bold 32px MasonUI";
+      ctx.textAlign = "center";
+      ctx.fillText(score, canvas.width/2, 50);
     }
 
-    function update(delta) {
-      // gravity
-      bird.vfy += gravity;
-      bird.y += bird.vfy;
-
-      // spawn pipes
-      if (frame % 90 === 0) spawnPipe();
-
-      // move pipes & collision check
-      pipes.forEach((p) => (p.x -= 2));
-      pipes = pipes.filter((p) => {
-        // scored?
-        if (!p.scored && p.x + p.w < bird.x) {
-          score++;
-          audio.point.play();
-          p.scored = true;
-        }
-        return p.x + p.w > 0;
-      });
-
-      // collisions
-      for (const p of pipes) {
-        if (
-          bird.x < p.x + p.w &&
-          bird.x + bird.size > p.x &&
-          bird.y < p.y + p.h &&
-          bird.y + bird.size > p.y
-        ) {
-          gameOver();
-          return;
-        }
-      }
-
-      // ground or ceiling
-      if (bird.y + bird.size > H || bird.y < 0) {
-        gameOver();
-      }
-    }
-
-    function gameLoop(now) {
-      const delta = now - lastTime;
+    function loop(now) {
+      fps = 1000 / (now - lastTime);
       lastTime = now;
-      fps = 1000 / delta;
-      frame++;
-      update(delta);
+      update();
       draw();
-      if (!gameEnded) requestAnimationFrame(gameLoop);
-    }
-
-    let gameEnded = true;
-    function startGame() {
-      resetGame();
-      gameEnded = false;
-      document.getElementById("main-menu").classList.add("hidden");
-      document.getElementById("game-container").style.display = "flex";
-      requestAnimationFrame(gameLoop);
+      if (!gameEnded) requestAnimationFrame(loop);
     }
 
     function gameOver() {
+      if (gameEnded) return;
       gameEnded = true;
-      audio.die.play();
-      submitScore(score);
-      setTimeout(() => {
-        alert("Game Over! Score: " + score);
-        document.getElementById("game-container").style.display = "none";
-        document.getElementById("main-menu").classList.remove("hidden");
-      }, 100);
-    }
+      playSfx("hit");
+      setTimeout(() => playSfx("die"), 200);
+      finalScoreEl.textContent = `Score: ${score}`;
+      toggleOverlay(overlayGameOver, true);
 
-    async function submitScore(score) {
-      if (currentUser) {
-        await addDoc(collection(db, "leaderboard"), {
-          uid: currentUser.uid,
-          name: currentUser.displayName,
+      // Submit to Firestore
+      if (auth.currentUser) {
+        addDoc(collection(db,"leaderboard"), {
+          name: auth.currentUser.displayName||"Anon",
           score,
-          timestamp: serverTimestamp(),
+          timestamp: serverTimestamp()
         });
       }
     }
 
-    // INPUT HANDLING
-    function flap() {
-      if (!gameEnded) {
-        bird.vfy = -7;
-        audio.flap.play();
-      }
+    function startGame() {
+      resetGame();
+      menuEl.style.display = "none";
+      gameEl.style.display = "flex";
+      requestAnimationFrame(loop);
     }
 
-    canvas.addEventListener("click", flap);
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        if (gameEnded) startGame();
-        else flap();
-      }
-    });
+    function returnToMenu() {
+      gameEl.style.display = "none";
+      menuEl.style.display = "flex";
+    }
 
-    // MENU BUTTONS
-    document.getElementById("start-btn").onclick = () => startGame();
+    // Bind events
+    btnStart.onclick = startGame;
+    btnRetry.onclick = startGame;
+    btnMenu.onclick  = returnToMenu;
+
+    canvas.addEventListener("click", () => !gameEnded && flap());
+    window.addEventListener("keydown", e => e.code==="Space" && !gameEnded && flap());
+
+    function flap() {
+      bird.vy = -8;
+      playSfx("flap");
+    }
   </script>
 </body>
 </html>
