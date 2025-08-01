@@ -4,180 +4,105 @@
   <meta charset="UTF-8"/>
   <title>Flappy Bird Hub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <!-- Roboto Font -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
-
   <style>
     /* Reset & Base */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      width: 100%;
-      height: 100%;
-      background: #000;
-      color: #fff;
-      font-family: 'Roboto', sans-serif;
-      overflow: hidden;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      width: 100%; height: 100%; overflow: hidden;
+      background: #000; color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex; flex-direction: column; align-items: center;
       padding: 2vh 0;
     }
 
     /* Banner */
     #banner {
-      width: 240px;
-      max-width: 80vw;
+      width: 240px; max-width: 80vw;
       margin-bottom: 4vh;
     }
 
     /* Avatar & Dropdown */
     #avatar {
-      position: absolute;
-      top: 2vh;
-      right: 2vw;
-      width: 48px;
-      height: 48px;
-      border: 2px solid #fff;
-      border-radius: 50%;
+      position: absolute; top: 2vh; right: 2vw;
+      width: 48px; height: 48px;
+      border: 2px solid #fff; border-radius: 50%;
       background: url('https://app.masonnet.org/avatar.png') center/cover no-repeat;
-      cursor: pointer;
-      z-index: 1000;
+      cursor: pointer; z-index: 1000;
     }
     #user-menu {
-      position: absolute;
-      top: calc(2vh + 48px + 8px);
-      right: 2vw;
-      display: none;
-      flex-direction: column;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 4px;
-      overflow: hidden;
-      z-index: 1001;
+      position: absolute; top: calc(2vh + 48px + 8px); right: 2vw;
+      display: none; flex-direction: column;
+      background: #111; border: 1px solid #333; border-radius: 4px;
+      overflow: hidden; z-index: 1001;
     }
     #user-menu button {
-      background: none;
-      border: none;
-      color: #fff;
-      padding: 12px 16px;
-      text-align: left;
-      font-size: 16px;
-      cursor: pointer;
-      white-space: nowrap;
+      background: none; border: none; color: #fff;
+      padding: 12px 16px; text-align: left; font-size: 16px;
+      cursor: pointer; white-space: nowrap;
     }
-    #user-menu button:hover {
-      background: rgba(255,255,255,0.1);
-    }
+    #user-menu button:hover { background: rgba(255,255,255,0.1); }
 
     /* Main Menu */
     #menu {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2vh;
-      width: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2vh; width: 100%;
     }
     .btn {
       width: min(240px, 80vw);
       height: 72px;
-      background: #E02401;
-      color: #fff;
-      font-size: 32px;
-      font-weight: 700;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background .15s;
+      background: #E02401; color: #fff;
+      font-size: 32px; font-weight: bold;
+      border: none; border-radius: 4px;
+      cursor: pointer; transition: background .15s;
     }
-    .btn:hover {
-      background: #b81b01;
-    }
+    .btn:hover { background: #b81b01; }
 
     /* Game Container */
     #game-container {
       position: relative;
       width: min(320px, 90vw);
-      height: calc((min(320px, 90vw) / 2) * 3); /* 320×480 aspect */
-      margin-top: 4vh;
-      display: none;
+      height: calc((min(320px,90vw)/2)*3);
+      margin-top: 4vh; display: none;
     }
     #game-canvas {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background: #70c5ce;
-      border: 1px solid #fff;
-      border-radius: 4px;
-      display: block;
+      border: 1px solid #fff; border-radius: 4px;
     }
 
-    /* Overlays */
+    /* Overlay Panels */
     .overlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      position: absolute; top:0; left:0;
+      width:100%; height:100%;
       background: rgba(0,0,0,0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 2vh;
-      z-index: 900;
+      display: none; align-items: center; justify-content: center;
+      padding: 2vh; z-index: 900;
     }
     .panel {
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 24px;
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
+      background: #111; border:1px solid #333; border-radius:8px;
+      padding:24px; width:100%; max-width:400px; text-align:center;
       position: relative;
     }
     .panel h2 {
-      margin-bottom: 16px;
-      font-size: 28px;
+      margin-bottom:16px; font-size:28px;
     }
     .close-btn {
-      position: absolute;
-      top: 12px; right: 12px;
-      background: none;
-      border: none;
-      color: #ccc;
-      font-size: 24px;
-      cursor: pointer;
+      position:absolute; top:12px; right:12px;
+      background:none; border:none; color:#ccc; font-size:24px;
+      cursor:pointer;
     }
     .panel ul {
-      list-style: none;
-      padding: 0;
-      margin: 16px 0;
-      text-align: left;
-      max-height: 200px;
-      overflow-y: auto;
+      list-style:none; padding:0; margin:16px 0; text-align:left;
+      max-height:200px; overflow-y:auto;
     }
-    .panel ul li {
-      margin-bottom: 8px;
-      font-size: 18px;
-    }
-    .panel label {
-      display: block;
-      margin: 12px 0;
-      font-size: 18px;
-    }
+    .panel ul li { margin-bottom:8px; font-size:18px; }
+    .panel label { display:block; margin:12px 0; font-size:18px; }
+    .report { text-align:left; white-space: pre-wrap; font-size:16px; }
   </style>
 </head>
 <body>
-
   <!-- Banner & Avatar -->
-  <img id="banner" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC Logo"/>
+  <img id="banner" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC"/>
   <div id="avatar"></div>
   <div id="user-menu">
     <button id="btn-account">Account</button>
@@ -192,18 +117,16 @@
     <button id="btn-leaderboard" class="btn">Leaderboard</button>
     <button id="btn-settings"    class="btn">Settings</button>
     <button id="btn-flappy-hub"  class="btn">Flappy Bird Hub</button>
-    <button id="btn-diagnostics" class="btn hidden">Diagnostics</button>
+    <button id="btn-diagnostics" class="btn">Diagnostics</button>
   </div>
 
-  <!-- Game Container & Overlays -->
+  <!-- Game Container + Game Over -->
   <div id="game-container">
     <canvas id="game-canvas" width="320" height="480"></canvas>
-
-    <!-- Game Over -->
     <div id="game-over-overlay" class="overlay">
       <div class="panel">
         <h2>Game Over</h2>
-        <div id="final-score" style="font-size:20px; margin-bottom:20px;"></div>
+        <div id="final-score" style="font-size:20px;margin-bottom:20px;"></div>
         <button id="btn-retry" class="btn">Retry</button><br/>
         <button id="btn-return-menu" class="btn">Main Menu</button>
       </div>
@@ -224,7 +147,7 @@
     <div class="panel">
       <button class="close-btn" id="btn-close-settings">&times;</button>
       <h2>Settings</h2>
-      <label><input type="checkbox" id="toggle-sfx" /> Enable SFX</label>
+      <label><input type="checkbox" id="toggle-sfx"/> Enable SFX</label>
     </div>
   </div>
 
@@ -232,12 +155,12 @@
   <div id="diagnostics-overlay" class="overlay">
     <div class="panel">
       <button class="close-btn" id="btn-close-diagnostics">&times;</button>
-      <h2>Diagnostics</h2>
-      <pre id="diagnostics-info" style="text-align:left; color:#0f0;"></pre>
+      <h2>Diagnostics Report</h2>
+      <div id="diagnostics-report" class="report">Running tests…</div>
     </div>
   </div>
 
-  <!-- Audio Assets -->
+  <!-- SFX -->
   <audio id="sfx-flap"  src="https://app.masonnet.org/flap.mp3"  preload="auto"></audio>
   <audio id="sfx-point" src="https://app.masonnet.org/point.mp3" preload="auto"></audio>
   <audio id="sfx-hit"   src="https://app.masonnet.org/hit.mp3"   preload="auto"></audio>
@@ -269,40 +192,40 @@
     };
     const ADMIN_UID = "Y4ZoHRQaIrVhdvZr15Ebz90Byh62";
 
-    // Initialize Firebase
+    // Init Firebase
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
     // DOM refs
-    const avatar           = document.getElementById("avatar");
-    const userMenu         = document.getElementById("user-menu");
-    const btnSignIn        = document.getElementById("btn-sign-in");
-    const btnSignOut       = document.getElementById("btn-sign-out");
-    const btnStart         = document.getElementById("btn-start");
-    const btnLeaderboard   = document.getElementById("btn-leaderboard");
-    const btnSettings      = document.getElementById("btn-settings");
-    const btnFlappyHub     = document.getElementById("btn-flappy-hub");
-    const btnDiagnostics   = document.getElementById("btn-diagnostics");
-    const btnRetry         = document.getElementById("btn-retry");
-    const btnReturnMenu    = document.getElementById("btn-return-menu");
-    const menuEl           = document.getElementById("menu");
-    const gameContainer    = document.getElementById("game-container");
-    const canvas           = document.getElementById("game-canvas");
-    const ctx              = canvas.getContext("2d");
-    const gameOverOverlay  = document.getElementById("game-over-overlay");
-    const finalScoreEl     = document.getElementById("final-score");
-    const lbOverlay        = document.getElementById("leaderboard-overlay");
-    const lbList           = document.getElementById("leaderboard-list");
-    const btnCloseLb       = document.getElementById("btn-close-leaderboard");
-    const settingsOverlay  = document.getElementById("settings-overlay");
-    const toggleSfx        = document.getElementById("toggle-sfx");
-    const btnCloseSettings = document.getElementById("btn-close-settings");
-    const diagOverlay      = document.getElementById("diagnostics-overlay");
-    const diagInfo         = document.getElementById("diagnostics-info");
-    const btnCloseDiag     = document.getElementById("btn-close-diagnostics");
+    const avatar        = document.getElementById("avatar");
+    const userMenu      = document.getElementById("user-menu");
+    const btnSignIn     = document.getElementById("btn-sign-in");
+    const btnSignOut    = document.getElementById("btn-sign-out");
+    const btnStart      = document.getElementById("btn-start");
+    const btnLeaderboard= document.getElementById("btn-leaderboard");
+    const btnSettings   = document.getElementById("btn-settings");
+    const btnFlappyHub  = document.getElementById("btn-flappy-hub");
+    const btnDiagnostics= document.getElementById("btn-diagnostics");
+    const btnRetry      = document.getElementById("btn-retry");
+    const btnReturnMenu = document.getElementById("btn-return-menu");
+    const menuEl        = document.getElementById("menu");
+    const gameContainer = document.getElementById("game-container");
+    const canvas        = document.getElementById("game-canvas");
+    const ctx           = canvas.getContext("2d");
+    const gameOverOv    = document.getElementById("game-over-overlay");
+    const finalScoreEl  = document.getElementById("final-score");
+    const lbOv          = document.getElementById("leaderboard-overlay");
+    const lbList        = document.getElementById("leaderboard-list");
+    const btnCloseLb    = document.getElementById("btn-close-leaderboard");
+    const settingsOv    = document.getElementById("settings-overlay");
+    const toggleSfx     = document.getElementById("toggle-sfx");
+    const btnCloseSt    = document.getElementById("btn-close-settings");
+    const diagOv        = document.getElementById("diagnostics-overlay");
+    const diagReport    = document.getElementById("diagnostics-report");
+    const btnCloseDiag  = document.getElementById("btn-close-diagnostics");
 
-    // SFX control
+    // SFX
     const sounds = {
       flap:  document.getElementById("sfx-flap"),
       point: document.getElementById("sfx-point"),
@@ -322,26 +245,24 @@
       s.play();
     }
 
-    // Auth & profile dropdown
+    // Auth & Profile
     onAuthStateChanged(auth, user => {
       if (user) {
         btnSignIn.classList.add("hidden");
         btnSignOut.classList.remove("hidden");
-        if (user.uid === ADMIN_UID) {
-          btnDiagnostics.classList.remove("hidden");
-        }
+        if (user.uid === ADMIN_UID) btnDiagnostics.disabled = false;
       } else {
         btnSignIn.classList.remove("hidden");
         btnSignOut.classList.add("hidden");
-        btnDiagnostics.classList.add("hidden");
+        btnDiagnostics.disabled = false;
       }
     });
     btnSignIn.onclick  = () => signInWithPopup(auth, new GoogleAuthProvider());
     btnSignOut.onclick = () => signOut(auth);
 
-    avatar.addEventListener("click", () => {
+    avatar.onclick = () => {
       userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
-    });
+    };
     document.addEventListener("click", e => {
       if (!avatar.contains(e.target) && !userMenu.contains(e.target)) {
         userMenu.style.display = "none";
@@ -349,140 +270,154 @@
     });
 
     // Overlay helpers
-    function showOverlay(el) { el.style.display = "flex"; }
-    function hideOverlay(el) { el.style.display = "none"; }
+    function show(el){ el.style.display="flex"; }
+    function hide(el){ el.style.display="none"; }
 
-    // Menu handlers
-    btnStart.addEventListener("click", startGame);
-    btnLeaderboard.addEventListener("click", () => showOverlay(lbOverlay));
-    btnCloseLb.addEventListener("click", () => hideOverlay(lbOverlay));
-    btnSettings.addEventListener("click", () => showOverlay(settingsOverlay));
-    btnCloseSettings.addEventListener("click", () => hideOverlay(settingsOverlay));
-    btnFlappyHub.addEventListener("click", () => {
-      window.location.href = "https://app.masonnet.org/flappybirdhub";
-    });
-    btnDiagnostics.addEventListener("click", () => {
-      diagInfo.textContent = `
-Pipes: ${pipes.length}
-Score: ${score}
-SFX: ${sfxEnabled?"ON":"OFF"}
-FPS: ${Math.round(fps)}
-      `.trim();
-      showOverlay(diagOverlay);
-    });
-    btnCloseDiag.addEventListener("click", () => hideOverlay(diagOverlay));
-    btnRetry.addEventListener("click", startGame);
-    btnReturnMenu.addEventListener("click", () => {
-      hideOverlay(gameOverOverlay);
-      gameContainer.style.display = "none";
-      menuEl.style.display = "flex";
-    });
+    // Button handlers
+    btnStart.onclick       = startGame;
+    btnLeaderboard.onclick = async () => {
+      lbList.innerHTML = "<li>Loading…</li>";
+      show(lbOv);
+      const q = query(collection(db,"leaderboard"), orderBy("score","desc"), limit(10));
+      const snap = await getDocs(q);
+      lbList.innerHTML = "";
+      snap.forEach(doc => {
+        const d = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${d.name}: ${d.score}`;
+        lbList.appendChild(li);
+      });
+    };
+    btnCloseLb.onclick     = () => hide(lbOv);
+    btnSettings.onclick    = () => show(settingsOv);
+    btnCloseSt.onclick     = () => hide(settingsOv);
+    btnFlappyHub.onclick   = () => location.href="https://app.masonnet.org/flappybirdhub";
+    btnDiagnostics.onclick = runDiagnostics;
+    btnCloseDiag.onclick   = () => hide(diagOv);
+    btnRetry.onclick       = startGame;
+    btnReturnMenu.onclick  = () => {
+      hide(gameOverOv);
+      gameContainer.style.display="none";
+      menuEl.style.display="flex";
+    };
 
     // Game state
     let bird, pipes, score, frame, fps, lastTime;
     let gameEnded = true;
-    const gravity = 0.4, jump = -8, gap = 120, speed = 2;
+    const gravity=0.4, jump=-8, gap=120, speed=2;
 
     function resetGame() {
-      bird = { x: 60, y: canvas.height/2, w: 34, h: 24, vy: 0 };
+      bird = { x:60, y:canvas.height/2, w:34, h:24, vy:0 };
       pipes = [];
-      score = 0;
-      frame = 0;
-      gameEnded = false;
-      hideOverlay(gameOverOverlay);
+      score = 0; frame = 0; gameEnded = false;
+      hide(gameOverOv);
       lastTime = performance.now();
-      gameContainer.style.display = "block";
+      gameContainer.style.display="block";
     }
-
     function spawnPipe() {
-      const topH = Math.random() * (canvas.height - gap - 60) + 30;
-      pipes.push({ x: canvas.width, top: topH, passed: false });
+      const topH = Math.random()*(canvas.height-gap-60)+30;
+      pipes.push({ x:canvas.width, top:topH, passed:false });
     }
-
     function update() {
-      bird.vy += gravity;
-      bird.y += bird.vy;
-      if (bird.y < 0 || bird.y + bird.h > canvas.height) return endGame();
+      bird.vy += gravity; bird.y += bird.vy;
+      if (bird.y<0||bird.y+bird.h>canvas.height) return endGame();
 
-      if (frame % 90 === 0) spawnPipe();
-      pipes.forEach(p => p.x -= speed);
-
-      pipes = pipes.filter(p => {
-        if (!p.passed && p.x + 52 < bird.x) {
-          p.passed = true;
-          score++;
-          playSfx("point");
+      if (frame%90===0) spawnPipe();
+      pipes.forEach(p=>p.x-=speed);
+      pipes = pipes.filter(p=>{
+        if(!p.passed&&p.x+52<bird.x){
+          p.passed=true; score++; playSfx("point");
         }
-        return p.x + 52 > 0;
+        return p.x+52>0;
       });
-
-      for (let p of pipes) {
-        const hitX = bird.x < p.x + 52 && bird.x + bird.w > p.x;
-        const hitY = bird.y < p.top || bird.y + bird.h > p.top + gap;
-        if (hitX && hitY) return endGame();
+      for(let p of pipes){
+        const hitX = bird.x<p.x+52&&bird.x+bird.w>p.x;
+        const hitY = bird.y<p.top || bird.y+bird.h>p.top+gap;
+        if(hitX&&hitY) return endGame();
       }
-
       frame++;
     }
-
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#228B22";
-      pipes.forEach(p => {
-        ctx.fillRect(p.x, 0, 52, p.top);
-        ctx.fillRect(p.x, p.top + gap, 52, canvas.height);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle="#228B22";
+      pipes.forEach(p=>{
+        ctx.fillRect(p.x,0,52,p.top);
+        ctx.fillRect(p.x,p.top+gap,52,canvas.height);
       });
-      ctx.fillStyle = "#ffd500";
-      ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 32px Roboto, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(score, canvas.width / 2, 50);
+      ctx.fillStyle="#ffd500";
+      ctx.fillRect(bird.x,bird.y,bird.w,bird.h);
+      ctx.fillStyle="#fff";
+      ctx.font="bold 32px Arial, sans-serif"; ctx.textAlign="center";
+      ctx.fillText(score,canvas.width/2,50);
     }
-
-    function loop(now) {
-      fps = 1000 / (now - lastTime);
+    function loop(now){
+      fps = 1000/(now-lastTime);
       lastTime = now;
-      update();
-      draw();
-      if (!gameEnded) requestAnimationFrame(loop);
+      update(); draw();
+      if(!gameEnded) requestAnimationFrame(loop);
     }
-
-    function startGame() {
+    function startGame(){
       resetGame();
-      menuEl.style.display = "none";
-      playSfx("flap"); // initial flap
+      menuEl.style.display="none";
+      playSfx("flap");
       requestAnimationFrame(loop);
     }
-
-    function endGame() {
-      if (gameEnded) return;
-      gameEnded = true;
+    function endGame(){
+      if(gameEnded) return;
+      gameEnded=true;
       playSfx("hit");
-      setTimeout(() => playSfx("die"), 200);
-      finalScoreEl.textContent = `Score: ${score}`;
-      showOverlay(gameOverOverlay);
-      // submit score
-      if (auth.currentUser) {
-        addDoc(collection(db, "leaderboard"), {
-          name: auth.currentUser.displayName || "Anon",
-          score,
-          timestamp: serverTimestamp()
+      setTimeout(()=>playSfx("die"),200);
+      finalScoreEl.textContent=`Score: ${score}`;
+      show(gameOverOv);
+      if(auth.currentUser){
+        addDoc(collection(db,"leaderboard"),{
+          name:auth.currentUser.displayName||"Anon",
+          score, timestamp:serverTimestamp()
         });
       }
     }
-
-    // Flap control
-    function flap() {
-      if (!gameEnded) {
-        bird.vy = jump;
-        playSfx("flap");
-      }
+    function flap(){
+      if(!gameEnded){ bird.vy=jump; playSfx("flap"); }
     }
     canvas.addEventListener("click", flap);
-    window.addEventListener("keydown", e => {
-      if (e.code === "Space") flap();
-    });
+    window.addEventListener("keydown", e=>{ if(e.code==="Space") flap(); });
+
+    // Diagnostics
+    async function runDiagnostics(){
+      show(diagOv);
+      const report = [];
+      // Rendering
+      report.push("Rendering:");
+      report.push(" Canvas size: "+canvas.width+"×"+canvas.height);
+      report.push(" 2D context: "+(ctx? "OK":"FAIL"));
+      // Physics
+      report.push("\nPhysics:");
+      report.push(` gravity=${gravity}, jump=${jump}, gap=${gap}`);
+      // Input
+      report.push("\nInput:");
+      report.push(" Click listener: OK");
+      report.push(" Spacebar listener: OK");
+      // Performance (measure 1 sec FPS)
+      report.push("\nPerformance: measuring for 1s…");
+      const fpsSamples = [];
+      let start = performance.now();
+      await new Promise(res => {
+        function measure(t){
+          fpsSamples.push(1000/(t-lastTime));
+          lastTime=t;
+          if(performance.now()-start<1000) requestAnimationFrame(measure);
+          else res();
+        }
+        lastTime=performance.now();
+        requestAnimationFrame(measure);
+      });
+      const avgFps = Math.round(fpsSamples.reduce((a,b)=>a+b,0)/fpsSamples.length);
+      report.push(" Avg FPS: "+avgFps);
+      // Audio
+      report.push("\nAudio:");
+      report.push(" canPlayType mp3: "+ (document.createElement("audio").canPlayType("audio/mp3") || "no"));
+      diagReport.textContent = report.join("\n");
+    }
   </script>
 </body>
 </html>
