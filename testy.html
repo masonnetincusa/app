@@ -3,110 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Bird Hub</title>
+  <title>Flappy Bird Recreated Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
     body {
+      background-color: black;
       margin: 0;
-      background: #000;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Press Start 2P', monospace;
+      color: white;
     }
-    button {
+
+    #menu {
+      width: 480px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 4px solid red;
+      text-align: center;
+      position: relative;
+    }
+
+    #menu img.banner {
+      width: 420px;
+      display: block;
+      margin: 0 auto 30px auto;
+      image-rendering: pixelated;
+    }
+
+    .menu-btn {
+      display: block;
+      width: 320px;
+      margin: 10px auto;
+      padding: 14px;
+      background-color: yellow;
+      color: black;
+      border: none;
+      font-size: 14px;
+      font-family: inherit;
       cursor: pointer;
+      image-rendering: pixelated;
+    }
+
+    .menu-btn:hover {
+      background-color: orange;
+    }
+
+    #avatar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    #avatar img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
     }
   </style>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-  authDomain: "masonnet-app-official.firebaseapp.com",
-  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-  projectId: "masonnet-app-official",
-  storageBucket: "masonnet-app-official.firebasestorage.app",
-  messagingSenderId: "783919367562",
-  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-  measurementId: "G-X1YKV5VK7J"
-};
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth();
-
-    function startGame() {
-      document.getElementById('mainMenu').style.display = 'none';
-      document.getElementById('flapSFX').play();
-      // 🚀 Launch canvas game logic here
-    }
-
-    function submitScore(score) {
-      onAuthStateChanged(auth, async user => {
-        if (user) {
-          await addDoc(collection(db, "leaderboard"), {
-            name: user.displayName || "Anonymous",
-            score: score,
-            timestamp: Date.now()
-          });
-          console.log("Score submitted");
-          document.getElementById('pointSFX').play();
-        } else {
-          console.log("User not logged in");
-        }
-      });
-    }
-
-    async function showLeaderboard() {
-      const list = document.getElementById("leaderboardList");
-      list.innerHTML = "";
-      const querySnapshot = await getDocs(collection(db, "leaderboard"));
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const li = document.createElement("li");
-        li.textContent = `${data.name}: ${data.score}`;
-        list.appendChild(li);
-      });
-      document.getElementById("leaderboardOverlay").style.display = "block";
-    }
-
-    function closeLeaderboard() {
-      document.getElementById("leaderboardOverlay").style.display = "none";
-    }
-
-    window.testSubmit = () => submitScore(Math.floor(Math.random() * 500));
-  </script>
 </head>
 <body>
+  <div id="menu">
+    <!-- Header Banner -->
+    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Recreated" class="banner" />
 
-  <!-- Main Menu -->
-  <div id="mainMenu" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;z-index:9999;">
-    <div style="text-align:center;color:#fff;">
-      <h1 style="font-size:36px;margin-bottom:30px;">Flappy Bird Hub</h1>
-      <button onclick="startGame()" style="margin:10px;padding:12px 24px;font-size:18px;background:#2d2;color:#fff;border:none;border-radius:6px;">Play</button>
-      <button onclick="showLeaderboard()" style="margin:10px;padding:12px 24px;font-size:18px;background:#3498db;color:#fff;border:none;border-radius:6px;">Leaderboard</button>
+    <!-- Buttons -->
+    <button class="menu-btn">Start</button>
+    <button class="menu-btn">Leaderboard</button>
+    <button class="menu-btn">Settings</button>
+    <button class="menu-btn">Hub</button>
+    <button class="menu-btn">Submit Test Score</button>
+
+    <!-- Avatar Profile -->
+    <div id="avatar">
+      <img src="https://app.masonnet.org/avatar.png" alt="User Avatar" />
     </div>
   </div>
 
-  <!-- Leaderboard Overlay -->
-  <div id="leaderboardOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:none;">
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#222;color:#fff;padding:20px;border-radius:8px;width:300px;text-align:center;">
-      <h2 style="margin-top:0;">Leaderboard</h2>
-      <ul id="leaderboardList" style="list-style:none;padding:0;margin:0;"></ul>
-      <button onclick="closeLeaderboard()" style="margin-top:15px;padding:8px 16px;border:none;background:#f33;color:#fff;border-radius:4px;">Close</button>
-    </div>
-  </div>
+  <!-- Sound Effects Preload -->
+  <audio id="flap" src="https://app.masonnet.org/flap.mp3"></audio>
+  <audio id="hit" src="https://app.masonnet.org/hit.mp3"></audio>
+  <audio id="point" src="https://app.masonnet.org/point.mp3"></audio>
+  <audio id="die" src="https://app.masonnet.org/die.mp3"></audio>
 
-  <!-- Sound Effects -->
-  <audio id="flapSFX" src="https://app.masonnet.org/flap.mp3"></audio>
-  <audio id="pointSFX" src="https://app.masonnet.org/point.mp3"></audio>
-  <audio id="hitSFX" src="https://app.masonnet.org/hit.mp3"></audio>
-  <audio id="dieSFX" src="https://app.masonnet.org/die.mp3"></audio>
-
-  <!-- Developer Button -->
-  <button onclick="testSubmit()" style="position:fixed;bottom:20px;right:20px;padding:10px 18px;background:#2d2;color:#fff;border:none;border-radius:5px;z-index:9999;font-weight:bold;">
-    Submit Test Score
-  </button>
-
+  <script>
+    // Example: attach SFX to buttons
+    const buttons = document.querySelectorAll('.menu-btn');
+    const flap = document.getElementById('flap');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => flap.play());
+    });
+  </script>
 </body>
 </html>
