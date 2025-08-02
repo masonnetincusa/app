@@ -63,6 +63,7 @@
       cursor: pointer;
       background-size: cover;
       background-position: center;
+      background-image: url('https://app.masonnet.org/default-avatar.png');
     }
 
     #user-menu {
@@ -91,7 +92,9 @@
       background-color: rgba(255,255,255,0.1);
     }
 
-    .hidden { display: none !important; }
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -104,7 +107,8 @@
     <button id="btn-diag" class="menu-button hidden">Diagnostics</button>
   </div>
 
-  <div id="avatar" class="avatar" style="background-image: url('https://app.masonnet.org/default-avatar.png');"></div>
+  <!-- Profile avatar + dropdown -->
+  <div id="avatar" class="avatar"></div>
   <div id="user-menu">
     <button id="btn-account">Account</button>
     <button id="btn-search">Search</button>
@@ -112,6 +116,7 @@
     <button id="btn-signout" class="hidden">Sign Out</button>
   </div>
 
+  <!-- Firebase SDK + menu logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
     import {
@@ -119,42 +124,39 @@
       signOut, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
 
-    // Replace this config with your actual project
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-  authDomain: "masonnet-app-official.firebaseapp.com",
-  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-  projectId: "masonnet-app-official",
-  storageBucket: "masonnet-app-official.firebasestorage.app",
-  messagingSenderId: "783919367562",
-  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-  measurementId: "G-X1YKV5VK7J"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+      authDomain: "masonnet-app-official.firebaseapp.com",
+      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+      projectId: "masonnet-app-official",
+      storageBucket: "masonnet-app-official.firebasestorage.app",
+      messagingSenderId: "783919367562",
+      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+      measurementId: "G-X1YKV5VK7J"
+    };
     const ADMIN_UID = "Y4ZoHRQaIrVhdvZr15Ebz90Byh62";
 
-    const app  = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    // DOM refs
     const avatar     = document.getElementById("avatar");
     const userMenu   = document.getElementById("user-menu");
     const btnSignIn  = document.getElementById("btn-signin");
     const btnSignOut = document.getElementById("btn-signout");
     const btnDiag    = document.getElementById("btn-diag");
 
-    // Profile Dropdown Toggle
-    avatar.addEventListener("click", () => {
+    // Avatar dropdown toggle
+    avatar.onclick = () => {
       userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
-    });
-
+    };
     document.addEventListener("click", e => {
       if (!avatar.contains(e.target) && !userMenu.contains(e.target)) {
         userMenu.style.display = "none";
       }
     });
 
-    // Auth state tracking
+    // Auth state binding
     onAuthStateChanged(auth, user => {
       if (user) {
         avatar.style.backgroundImage = `url('${user.photoURL || "https://app.masonnet.org/default-avatar.png"}')`;
@@ -169,15 +171,15 @@ const firebaseConfig = {
       }
     });
 
-    btnSignIn.onclick  = () => signInWithPopup(auth, new GoogleAuthProvider());
+    btnSignIn.onclick  = () => signInWithPopup(auth, provider);
     btnSignOut.onclick = () => signOut(auth);
 
-    // Basic wiring for menu buttons
-    document.getElementById("btn-start").onclick = () => alert("Start game logic goes here.");
-    document.getElementById("btn-leader").onclick = () => alert("Leaderboard overlay here.");
-    document.getElementById("btn-settings").onclick = () => alert("Settings modal here.");
+    // Menu button actions
+    document.getElementById("btn-start").onclick = () => alert("Start game flow goes here");
+    document.getElementById("btn-leader").onclick = () => alert("Show leaderboard modal");
+    document.getElementById("btn-settings").onclick = () => alert("Open settings overlay");
     document.getElementById("btn-hub").onclick = () => location.href = "https://app.masonnet.org/flappybirdhub";
-    btnDiag.onclick = () => alert("Diagnostics activated.");
+    btnDiag.onclick = () => alert("Diagnostics activated");
   </script>
 </body>
 </html>
