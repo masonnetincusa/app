@@ -3,94 +3,169 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Bird Hub Menu</title>
+  <title>FlappyBird Recreated</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
-    @font-face {
-      font-family: 'PixelFont';
-      src: url('https://app.masonnet.org/pixel-font.woff2') format('woff2');
+    * {
+      box-sizing: border-box;
     }
-
-    body {
-      background-color: #000;
-      font-family: 'PixelFont', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    html, body {
       margin: 0;
+      padding: 0;
+      background-color: black;
+      color: white;
+      font-family: 'Press Start 2P', monospace;
+      height: 100vh;
+      overflow: hidden;
     }
-
-    .main-menu {
+    .menu-wrapper {
+      width: 700px;
+      max-width: 90vw;
+      margin: auto;
+      margin-top: 40px;
       border: 5px solid red;
-      border-radius: 30px;
+      border-radius: 40px;
       padding: 30px 20px;
-      text-align: center;
       background-color: #111;
-      box-shadow: 0 0 20px red;
+      text-align: center;
+      box-shadow: 0 0 15px red;
+      position: relative;
     }
-
-    .main-menu img {
-      width: 240px;
+    .menu-wrapper img {
+      width: 90%;
+      max-width: 500px;
       margin-bottom: 30px;
+      image-rendering: pixelated;
     }
-
     .menu-btn {
-      display: block;
-      width: 240px;
-      height: 60px;
-      margin: 10px auto;
-      background-color: #222;
+      width: 80%;
+      max-width: 400px;
+      height: 70px;
+      margin: 12px auto;
+      background: #222;
       color: #fff;
+      font-size: 18px;
       border: 2px solid #fff;
-      border-radius: 12px;
-      font-size: 20px;
+      border-radius: 14px;
       cursor: pointer;
-      transition: all 0.2s ease-in-out;
+      transition: 0.2s;
     }
-
     .menu-btn:hover {
-      background-color: #444;
+      background: #444;
       box-shadow: 0 0 10px #fff;
     }
 
-    .menu-btn:active {
-      box-shadow: inset 0 0 10px #fff;
+    /* Top-left admin buttons */
+    .admin-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .admin-panel button {
+      padding: 8px 12px;
+      font-size: 10px;
+      background: #0ff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    /* Top-right profile card */
+    .profile-card {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-card img {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+    }
+    .profile-card span {
+      font-size: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="main-menu">
-    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC" />
+
+  <!-- 🔧 Admin Panel Top-Left -->
+  <div class="admin-panel">
+    <button onclick="runNewTest()">New</button>
+    <button onclick="runDiagnostics()">Diagnostics</button>
+    <button onclick="runProtected()">Protected</button>
+  </div>
+
+  <!-- 👤 Profile Card Top-Right -->
+  <div class="profile-card" id="profileCard" style="display: none;">
+    <img src="https://app.masonnet.org/avatar.png" alt="User" />
+    <span id="userName">Signed in</span>
+  </div>
+
+  <!-- 🟥 Main Menu -->
+  <div class="menu-wrapper">
+    <img src="https://app.masonnet.org/fbrc.png" alt="FBR Menu" />
     <button class="menu-btn" onclick="startGame()">Start</button>
     <button class="menu-btn" onclick="openLeaderboard()">Leaderboard</button>
     <button class="menu-btn" onclick="openSettings()">Settings</button>
-    <button class="menu-btn" onclick="goToHub()">Flappy Bird Hub</button>
+    <button class="menu-btn" onclick="window.open('https://app.masonnet.org/flappybirdhub')">Flappy Bird Hub</button>
   </div>
 
-  <script>
-    function playSFX(src) {
-      new Audio(src).play();
-    }
+  <!-- 🔥 Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    function startGame() {
-      playSFX('https://app.masonnet.org/flap.mp3');
-      // start game logic here
-    }
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-    function openLeaderboard() {
-      playSFX('https://app.masonnet.org/point.mp3');
-      // leaderboard overlay logic here
-    }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    function openSettings() {
-      playSFX('https://app.masonnet.org/hit.mp3');
-      // settings modal logic here
-    }
+    // 🔐 Auto-show profile if signed in
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById("profileCard").style.display = "flex";
+        document.getElementById("userName").textContent = user.displayName || "Admin";
+        console.log("Signed in:", user.email);
+      } else {
+        signInWithPopup(auth, provider).catch(console.error);
+      }
+    });
 
-    function goToHub() {
-      playSFX('https://app.masonnet.org/die.mp3');
-      window.location.href = "https://app.masonnet.org/flappybirdhub";
-    }
+    // 🧪 Admin functions (stubbed)
+    window.runNewTest = () => console.log("New test triggered");
+    window.runDiagnostics = () => console.log("Diagnostics check");
+    window.runProtected = () => {
+      const password = prompt("Enter Admin Password");
+      if (password === "masonnet2025") {
+        alert("Access granted");
+      } else {
+        alert("Access denied");
+      }
+    };
+
+    // 🚀 Game buttons
+    window.startGame = () => console.log("Game Start");
+    window.openLeaderboard = () => console.log("Open Leaderboard");
+    window.openSettings = () => console.log("Open Settings");
   </script>
 </body>
 </html>
