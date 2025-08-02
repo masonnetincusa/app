@@ -2,151 +2,229 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>FlappyBird RECREATED</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Hub Portal</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
-      font-family: 'Press Start 2P', cursive;
-      background-color: #000;
-      color: #fff;
+      background-color: black;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      position: relative;
     }
 
-    .red-container {
-      width: 720px;
-      margin: 80px auto;
-      border: 6px solid red;
-      border-radius: 20px;
+    .top-bar {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 5;
+    }
+
+    .test-button {
+      background-color: red;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid red;
+    }
+
+    .warning-banner {
+      margin-top: 64px;
+      display: flex;
+      align-items: center;
+      background-color: rgba(50,50,50,0.6);
+      padding: 10px 16px;
+      border-radius: 8px;
+      max-width: 90%;
+    }
+
+    .warning-banner img {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      opacity: 0.8;
+    }
+
+    .warning-text {
+      font-size: 0.9rem;
+      line-height: 1.3rem;
+    }
+
+    .menu-box {
+      border: 3px solid red;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      width: 90%;
+      max-width: 360px;
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo {
+      width: 152px;
+      margin-bottom: 24px;
+    }
+
+    .menu-button {
+      background-color: red;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 0;
+      margin: 10px 0;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .menu-button:hover {
+      background-color: #ff4d4d;
+    }
+
+    .leaderboard-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background-color: #111;
-      padding: 40px;
+      border: 2px solid red;
+      border-radius: 12px;
+      padding: 20px;
+      width: 300px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 999;
+      display: none;
+    }
+
+    .leaderboard-modal h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #FFD700;
       text-align: center;
     }
 
-    .btn {
-      display: block;
-      margin: 16px auto;
-      padding: 16px 32px;
-      font-size: 16px;
-      background: #333;
-      border: 2px solid #555;
-      color: white;
-      border-radius: 12px;
-      cursor: pointer;
-      font-family: inherit;
-      width: 70%;
-    }
-
-    .btn:hover {
-      background-color: red;
-      border-color: red;
-    }
-
-    .admin-panel {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-    }
-
-    .admin-panel button {
-      padding: 10px 16px;
-      font-size: 12px;
-      background-color: #333;
-      color: #fff;
-      border: 2px solid #555;
-      border-radius: 8px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .admin-panel button:hover {
-      background-color: red;
-      border-color: red;
-    }
-
-    .profile-card {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      background-color: #222;
-      padding: 12px 16px;
-      border-radius: 12px;
-      text-align: right;
+    .entry {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
     }
 
-    .profile-card img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid red;
+    .close-button {
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 12px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
 </head>
 <body>
-  <div class="admin-panel">
-    <button onclick="triggerTest()">Test</button>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <button class="test-button" onclick="alert('Diagnostics triggered')">Test</button>
+    <img src="https://app.masonnet.org/default-avatar.png" alt="Avatar" class="avatar" />
   </div>
 
-  <div class="profile-card" id="profileCard">
-    <img id="userPic" src="" alt="" style="display: none;">
-    <span id="userName">Guest</span>
+  <!-- Warning Banner -->
+  <div class="warning-banner">
+    <img src="https://app.masonnet.org/warning.svg" alt="Warning" />
+    <div class="warning-text">
+      This is a test build that is under active development as of August 2nd, 2025.
+      Some features may only work partially, or not at all.
+      Do not enter any sensitive information or account credentials on this page.
+    </div>
   </div>
 
-  <div class="red-container">
-    <img src="https://app.masonnet.org/fbrc.png" alt="Masonnet Branding" style="width: 80%; margin-bottom: 32px;" />
-    <button class="btn" onclick="startGame()">Start</button>
-    <button class="btn" onclick="showLeaderboard()">Leaderboard</button>
-    <button class="btn" onclick="openSettings()">Settings</button>
-    <button class="btn" onclick="goToHub()">Flappy Bird Hub</button>
+  <!-- Main Menu -->
+  <div class="menu-box">
+    <img src="https://app.masonnet.org/fbrc.png" alt="FlappyBird Logo" class="logo" />
+    <button class="menu-button" onclick="alert('Start game')">Start</button>
+    <button class="menu-button" onclick="loadLeaderboard()">Leaderboard</button>
+    <button class="menu-button" onclick="alert('Open settings')">Settings</button>
+    <button class="menu-button" onclick="window.location.href='https://app.masonnet.org/flappybirdhub'">Flappy Bird Hub</button>
+  </div>
+
+  <!-- Leaderboard Modal -->
+  <div id="leaderboardModal" class="leaderboard-modal">
+    <h2>🏆 Leaderboard</h2>
+    <div id="leaderboardEntries">Loading...</div>
+    <button class="close-button" onclick="closeLeaderboard()">Close</button>
   </div>
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-      authDomain: "masonnet-app-official.firebaseapp.com",
-      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-      projectId: "masonnet-app-official",
-      storageBucket: "masonnet-app-official.firebasestorage.app",
-      messagingSenderId: "783919367562",
-      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-      measurementId: "G-X1YKV5VK7J"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
+
     firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("userName").textContent = user.displayName || "User";
-        if (user.photoURL) {
-          document.getElementById("userPic").src = user.photoURL;
-          document.getElementById("userPic").style.display = "inline-block";
-        }
-      }
-    });
+    function loadLeaderboard() {
+      const modal = document.getElementById("leaderboardModal");
+      const entries = document.getElementById("leaderboardEntries");
+      modal.style.display = "block";
+      entries.innerHTML = "<div class='entry'><em>Loading...</em></div>";
 
-    function startGame() {
-      alert("Start Game logic triggered");
+      db.collection("leaderboard")
+        .orderBy("score", "desc")
+        .limit(10)
+        .get()
+        .then(snapshot => {
+          entries.innerHTML = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement("div");
+            div.className = "entry";
+            div.innerHTML = `<span>${data.username}</span><span>${data.score}</span>`;
+            entries.appendChild(div);
+          });
+        })
+        .catch(error => {
+          entries.innerHTML = `<div class='entry'><em>Error loading scores</em></div>`;
+          console.error("Leaderboard error:", error);
+        });
     }
 
-    function showLeaderboard() {
-      alert("Show Leaderboard logic triggered");
-    }
-
-    function openSettings() {
-      alert("Open Settings modal triggered");
-    }
-
-    function goToHub() {
-      window.location.href = "https://app.masonnet.org/flappybirdhub";
-    }
-
-    function triggerTest() {
-      alert("Test button triggered");
+    function closeLeaderboard() {
+      document.getElementById("leaderboardModal").style.display = "none";
     }
   </script>
 </body>
