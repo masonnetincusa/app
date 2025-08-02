@@ -2,252 +2,111 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird Hub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Bird Hub</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100vh;
       background: #000;
-      font-family: Arial, sans-serif;
-      color: white;
-      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
     }
-
-    .container {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 90vw;
-      max-width: 380px;
-      border: 3px solid red;
-      padding: 16px;
-      box-sizing: border-box;
-    }
-
-    .title-img {
-      width: 85%;
-      max-width: 340px;
-      margin-bottom: 16px;
-    }
-
-    .menu-button {
-      width: 240px;
-      height: 56px;
-      background-color: red;
-      color: white;
-      font-size: 20px;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
+    button {
       cursor: pointer;
-      margin-bottom: 8px;
-    }
-
-    .menu-button:hover {
-      background-color: #cc0000;
-    }
-
-    .avatar {
-      position: fixed;
-      top: 24px;
-      right: 24px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid white;
-      background-size: cover;
-      background-position: center;
-      cursor: pointer;
-      background-image: url('https://app.masonnet.org/default-avatar.png');
-      z-index: 1000;
-    }
-
-    #user-menu {
-      position: fixed;
-      top: 80px;
-      right: 24px;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 6px;
-      display: none;
-      flex-direction: column;
-      z-index: 1001;
-    }
-
-    #user-menu button {
-      background: none;
-      border: none;
-      color: white;
-      padding: 10px 16px;
-      text-align: left;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    #user-menu button:hover {
-      background-color: rgba(255,255,255,0.1);
-    }
-
-    #leaderboard-modal {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 300px;
-      background: #111;
-      border: 2px solid red;
-      padding: 16px;
-      border-radius: 10px;
-      z-index: 1002;
-      display: none;
-    }
-
-    #leaderboard-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    #leaderboard-list li {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid #333;
-    }
-
-    #close-leaderboard {
-      margin-top: 12px;
-      background: red;
-      border: none;
-      padding: 8px;
-      width: 100%;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-    }
-
-    .hidden {
-      display: none !important;
     }
   </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+  authDomain: "masonnet-app-official.firebaseapp.com",
+  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app-official",
+  storageBucket: "masonnet-app-official.firebasestorage.app",
+  messagingSenderId: "783919367562",
+  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+  measurementId: "G-X1YKV5VK7J"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    function startGame() {
+      document.getElementById('mainMenu').style.display = 'none';
+      document.getElementById('flapSFX').play();
+      // 🚀 Launch canvas game logic here
+    }
+
+    function submitScore(score) {
+      onAuthStateChanged(auth, async user => {
+        if (user) {
+          await addDoc(collection(db, "leaderboard"), {
+            name: user.displayName || "Anonymous",
+            score: score,
+            timestamp: Date.now()
+          });
+          console.log("Score submitted");
+          document.getElementById('pointSFX').play();
+        } else {
+          console.log("User not logged in");
+        }
+      });
+    }
+
+    async function showLeaderboard() {
+      const list = document.getElementById("leaderboardList");
+      list.innerHTML = "";
+      const querySnapshot = await getDocs(collection(db, "leaderboard"));
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${data.name}: ${data.score}`;
+        list.appendChild(li);
+      });
+      document.getElementById("leaderboardOverlay").style.display = "block";
+    }
+
+    function closeLeaderboard() {
+      document.getElementById("leaderboardOverlay").style.display = "none";
+    }
+
+    window.testSubmit = () => submitScore(Math.floor(Math.random() * 500));
+  </script>
 </head>
 <body>
-  <div class="container">
-    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Title" class="title-img" />
-    <button id="btn-start" class="menu-button">Start</button>
-    <button id="btn-leader" class="menu-button">Leaderboard</button>
-    <button id="btn-settings" class="menu-button">Settings</button>
-    <button id="btn-hub" class="menu-button">Flappy Bird Hub</button>
-    <button id="btn-diag" class="menu-button hidden">Diagnostics</button>
+
+  <!-- Main Menu -->
+  <div id="mainMenu" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;z-index:9999;">
+    <div style="text-align:center;color:#fff;">
+      <h1 style="font-size:36px;margin-bottom:30px;">Flappy Bird Hub</h1>
+      <button onclick="startGame()" style="margin:10px;padding:12px 24px;font-size:18px;background:#2d2;color:#fff;border:none;border-radius:6px;">Play</button>
+      <button onclick="showLeaderboard()" style="margin:10px;padding:12px 24px;font-size:18px;background:#3498db;color:#fff;border:none;border-radius:6px;">Leaderboard</button>
+    </div>
   </div>
 
-  <div id="avatar" class="avatar"></div>
-  <div id="user-menu">
-    <button id="btn-signin">Sign In</button>
-    <button id="btn-signout" class="hidden">Sign Out</button>
+  <!-- Leaderboard Overlay -->
+  <div id="leaderboardOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:none;">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#222;color:#fff;padding:20px;border-radius:8px;width:300px;text-align:center;">
+      <h2 style="margin-top:0;">Leaderboard</h2>
+      <ul id="leaderboardList" style="list-style:none;padding:0;margin:0;"></ul>
+      <button onclick="closeLeaderboard()" style="margin-top:15px;padding:8px 16px;border:none;background:#f33;color:#fff;border-radius:4px;">Close</button>
+    </div>
   </div>
 
-  <div id="leaderboard-modal">
-    <h2>Leaderboard</h2>
-    <ul id="leaderboard-list"><li>Loading...</li></ul>
-    <button id="close-leaderboard">Close</button>
-  </div>
+  <!-- Sound Effects -->
+  <audio id="flapSFX" src="https://app.masonnet.org/flap.mp3"></audio>
+  <audio id="pointSFX" src="https://app.masonnet.org/point.mp3"></audio>
+  <audio id="hitSFX" src="https://app.masonnet.org/hit.mp3"></audio>
+  <audio id="dieSFX" src="https://app.masonnet.org/die.mp3"></audio>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- Developer Button -->
+  <button onclick="testSubmit()" style="position:fixed;bottom:20px;right:20px;padding:10px 18px;background:#2d2;color:#fff;border:none;border-radius:5px;z-index:9999;font-weight:bold;">
+    Submit Test Score
+  </button>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-      authDomain: "masonnet-app-official.firebaseapp.com",
-      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-      projectId: "masonnet-app-official",
-      storageBucket: "masonnet-app-official.appspot.com",
-      messagingSenderId: "783919367562",
-      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-      measurementId: "G-X1YKV5VK7J"
-    };
-
-    const ADMIN_UID = "Y4ZoHRQaIrVhdvZr15Ebz90Byh62";
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    const db = getFirestore(app);
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const avatar = document.getElementById("avatar");
-      const userMenu = document.getElementById("user-menu");
-      const btnSignIn = document.getElementById("btn-signin");
-      const btnSignOut = document.getElementById("btn-signout");
-      const btnDiag = document.getElementById("btn-diag");
-
-      avatar.onclick = () => {
-        userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
-      };
-
-      document.addEventListener("click", e => {
-        if (!avatar.contains(e.target) && !userMenu.contains(e.target)) {
-          userMenu.style.display = "none";
-        }
-      });
-
-      onAuthStateChanged(auth, user => {
-        if (user) {
-          avatar.style.backgroundImage = `url('${user.photoURL || "https://app.masonnet.org/default-avatar.png"}')`;
-          btnSignIn.classList.add("hidden");
-          btnSignOut.classList.remove("hidden");
-          if (user.uid === ADMIN_UID) btnDiag.classList.remove("hidden");
-        } else {
-          avatar.style.backgroundImage = "url('https://app.masonnet.org/default-avatar.png')";
-          btnSignIn.classList.remove("hidden");
-          btnSignOut.classList.add("hidden");
-          btnDiag.classList.add("hidden");
-        }
-      });
-
-      btnSignIn.onclick = () => signInWithPopup(auth, provider);
-      btnSignOut.onclick = () => signOut(auth);
-
-      document.getElementById("btn-start").onclick = () => alert("Start game logic here.");
-      document.getElementById("btn-settings").onclick = () => alert("Open settings overlay.");
-      document.getElementById("btn-hub").onclick = () => location.href = "https://app.masonnet.org/flappybirdhub";
-      btnDiag.onclick = () => alert("Diagnostics overlay.");
-
-      // Leaderboard logic
-      const leaderboardModal = document.getElementById("leaderboard-modal");
-      const leaderboardList = document.getElementById("leaderboard-list");
-      const closeLeaderboard = document.getElementById("close-leaderboard");
-
-      document.getElementById("btn-leader").onclick = async () => {
-        leaderboardModal.style.display = "block";
-        leaderboardList.innerHTML = "<li>Loading...</li>";
-        try {
-          const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(10));
-          const snapshot = await getDocs(q);
-          leaderboardList.innerHTML = "";
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const name = data.name || "Anonymous";
-            const score = data.score || 0;
-            leaderboardList.innerHTML += `<li><span>${name}</span><span>${score}</span></li>`;
-          });
-        } catch (err) {
-          leaderboardList.innerHTML = "<li>Error loading leaderboard.</li>";
-          console.error(err);
-        }
-      };
-
-      closeLeaderboard.onclick = () => {
-        leaderboardModal.style.display = "none";
-      };
-    });
-  </script>
 </body>
 </html>
