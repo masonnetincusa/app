@@ -4,424 +4,180 @@
   <meta charset="UTF-8" />
   <title>Flappy Bird Hub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
   <style>
-    /* Base reset & layout */
-    * { box-sizing: border-box; margin:0; padding:0 }
-    html, body {
-      width:100%; height:100%; overflow:hidden;
-      background:#000; color:#fff;
+    body {
+      margin: 0;
+      background-color: #000;
       font-family: Arial, sans-serif;
-      display:flex; flex-direction:column; align-items:center;
-      padding:2vh 0;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    /* Banner */
-    #banner {
-      width:240px; max-width:80vw;
-      margin-bottom:4vh;
+    .container {
+      outline: 3px solid red;
+      background-color: #000;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 90vw;
+      max-width: 380px;
+      box-sizing: border-box;
     }
 
-    /* Profile */
-    #profile-container {
-      position:absolute; top:2vh; right:2vw; z-index:1000;
+    .title-img {
+      width: 85%;
+      max-width: 340px;
+      height: auto;
+      margin-bottom: 8px;
     }
-    #profile-btn {
-      width:48px; height:48px;
-      border:2px solid #fff; border-radius:50%;
-      background:url('https://app.masonnet.org/avatar.png') center/cover no-repeat;
-      cursor:pointer;
+
+    .menu-button {
+      width: 240px;
+      height: 56px;
+      background-color: red;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
     }
+
+    .menu-button:hover {
+      background-color: #cc0000;
+    }
+
+    .avatar {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid white;
+      cursor: pointer;
+      background-size: cover;
+      background-position: center;
+    }
+
     #user-menu {
-      display:none; flex-direction:column;
-      background:#111; border:1px solid #333; border-radius:4px;
-      margin-top:8px; overflow:hidden;
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      display: none;
+      flex-direction: column;
+      z-index: 1001;
     }
+
     #user-menu button {
-      background:none; border:none; color:#fff;
-      padding:12px 16px; text-align:left; font-size:16px;
-      cursor:pointer;
-    }
-    #user-menu button:hover { background:rgba(255,255,255,0.1) }
-
-    /* Main menu */
-    #menu {
-      display:flex; flex-direction:column; align-items:center;
-      gap:2vh; width:100%;
-    }
-    .btn {
-      width:min(240px,80vw); height:72px;
-      background:#E02401; color:#fff;
-      font-size:32px; font-weight:bold;
-      border:none; border-radius:4px;
-      cursor:pointer; transition:background .15s;
-    }
-    .btn:hover { background:#b81b01 }
-
-    /* Game container */
-    #game-container {
-      display:none; position:relative;
-      width:min(320px,90vw);
-      height:calc((min(320px,90vw)/2)*3);
-      margin-top:4vh;
-    }
-    #game-canvas {
-      width:100%; height:100%;
-      background:#70c5ce; border:1px solid #fff; border-radius:4px;
+      background: none;
+      border: none;
+      color: white;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 16px;
+      cursor: pointer;
     }
 
-    /* Overlay panels */
-    .overlay {
-      position:absolute; top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.8);
-      display:none; align-items:center; justify-content:center;
-      padding:2vh; z-index:900;
+    #user-menu button:hover {
+      background-color: rgba(255,255,255,0.1);
     }
-    .panel {
-      background:#111; border:1px solid #333; border-radius:8px;
-      padding:24px; width:90%; max-width:400px; text-align:center;
-      position:relative;
-    }
-    .panel h2 { margin-bottom:16px; font-size:28px }
-    .close-btn {
-      position:absolute; top:12px; right:12px;
-      background:none; border:none; color:#ccc; font-size:24px;
-      cursor:pointer;
-    }
-    .panel ul {
-      list-style:none; padding:0; margin:16px 0;
-      max-height:200px; overflow-y:auto; text-align:left;
-    }
-    .panel label { display:block; margin:12px 0; font-size:18px }
-    .report { text-align:left; white-space:pre-wrap; font-size:16px }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-
-  <!-- Banner -->
-  <img id="banner" src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC Logo"/>
-
-  <!-- Profile Dropdown -->
-  <div id="profile-container">
-    <div id="profile-btn"></div>
-    <div id="user-menu">
-      <button id="account-btn">Account</button>
-      <button id="search-btn">Search</button>
-      <button id="sign-in-btn">Sign In</button>
-      <button id="sign-out-btn" class="hidden">Sign Out</button>
-    </div>
+  <div class="container">
+    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Title" class="title-img" />
+    <button id="btn-start" class="menu-button">Start</button>
+    <button id="btn-leader" class="menu-button">Leaderboard</button>
+    <button id="btn-settings" class="menu-button">Settings</button>
+    <button id="btn-hub" class="menu-button">Flappy Bird Hub</button>
+    <button id="btn-diag" class="menu-button hidden">Diagnostics</button>
   </div>
 
-  <!-- Main Menu -->
-  <div id="menu">
-    <button id="start-btn"       class="btn">Start</button>
-    <button id="leaderboard-btn" class="btn">Leaderboard</button>
-    <button id="settings-btn"    class="btn">Settings</button>
-    <button id="hub-btn"         class="btn">Flappy Bird Hub</button>
-    <button id="diagnostics-btn" class="btn">Diagnostics</button>
+  <div id="avatar" class="avatar" style="background-image: url('https://app.masonnet.org/default-avatar.png');"></div>
+  <div id="user-menu">
+    <button id="btn-account">Account</button>
+    <button id="btn-search">Search</button>
+    <button id="btn-signin">Sign In</button>
+    <button id="btn-signout" class="hidden">Sign Out</button>
   </div>
 
-  <!-- Game Container & Game Over -->
-  <div id="game-container">
-    <canvas id="game-canvas" width="320" height="480"></canvas>
-    <div id="game-over-overlay" class="overlay">
-      <div class="panel">
-        <h2>Game Over</h2>
-        <div id="final-score" style="font-size:20px;margin-bottom:20px"></div>
-        <button id="retry-btn" class="btn">Retry</button><br/>
-        <button id="return-menu-btn" class="btn">Main Menu</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Leaderboard -->
-  <div id="leaderboard-overlay" class="overlay">
-    <div class="panel">
-      <button class="close-btn" id="close-leaderboard-btn">&times;</button>
-      <h2>Leaderboard</h2>
-      <ul id="leaderboard-list"></ul>
-    </div>
-  </div>
-
-  <!-- Settings -->
-  <div id="settings-overlay" class="overlay">
-    <div class="panel">
-      <button class="close-btn" id="close-settings-btn">&times;</button>
-      <h2>Settings</h2>
-      <label><input type="checkbox" id="toggle-sfx"/> Enable SFX</label>
-    </div>
-  </div>
-
-  <!-- Diagnostics -->
-  <div id="diagnostics-overlay" class="overlay">
-    <div class="panel">
-      <button class="close-btn" id="close-diagnostics-btn">&times;</button>
-      <h2>Diagnostics Report</h2>
-      <div id="diagnostics-report" class="report">Running tests…</div>
-    </div>
-  </div>
-
-  <!-- Audio -->
-  <audio id="sfx-flap"  src="https://app.masonnet.org/flap.mp3"  preload="auto"></audio>
-  <audio id="sfx-point" src="https://app.masonnet.org/point.mp3" preload="auto"></audio>
-  <audio id="sfx-hit"   src="https://app.masonnet.org/hit.mp3"   preload="auto"></audio>
-  <audio id="sfx-die"   src="https://app.masonnet.org/die.mp3"   preload="auto"></audio>
-
-  <!-- Firebase & Game Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
     import {
       getAuth, signInWithPopup, GoogleAuthProvider,
       signOut, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
-    import {
-      getFirestore, collection, query,
-      orderBy, limit, getDocs, addDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
-      authDomain: "masonnet-app-official.firebaseapp.com",
-      databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
-      projectId: "masonnet-app-official",
-      storageBucket: "masonnet-app-official.firebasestorage.app",
-      messagingSenderId: "783919367562",
-      appId: "1:783919367562:web:b7bb809332a4e873f3b473",
-      measurementId: "G-X1YKV5VK7J"
-    };
+    // Replace this config with your actual project
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
+  authDomain: "masonnet-app-official.firebaseapp.com",
+  databaseURL: "https://masonnet-app-official-default-rtdb.firebaseio.com",
+  projectId: "masonnet-app-official",
+  storageBucket: "masonnet-app-official.firebasestorage.app",
+  messagingSenderId: "783919367562",
+  appId: "1:783919367562:web:b7bb809332a4e873f3b473",
+  measurementId: "G-X1YKV5VK7J"
+};
     const ADMIN_UID = "Y4ZoHRQaIrVhdvZr15Ebz90Byh62";
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // DOM refs
-      const profileBtn       = document.getElementById("profile-btn");
-      const userMenu         = document.getElementById("user-menu");
-      const signInBtn        = document.getElementById("sign-in-btn");
-      const signOutBtn       = document.getElementById("sign-out-btn");
-      const accountBtn       = document.getElementById("account-btn");
-      const searchBtn        = document.getElementById("search-btn");
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-      const startBtn         = document.getElementById("start-btn");
-      const leaderboardBtn   = document.getElementById("leaderboard-btn");
-      const settingsBtn      = document.getElementById("settings-btn");
-      const hubBtn           = document.getElementById("hub-btn");
-      const diagnosticsBtn   = document.getElementById("diagnostics-btn");
+    // DOM refs
+    const avatar     = document.getElementById("avatar");
+    const userMenu   = document.getElementById("user-menu");
+    const btnSignIn  = document.getElementById("btn-signin");
+    const btnSignOut = document.getElementById("btn-signout");
+    const btnDiag    = document.getElementById("btn-diag");
 
-      const retryBtn         = document.getElementById("retry-btn");
-      const returnMenuBtn    = document.getElementById("return-menu-btn");
-      const closeLBBtn       = document.getElementById("close-leaderboard-btn");
-      const closeSettingsBtn = document.getElementById("close-settings-btn");
-      const closeDiagBtn     = document.getElementById("close-diagnostics-btn");
+    // Profile Dropdown Toggle
+    avatar.addEventListener("click", () => {
+      userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
+    });
 
-      const menuEl           = document.getElementById("menu");
-      const gameContainer    = document.getElementById("game-container");
-      const gameOverOv       = document.getElementById("game-over-overlay");
-      const finalScoreEl     = document.getElementById("final-score");
-      const lbOv             = document.getElementById("leaderboard-overlay");
-      const lbList           = document.getElementById("leaderboard-list");
-      const settingsOv       = document.getElementById("settings-overlay");
-      const toggleSfx        = document.getElementById("toggle-sfx");
-      const diagOv           = document.getElementById("diagnostics-overlay");
-      const diagReport       = document.getElementById("diagnostics-report");
-
-      const canvas           = document.getElementById("game-canvas");
-      const ctx              = canvas.getContext("2d");
-
-      // SFX toggle & playback
-      const sounds = {
-        flap:  document.getElementById("sfx-flap"),
-        point: document.getElementById("sfx-point"),
-        hit:   document.getElementById("sfx-hit"),
-        die:   document.getElementById("sfx-die")
-      };
-      let sfxEnabled = JSON.parse(localStorage.getItem("sfxEnabled")) ?? true;
-      toggleSfx.checked = sfxEnabled;
-      toggleSfx.addEventListener("change", () => {
-        sfxEnabled = toggleSfx.checked;
-        localStorage.setItem("sfxEnabled", JSON.stringify(sfxEnabled));
-      });
-      const playSfx = key => {
-        if (!sfxEnabled) return;
-        const s = sounds[key]; s.currentTime = 0; s.play();
-      };
-
-      // Profile dropdown
-      profileBtn.addEventListener("click", () => {
-        userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
-      });
-      document.addEventListener("click", e => {
-        if (!profileBtn.contains(e.target) && !userMenu.contains(e.target)) {
-          userMenu.style.display = "none";
-        }
-      });
-
-      // Firebase init & auth
-      const app  = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db   = getFirestore(app);
-
-      onAuthStateChanged(auth, user => {
-        if (user) {
-          signInBtn.classList.add("hidden");
-          signOutBtn.classList.remove("hidden");
-          if (user.uid === ADMIN_UID) diagnosticsBtn.disabled = false;
-        } else {
-          signInBtn.classList.remove("hidden");
-          signOutBtn.classList.add("hidden");
-          diagnosticsBtn.disabled = false;
-        }
-      });
-      signInBtn.addEventListener("click", () => signInWithPopup(auth, new GoogleAuthProvider()));
-      signOutBtn.addEventListener("click", () => signOut(auth));
-
-      // Overlays
-      const show = el => el.style.display = "flex";
-      const hide = el => el.style.display = "none";
-
-      // Button bindings
-      startBtn.addEventListener("click", startGame);
-
-      leaderboardBtn.addEventListener("click", async () => {
-        lbList.innerHTML = "<li>Loading…</li>";
-        show(lbOv);
-        const q = query(collection(db,"leaderboard"), orderBy("score","desc"), limit(10));
-        const snap = await getDocs(q);
-        lbList.innerHTML = "";
-        snap.forEach(doc => {
-          const li = document.createElement("li");
-          li.textContent = `${doc.data().name}: ${doc.data().score}`;
-          lbList.appendChild(li);
-        });
-      });
-      closeLBBtn.addEventListener("click", () => hide(lbOv));
-
-      settingsBtn.addEventListener("click", () => show(settingsOv));
-      closeSettingsBtn.addEventListener("click", () => hide(settingsOv));
-
-      hubBtn.addEventListener("click", () => {
-        window.location.href = "https://app.masonnet.org/flappybirdhub";
-      });
-
-      diagnosticsBtn.addEventListener("click", runDiagnostics);
-      closeDiagBtn.addEventListener("click", () => hide(diagOv));
-
-      retryBtn.addEventListener("click", startGame);
-      returnMenuBtn.addEventListener("click", () => {
-        hide(gameOverOv);
-        gameContainer.style.display = "none";
-        menuEl.style.display = "flex";
-      });
-
-      // Game state & logic
-      let bird, pipes, score, frame, fps, lastTime;
-      let gameEnded = true;
-      const gravity = 0.4, jump = -8, gap = 120, speed = 2;
-
-      function resetGame() {
-        bird = { x:60, y:canvas.height/2, w:34, h:24, vy:0 };
-        pipes = []; score = 0; frame = 0; gameEnded = false;
-        hide(gameOverOv);
-        lastTime = performance.now();
-        gameContainer.style.display = "block";
-      }
-      function spawnPipe() {
-        const top = Math.random()*(canvas.height-gap-60)+30;
-        pipes.push({ x:canvas.width, top, passed:false });
-      }
-      function update() {
-        bird.vy += gravity; bird.y += bird.vy;
-        if (bird.y<0 || bird.y+bird.h>canvas.height) return endGame();
-        if (frame%90===0) spawnPipe();
-        pipes.forEach(p=>p.x-=speed);
-        pipes = pipes.filter(p=>{
-          if(!p.passed && p.x+52<bird.x){
-            p.passed=true; score++; playSfx("point");
-          }
-          return p.x+52>0;
-        });
-        for(let p of pipes){
-          const hitX = bird.x<p.x+52 && bird.x+bird.w>p.x;
-          const hitY = bird.y<p.top || bird.y+bird.h>p.top+gap;
-          if(hitX&&hitY) return endGame();
-        }
-        frame++;
-      }
-      function draw() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle="#228B22";
-        pipes.forEach(p=>{
-          ctx.fillRect(p.x,0,52,p.top);
-          ctx.fillRect(p.x,p.top+gap,52,canvas.height);
-        });
-        ctx.fillStyle="#ffd500";
-        ctx.fillRect(bird.x,bird.y,bird.w,bird.h);
-        ctx.fillStyle="#fff";
-        ctx.font="bold 32px Arial";
-        ctx.textAlign="center";
-        ctx.fillText(score,canvas.width/2,50);
-      }
-      function loop(now) {
-        fps = 1000/(now-lastTime);
-        lastTime = now;
-        update(); draw();
-        if(!gameEnded) requestAnimationFrame(loop);
-      }
-      function startGame() {
-        resetGame();
-        menuEl.style.display="none";
-        playSfx("flap");
-        requestAnimationFrame(loop);
-      }
-      function endGame() {
-        if(gameEnded) return;
-        gameEnded=true;
-        playSfx("hit");
-        setTimeout(()=>playSfx("die"),200);
-        finalScoreEl.textContent=`Score: ${score}`;
-        show(gameOverOv);
-        if(auth.currentUser) {
-          addDoc(collection(db,"leaderboard"), {
-            name: auth.currentUser.displayName||"Anon",
-            score, timestamp: serverTimestamp()
-          });
-        }
-      }
-      function flap() {
-        if(!gameEnded){ bird.vy=jump; playSfx("flap"); }
-      }
-      canvas.addEventListener("click", flap);
-      window.addEventListener("keydown", e => { if(e.code==="Space") flap(); });
-
-      // Diagnostics
-      async function runDiagnostics() {
-        show(diagOv);
-        const report = ["=== Rendering ===",
-          `Canvas: ${canvas.width}×${canvas.height}`,
-          `Context OK: ${!!ctx}`,
-          "", "=== Physics ===",
-          `gravity=${gravity}`, `jump=${jump}`, `gap=${gap}`,
-          "", "=== Input ===",
-          "click=>flap", "space=>flap",
-          "", "=== Performance (1s FPS avg)==="];
-        const samples=[]
-        let t0=performance.now();
-        await new Promise(res=>{
-          function m(ts){
-            samples.push(1000/(ts-t0)); t0=ts;
-            if(performance.now()-lastTime<1000) requestAnimationFrame(m);
-            else res();
-          }
-          lastTime=performance.now();
-          requestAnimationFrame(m);
-        });
-        report.push(`Avg FPS: ${Math.round(samples.reduce((a,b)=>a+b)/samples.length)}`);
-        report.push("", "=== Audio ===");
-        report.push("mp3 support: "+document.createElement("audio").canPlayType("audio/mpeg"));
-        diagReport.textContent = report.join("\n");
+    document.addEventListener("click", e => {
+      if (!avatar.contains(e.target) && !userMenu.contains(e.target)) {
+        userMenu.style.display = "none";
       }
     });
+
+    // Auth state tracking
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        avatar.style.backgroundImage = `url('${user.photoURL || "https://app.masonnet.org/default-avatar.png"}')`;
+        btnSignIn.classList.add("hidden");
+        btnSignOut.classList.remove("hidden");
+        if (user.uid === ADMIN_UID) btnDiag.classList.remove("hidden");
+      } else {
+        avatar.style.backgroundImage = "url('https://app.masonnet.org/default-avatar.png')";
+        btnSignIn.classList.remove("hidden");
+        btnSignOut.classList.add("hidden");
+        btnDiag.classList.add("hidden");
+      }
+    });
+
+    btnSignIn.onclick  = () => signInWithPopup(auth, new GoogleAuthProvider());
+    btnSignOut.onclick = () => signOut(auth);
+
+    // Basic wiring for menu buttons
+    document.getElementById("btn-start").onclick = () => alert("Start game logic goes here.");
+    document.getElementById("btn-leader").onclick = () => alert("Leaderboard overlay here.");
+    document.getElementById("btn-settings").onclick = () => alert("Settings modal here.");
+    document.getElementById("btn-hub").onclick = () => location.href = "https://app.masonnet.org/flappybirdhub";
+    btnDiag.onclick = () => alert("Diagnostics activated.");
   </script>
 </body>
 </html>
