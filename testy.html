@@ -3,147 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Bird Hub</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <title>Flappy Bird Hub Menu</title>
   <style>
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('https://app.masonnet.org/pixel-font.woff2') format('woff2');
+    }
+
     body {
-      margin: 0;
-      background: #000;
-      font-family: 'Press Start 2P', monospace;
-      color: #fff;
-      text-align: center;
-    }
-
-    #banner {
-      display: block;
-      margin: 20px auto 0;
-      width: 220px;
-      image-rendering: pixelated;
-    }
-
-    #user-info {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
-
-    #avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 4px;
-    }
-
-    #username {
-      font-size: 10px;
-    }
-
-    #testScore {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      padding: 10px 14px;
-      font-size: 10px;
-      border-radius: 6px;
-      background-color: #222;
-      color: #0ff;
-      border: 2px solid #0ff;
-      cursor: pointer;
-    }
-
-    #main-menu {
-      margin-top: 40px;
+      background-color: #000;
+      font-family: 'PixelFont', sans-serif;
       display: flex;
-      flex-direction: column;
-      gap: 20px;
+      justify-content: center;
       align-items: center;
+      height: 100vh;
+      margin: 0;
     }
 
-    button {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 12px;
-      padding: 18px 24px;
-      border-radius: 12px;
-      border: 2px solid #0ff;
+    .main-menu {
+      border: 5px solid red;
+      border-radius: 30px;
+      padding: 30px 20px;
+      text-align: center;
       background-color: #111;
-      color: #0ff;
+      box-shadow: 0 0 20px red;
+    }
+
+    .main-menu img {
+      width: 240px;
+      margin-bottom: 30px;
+    }
+
+    .menu-btn {
+      display: block;
+      width: 240px;
+      height: 60px;
+      margin: 10px auto;
+      background-color: #222;
+      color: #fff;
+      border: 2px solid #fff;
+      border-radius: 12px;
+      font-size: 20px;
       cursor: pointer;
-      transition: 0.2s;
+      transition: all 0.2s ease-in-out;
     }
 
-    button:hover {
-      background-color: #0ff;
-      color: #000;
-      box-shadow: 0 0 10px #0ff;
+    .menu-btn:hover {
+      background-color: #444;
+      box-shadow: 0 0 10px #fff;
     }
 
-    .hidden {
-      display: none;
+    .menu-btn:active {
+      box-shadow: inset 0 0 10px #fff;
     }
   </style>
 </head>
 <body>
-  <!-- 🖼️ Header Banner -->
-  <img src="https://app.masonnet.org/fbrc.png" id="banner" />
-
-  <!-- 👤 Auth Info -->
-  <div id="user-info">
-    <img src="https://app.masonnet.org/avatar.png" id="avatar" />
-    <span id="username">User</span>
+  <div class="main-menu">
+    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird RC" />
+    <button class="menu-btn" onclick="startGame()">Start</button>
+    <button class="menu-btn" onclick="openLeaderboard()">Leaderboard</button>
+    <button class="menu-btn" onclick="openSettings()">Settings</button>
+    <button class="menu-btn" onclick="goToHub()">Flappy Bird Hub</button>
   </div>
-
-  <!-- 🔖 Top-Left Test Score Button -->
-  <button id="testScore">Test Score</button>
-
-  <!-- 🎮 Masonnet Main Menu -->
-  <div id="main-menu">
-    <button id="start">Start</button>
-    <button id="leaderboard">Leaderboard</button>
-    <button id="settings">Settings</button>
-    <button onclick="window.open('https://app.masonnet.org/flappybirdhub')">Flappy Bird Hub</button>
-  </div>
-
-  <!-- 📊 Leaderboard Modal -->
-  <div id="leaderboard-modal" class="hidden">
-    <!-- Firestore scores injected here -->
-  </div>
-
-  <!-- ⚙️ Settings Modal -->
-  <div id="settings-modal" class="hidden">
-    <!-- Volume toggle, diagnostics, etc -->
-  </div>
-
-  <!-- 🧠 Firebase Auth & Logic -->
-  <!-- Masonnet Firebase logic -->
-
-  <!-- 🕹️ Game Canvas Placeholder -->
-  <!-- Masonnet Game Logic canvas inject -->
-
-  <!-- 🔈 Sound Effects -->
-  <audio id="click-sfx" src="https://app.masonnet.org/point.mp3" preload="auto"></audio>
 
   <script>
-    const sfx = document.getElementById("click-sfx");
-    document.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", () => sfx.play());
-    });
-
-    // Placeholder: Show test score button only if signed in
-    const isSignedIn = true; // Replace with actual auth check
-    if (isSignedIn) {
-      document.getElementById("user-info").style.display = "flex";
-      document.getElementById("testScore").style.display = "block";
-    } else {
-      document.getElementById("testScore").style.display = "none";
+    function playSFX(src) {
+      new Audio(src).play();
     }
 
-    // Placeholder test score submission
-    document.getElementById("testScore").onclick = () => {
-      console.log("Submitting score 9999 to Firestore...");
-      // Masonnet Firebase logic here
-    };
+    function startGame() {
+      playSFX('https://app.masonnet.org/flap.mp3');
+      // start game logic here
+    }
+
+    function openLeaderboard() {
+      playSFX('https://app.masonnet.org/point.mp3');
+      // leaderboard overlay logic here
+    }
+
+    function openSettings() {
+      playSFX('https://app.masonnet.org/hit.mp3');
+      // settings modal logic here
+    }
+
+    function goToHub() {
+      playSFX('https://app.masonnet.org/die.mp3');
+      window.location.href = "https://app.masonnet.org/flappybirdhub";
+    }
   </script>
 </body>
 </html>
