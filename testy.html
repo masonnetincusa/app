@@ -2,121 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird Hub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Bird Hub Menu</title>
   <style>
     body {
-      margin: 0;
-      background-color: #000;
-      font-family: Arial, sans-serif;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .container {
-      outline: 3px solid red;
-      background-color: #000;
-      padding: 16px;
+      font-family: sans-serif;
+      background: #f9f9f9;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      width: 90vw;
-      max-width: 380px;
-      box-sizing: border-box;
+      padding: 2rem;
     }
-
-    .title-img {
-      width: 85%;
-      max-width: 340px;
-      height: auto;
-      margin-bottom: 8px;
-    }
-
-    .menu-button {
-      width: 240px;
-      height: 56px;
-      background-color: red;
-      color: white;
-      font-size: 20px;
-      font-weight: bold;
+    .menu-btn {
+      margin: 0.5rem;
+      padding: 1rem 2rem;
       border: none;
-      border-radius: 10px;
+      background: #2196f3;
+      color: white;
+      font-size: 1.1rem;
       cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.3s;
     }
-
-    .menu-button:hover {
-      background-color: #cc0000;
+    .menu-btn:hover {
+      background: #1976d2;
     }
-
-    .avatar {
-      position: fixed;
-      top: 24px;
-      right: 24px;
-      width: 48px;
-      height: 48px;
+    #user-menu {
+      display: none;
+      flex-direction: column;
+      margin-top: 0.5rem;
+    }
+    .hidden {
+      display: none !important;
+    }
+    #avatar {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      border: 2px solid white;
       cursor: pointer;
       background-size: cover;
       background-position: center;
-      background-image: url('https://app.masonnet.org/default-avatar.png');
-    }
-
-    #user-menu {
-      position: fixed;
-      top: 80px;
-      right: 24px;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 6px;
-      display: none;
-      flex-direction: column;
-      z-index: 1001;
-    }
-
-    #user-menu button {
-      background: none;
-      border: none;
-      color: white;
-      padding: 10px 16px;
-      text-align: left;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    #user-menu button:hover {
-      background-color: rgba(255,255,255,0.1);
-    }
-
-    .hidden {
-      display: none !important;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="https://app.masonnet.org/fbrc.png" alt="Flappy Bird Title" class="title-img" />
-    <button id="btn-start" class="menu-button">Start</button>
-    <button id="btn-leader" class="menu-button">Leaderboard</button>
-    <button id="btn-settings" class="menu-button">Settings</button>
-    <button id="btn-hub" class="menu-button">Flappy Bird Hub</button>
-    <button id="btn-diag" class="menu-button hidden">Diagnostics</button>
-  </div>
-
-  <!-- Profile avatar + dropdown -->
-  <div id="avatar" class="avatar"></div>
+  <div id="avatar"></div>
   <div id="user-menu">
-    <button id="btn-account">Account</button>
-    <button id="btn-search">Search</button>
-    <button id="btn-signin">Sign In</button>
-    <button id="btn-signout" class="hidden">Sign Out</button>
+    <button id="btn-signout" class="menu-btn hidden">Sign Out</button>
+    <button id="btn-diag" class="menu-btn hidden">Diagnostics</button>
   </div>
+  <button id="btn-signin" class="menu-btn">Sign In with Google</button>
+  <button id="btn-start" class="menu-btn">Start Game</button>
+  <button id="btn-leader" class="menu-btn">Leaderboard</button>
+  <button id="btn-settings" class="menu-btn">Settings</button>
+  <button id="btn-hub" class="menu-btn">Return to Hub</button>
 
-  <!-- Firebase SDK + menu logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
     import {
@@ -124,6 +65,7 @@
       signOut, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
 
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
       apiKey: "AIzaSyDtfrpxKaROrq1D0NUAbFl0FZ9E7axOIxE",
       authDomain: "masonnet-app-official.firebaseapp.com",
@@ -140,46 +82,47 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    const avatar     = document.getElementById("avatar");
-    const userMenu   = document.getElementById("user-menu");
-    const btnSignIn  = document.getElementById("btn-signin");
-    const btnSignOut = document.getElementById("btn-signout");
-    const btnDiag    = document.getElementById("btn-diag");
+    window.addEventListener("DOMContentLoaded", () => {
+      const avatar     = document.getElementById("avatar");
+      const userMenu   = document.getElementById("user-menu");
+      const btnSignIn  = document.getElementById("btn-signin");
+      const btnSignOut = document.getElementById("btn-signout");
+      const btnDiag    = document.getElementById("btn-diag");
 
-    // Avatar dropdown toggle
-    avatar.onclick = () => {
-      userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
-    };
-    document.addEventListener("click", e => {
-      if (!avatar.contains(e.target) && !userMenu.contains(e.target)) {
-        userMenu.style.display = "none";
-      }
+      // Toggle user menu
+      avatar.onclick = () => {
+        userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
+      };
+      document.addEventListener("click", e => {
+        if (!avatar.contains(e.target) && !userMenu.contains(e.target)) {
+          userMenu.style.display = "none";
+        }
+      });
+
+      onAuthStateChanged(auth, user => {
+        if (user) {
+          avatar.style.backgroundImage = `url('${user.photoURL || "https://app.masonnet.org/default-avatar.png"}')`;
+          btnSignIn.classList.add("hidden");
+          btnSignOut.classList.remove("hidden");
+          if (user.uid === ADMIN_UID) btnDiag.classList.remove("hidden");
+        } else {
+          avatar.style.backgroundImage = "url('https://app.masonnet.org/default-avatar.png')";
+          btnSignIn.classList.remove("hidden");
+          btnSignOut.classList.add("hidden");
+          btnDiag.classList.add("hidden");
+        }
+      });
+
+      btnSignIn.onclick  = () => signInWithPopup(auth, provider);
+      btnSignOut.onclick = () => signOut(auth);
+
+      // Main menu actions
+      document.getElementById("btn-start").onclick    = () => alert("Start game flow goes here");
+      document.getElementById("btn-leader").onclick   = () => alert("Show leaderboard modal");
+      document.getElementById("btn-settings").onclick = () => alert("Open settings overlay");
+      document.getElementById("btn-hub").onclick      = () => window.location.href = "https://app.masonnet.org/flappybirdhub";
+      btnDiag.onclick                                 = () => alert("Diagnostics activated");
     });
-
-    // Auth state binding
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        avatar.style.backgroundImage = `url('${user.photoURL || "https://app.masonnet.org/default-avatar.png"}')`;
-        btnSignIn.classList.add("hidden");
-        btnSignOut.classList.remove("hidden");
-        if (user.uid === ADMIN_UID) btnDiag.classList.remove("hidden");
-      } else {
-        avatar.style.backgroundImage = "url('https://app.masonnet.org/default-avatar.png')";
-        btnSignIn.classList.remove("hidden");
-        btnSignOut.classList.add("hidden");
-        btnDiag.classList.add("hidden");
-      }
-    });
-
-    btnSignIn.onclick  = () => signInWithPopup(auth, provider);
-    btnSignOut.onclick = () => signOut(auth);
-
-    // Menu button actions
-    document.getElementById("btn-start").onclick = () => alert("Start game flow goes here");
-    document.getElementById("btn-leader").onclick = () => alert("Show leaderboard modal");
-    document.getElementById("btn-settings").onclick = () => alert("Open settings overlay");
-    document.getElementById("btn-hub").onclick = () => location.href = "https://app.masonnet.org/flappybirdhub";
-    btnDiag.onclick = () => alert("Diagnostics activated");
   </script>
 </body>
 </html>
